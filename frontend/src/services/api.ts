@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ProductWithPrices, Seller } from '../types';
+import type { Product, ProductWithPrices, Seller } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
@@ -94,28 +94,85 @@ export const apiService = {
     }
   },
 
-  // Search products
-  async searchProducts(query: string): Promise<ProductWithPrices[]> {
-    // Delay to simulate network request
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    
-    if (!query) {
-      return MOCK_PRODUCTS;
+  // Get list of products with pagination, sorting, and optional search (Real API)
+  async getProducts(
+    page: number,
+    size: number,
+    sortKey?: string,
+    sortDir?: 'asc' | 'desc',
+    search?: string
+  ): Promise<{
+    content: Product[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number;
+  }> {
+    const params: any = { page, size };
+    if (sortKey) {
+      params.sort = `${sortKey},${sortDir || 'asc'}`;
     }
-    
-    const lowerQuery = query.toLowerCase();
-    return MOCK_PRODUCTS.filter(
-      (product) =>
-        product.name.toLowerCase().includes(lowerQuery) ||
-        product.brand.toLowerCase().includes(lowerQuery) ||
-        product.category.toLowerCase().includes(lowerQuery)
-    );
+    if (search) {
+      params.search = search;
+    }
+    const response = await apiClient.get('/products', { params });
+    return response.data;
   },
 
-  // Get single product details
+  // Search products (hybrid)
+  async searchProducts(query: string): Promise<ProductWithPrices[]> {
+    try {
+      const response = await this.getProducts(0, 50, undefined, undefined, query);
+      return response.content.map(p => ({
+        ...p,
+        prices: [],
+      }));
+    } catch (error) {
+      console.warn('Backend search failed, falling back to mock data');
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      if (!query) {
+        return MOCK_PRODUCTS;
+      }
+      
+      const lowerQuery = query.toLowerCase();
+      return MOCK_PRODUCTS.filter(
+        (product) =>
+          product.name.toLowerCase().includes(lowerQuery) ||
+          product.brand.toLowerCase().includes(lowerQuery) ||
+          product.category.toLowerCase().includes(lowerQuery)
+      );
+    }
+  },
+
+  // Get single product details (hybrid)
   async getProduct(id: string): Promise<ProductWithPrices | null> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    const product = MOCK_PRODUCTS.find((p) => p.id === id);
-    return product || null;
+    try {
+      const response = await apiClient.get(`/products/${id}`);
+      return {
+        ...response.data,
+        prices: [],
+      };
+    } catch (error) {
+      console.warn(`Failed to get product ${id} from API, trying mock data`);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const product = MOCK_PRODUCTS.find((p) => p.id === id);
+      return product || null;
+    }
+  },
+
+  // Product CRUD Operations (Real API)
+  async createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+    const response = await apiClient.post('/products', product);
+    return response.data;
+  },
+
+  async updateProduct(id: string, product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+    const response = await apiClient.put(`/products/${id}`, product);
+    return response.data;
+  },
+
+  async deleteProduct(id: string): Promise<void> {
+    await apiClient.delete(`/products/${id}`);
   }
 };

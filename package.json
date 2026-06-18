@@ -1,0 +1,13 @@
+{
+  "name": "pricepilot-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:backend": "backend\\mvnw.cmd spring-boot:run -f backend\\pom.xml",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -37,6 +37,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <nav className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
               <Link to="/" className="hover:text-zinc-100 transition-colors">Discover</Link>
               <Link to="/search" className="hover:text-zinc-100 transition-colors">Compare</Link>
+              <Link to="/admin/products" className="hover:text-zinc-100 transition-colors">Manage Products</Link>
             </nav>
           </div>
 
