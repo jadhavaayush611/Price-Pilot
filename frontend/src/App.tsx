@@ -6,6 +6,8 @@ import { LandingPage } from './pages/LandingPage';
 import { SearchPage } from './pages/SearchPage';
 import { ProductPage } from './pages/ProductPage';
 import { ProductManagementPage } from './pages/ProductManagementPage';
+import { SellerManagementPage } from './pages/SellerManagementPage';
+import { PriceManagementPage } from './pages/PriceManagementPage';
 
 // Create TanStack Query Client
 const queryClient = new QueryClient({
@@ -27,6 +29,8 @@ export const App: React.FC = () => {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/product/:id" element={<ProductPage />} />
             <Route path="/admin/products" element={<ProductManagementPage />} />
+            <Route path="/admin/sellers" element={<SellerManagementPage />} />
+            <Route path="/admin/prices" element={<PriceManagementPage />} />
           </Routes>
         </Layout>
       </Router>

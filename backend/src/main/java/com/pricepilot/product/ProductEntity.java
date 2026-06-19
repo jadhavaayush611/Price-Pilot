@@ -10,6 +10,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+import com.pricepilot.productprice.ProductPriceEntity;
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "products")
 @Getter
@@ -32,4 +39,9 @@ public class ProductEntity extends BaseEntity {
 
     @Column(name = "image_url")
     private String imageUrl;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ProductPriceEntity> productPrices = new ArrayList<>();
 }
+

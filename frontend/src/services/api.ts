@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice } from '../types';
 
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
@@ -174,5 +174,98 @@ export const apiService = {
 
   async deleteProduct(id: string): Promise<void> {
     await apiClient.delete(`/products/${id}`);
+  },
+
+  // Seller CRUD Operations (Real API)
+  async getSellers(
+    page: number,
+    size: number,
+    sortKey?: string,
+    sortDir?: 'asc' | 'desc',
+    search?: string
+  ): Promise<{
+    content: Seller[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number;
+  }> {
+    const params: any = { page, size };
+    if (sortKey) {
+      params.sort = `${sortKey},${sortDir || 'asc'}`;
+    }
+    if (search) {
+      params.search = search;
+    }
+    const response = await apiClient.get('/sellers', { params });
+    return response.data;
+  },
+
+  async createSeller(seller: Omit<Seller, 'id' | 'createdAt' | 'updatedAt'>): Promise<Seller> {
+    const response = await apiClient.post('/sellers', seller);
+    return response.data;
+  },
+
+  async updateSeller(id: string, seller: Omit<Seller, 'id' | 'createdAt' | 'updatedAt'>): Promise<Seller> {
+    const response = await apiClient.put(`/sellers/${id}`, seller);
+    return response.data;
+  },
+
+  async deleteSeller(id: string): Promise<void> {
+    await apiClient.delete(`/sellers/${id}`);
+  },
+
+  // ProductPrice CRUD Operations (Real API)
+  async getProductPrices(
+    page: number,
+    size: number,
+    sortKey?: string,
+    sortDir?: 'asc' | 'desc',
+    search?: string
+  ): Promise<{
+    content: ProductPrice[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number;
+  }> {
+    const params: any = { page, size };
+    if (sortKey) {
+      params.sort = `${sortKey},${sortDir || 'asc'}`;
+    }
+    if (search) {
+      params.search = search;
+    }
+    const response = await apiClient.get('/prices', { params });
+    return response.data;
+  },
+
+  async createProductPrice(price: {
+    productId: string;
+    sellerId: string;
+    currentPrice: number;
+    originalPrice: number;
+    productUrl?: string;
+  }): Promise<ProductPrice> {
+    const response = await apiClient.post('/prices', price);
+    return response.data;
+  },
+
+  async updateProductPrice(
+    id: string,
+    price: {
+      productId: string;
+      sellerId: string;
+      currentPrice: number;
+      originalPrice: number;
+      productUrl?: string;
+    }
+  ): Promise<ProductPrice> {
+    const response = await apiClient.put(`/prices/${id}`, price);
+    return response.data;
+  },
+
+  async deleteProductPrice(id: string): Promise<void> {
+    await apiClient.delete(`/prices/${id}`);
   }
 };

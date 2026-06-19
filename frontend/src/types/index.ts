@@ -14,18 +14,23 @@ export interface Seller {
   name: string;
   websiteUrl: string;
   logoUrl: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProductPrice {
   id: string;
-  productId: string;
-  sellerId: string;
+  productId?: string;
+  sellerId?: string;
   currentPrice: number;
   originalPrice: number;
   discountPercentage: number;
   productUrl: string;
   lastUpdated: string;
+  product?: Product;
   seller?: Seller;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProductWithPrices extends Product {
