@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { apiService } from '../services/api';
 
 interface LayoutProps {
@@ -34,12 +34,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 PricePilot
               </span>
             </Link>
-            <nav className="hidden md:flex items-center gap-6 text-sm text-zinc-400">
-              <Link to="/" className="hover:text-zinc-100 transition-colors">Discover</Link>
-              <Link to="/search" className="hover:text-zinc-100 transition-colors">Compare</Link>
-              <Link to="/admin/products" className="hover:text-zinc-100 transition-colors">Manage Products</Link>
-              <Link to="/admin/sellers" className="hover:text-zinc-100 transition-colors">Manage Sellers</Link>
-              <Link to="/admin/prices" className="hover:text-zinc-100 transition-colors">Manage Prices</Link>
+            <nav className="hidden md:flex items-center gap-6 text-sm">
+              <NavLink to="/" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Discover</NavLink>
+              <NavLink to="/search" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Compare</NavLink>
+              <NavLink to="/admin/products" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Manage Products</NavLink>
+              <NavLink to="/admin/sellers" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Manage Sellers</NavLink>
+              <NavLink to="/admin/prices" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Manage Prices</NavLink>
             </nav>
           </div>
 

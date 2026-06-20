@@ -3,6 +3,7 @@ package com.pricepilot.product;
 import com.pricepilot.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "products")
+@Table(name = "products", indexes = {
+    @Index(name = "idx_products_name", columnList = "name"),
+    @Index(name = "idx_products_brand", columnList = "brand"),
+    @Index(name = "idx_products_category", columnList = "category")
+})
 @Getter
 @Setter
 @NoArgsConstructor

@@ -20,4 +20,9 @@ public interface ProductPriceRepository extends JpaRepository<ProductPriceEntity
            "      LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            "      LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<ProductPriceEntity> findAllWithRelations(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT pp FROM ProductPriceEntity pp " +
+           "JOIN FETCH pp.seller s " +
+           "WHERE pp.product.id IN :productIds")
+    java.util.List<ProductPriceEntity> findPricesWithSellersByProductIds(@Param("productIds") java.util.List<UUID> productIds);
 }

@@ -145,6 +145,81 @@ export const apiService = {
     }
   },
 
+  // Search products with multi-faceted filtering, sorting, and pagination (Real API)
+  async searchProductsWithFilters(params: {
+    keyword?: string;
+    category?: string;
+    brand?: string;
+    page?: number;
+    size?: number;
+    sort?: string;
+  }): Promise<{
+    content: ProductWithPrices[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number;
+  }> {
+    try {
+      const response = await apiClient.get('/search', { params });
+      return response.data;
+    } catch (error) {
+      console.warn('Backend search API failed, falling back to mock data filtering');
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      const { keyword = '', category = 'All', brand = 'All', page = 0, size = 10, sort = 'default' } = params;
+      let filtered = [...MOCK_PRODUCTS];
+
+      if (keyword.trim()) {
+        const lowerKeyword = keyword.toLowerCase();
+        filtered = filtered.filter(
+          (p) =>
+            p.name.toLowerCase().includes(lowerKeyword) ||
+            p.brand.toLowerCase().includes(lowerKeyword) ||
+            p.category.toLowerCase().includes(lowerKeyword) ||
+            p.description.toLowerCase().includes(lowerKeyword)
+        );
+      }
+
+      if (category !== 'All') {
+        filtered = filtered.filter((p) => p.category.toLowerCase() === category.toLowerCase());
+      }
+
+      if (brand !== 'All') {
+        filtered = filtered.filter((p) => p.brand.toLowerCase() === brand.toLowerCase());
+      }
+
+      // Sort
+      filtered.sort((a, b) => {
+        if (sort === 'price-asc' || sort === 'price,asc') {
+          return (a.lowestPrice || 0) - (b.lowestPrice || 0);
+        }
+        if (sort === 'price-desc' || sort === 'price,desc') {
+          return (b.lowestPrice || 0) - (a.lowestPrice || 0);
+        }
+        if (sort === 'discount-desc' || sort === 'discount,desc') {
+          const maxDiscount = (p: ProductWithPrices) =>
+            p.prices && p.prices.length > 0 ? Math.max(...p.prices.map((pr) => pr.discountPercentage)) : 0;
+          return maxDiscount(b) - maxDiscount(a);
+        }
+        // default by name
+        return a.name.localeCompare(b.name);
+      });
+
+      // Paginate
+      const start = page * size;
+      const paginated = filtered.slice(start, start + size);
+
+      return {
+        content: paginated,
+        totalPages: Math.ceil(filtered.length / size),
+        totalElements: filtered.length,
+        size,
+        number: page,
+      };
+    }
+  },
+
   // Get single product details (hybrid)
   async getProduct(id: string): Promise<ProductWithPrices | null> {
     try {
