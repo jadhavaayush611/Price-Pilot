@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 
@@ -9,6 +9,18 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Automatically inject JWT token into header of every API request
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Mock Data
 export const MOCK_SELLERS: Seller[] = [
@@ -339,5 +351,20 @@ export const apiService = {
 
   async deleteProductPrice(id: string): Promise<void> {
     await apiClient.delete(`/prices/${id}`);
+  },
+
+  async login(credentials: any): Promise<{ token: string; user: User }> {
+    const response = await apiClient.post('/auth/login', credentials);
+    return response.data;
+  },
+
+  async register(userData: any): Promise<{ token: string; user: User }> {
+    const response = await apiClient.post('/auth/register', userData);
+    return response.data;
+  },
+  
+  async getCurrentUser(): Promise<User> {
+    const response = await apiClient.get('/users/me');
+    return response.data;
   }
 };

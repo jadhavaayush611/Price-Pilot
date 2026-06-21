@@ -8,6 +8,10 @@ import { ProductPage } from './pages/ProductPage';
 import { ProductManagementPage } from './pages/ProductManagementPage';
 import { SellerManagementPage } from './pages/SellerManagementPage';
 import { PriceManagementPage } from './pages/PriceManagementPage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Create TanStack Query Client
 const queryClient = new QueryClient({
@@ -22,18 +26,46 @@ const queryClient = new QueryClient({
 export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/product/:id" element={<ProductPage />} />
-            <Route path="/admin/products" element={<ProductManagementPage />} />
-            <Route path="/admin/sellers" element={<SellerManagementPage />} />
-            <Route path="/admin/prices" element={<PriceManagementPage />} />
-          </Routes>
-        </Layout>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <Layout>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/product/:id" element={<ProductPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+
+              {/* Admin Protected Routes */}
+              <Route
+                path="/admin/products"
+                element={
+                  <ProtectedRoute adminOnly={true}>
+                    <ProductManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/sellers"
+                element={
+                  <ProtectedRoute adminOnly={true}>
+                    <SellerManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/prices"
+                element={
+                  <ProtectedRoute adminOnly={true}>
+                    <PriceManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Layout>
+        </Router>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

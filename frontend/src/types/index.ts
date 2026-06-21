@@ -38,3 +38,13 @@ export interface ProductWithPrices extends Product {
   lowestPrice?: number;
   highestPrice?: number;
 }
+
+export interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'USER' | 'ADMIN';
+  enabled: boolean;
+}
+
