@@ -12,4 +12,11 @@ import java.util.UUID;
 public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, JpaSpecificationExecutor<ProductEntity> {
     Page<ProductEntity> findByNameContainingIgnoreCaseOrBrandContainingIgnoreCaseOrCategoryContainingIgnoreCase(
             String name, String brand, String category, Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM ProductEntity p " +
+            "LEFT JOIN FETCH p.productPrices pp " +
+            "LEFT JOIN FETCH pp.seller " +
+            "WHERE p.id = :id")
+    java.util.Optional<ProductEntity> findByIdWithPricesAndSellers(@org.springframework.data.repository.query.Param("id") UUID id);
 }
+

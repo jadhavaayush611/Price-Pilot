@@ -11,7 +11,10 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "product_prices")
+@Table(name = "product_prices", indexes = {
+    @Index(name = "idx_product_prices_product_id", columnList = "product_id"),
+    @Index(name = "idx_product_prices_seller_id", columnList = "seller_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor

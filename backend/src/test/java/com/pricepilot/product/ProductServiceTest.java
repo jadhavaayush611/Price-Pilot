@@ -113,4 +113,40 @@ public class ProductServiceTest {
         verify(productRepository, times(1)).findAll(any(Specification.class), any(PageRequest.class));
         verify(productPriceRepository, times(1)).findPricesWithSellersByProductIds(anyList());
     }
+
+    @Test
+    void testGetProductById_Success() {
+        // Arrange
+        UUID productId = product1.getId();
+        
+        SellerEntity seller = SellerEntity.builder().name("Amazon").websiteUrl("amazon.com").logoUrl("logo.png").build();
+        seller.setId(UUID.randomUUID());
+
+        ProductPriceEntity price = ProductPriceEntity.builder()
+                .product(product1)
+                .seller(seller)
+                .currentPrice(new BigDecimal("999.00"))
+                .originalPrice(new BigDecimal("1099.00"))
+                .discountPercentage(new BigDecimal("9.10"))
+                .lastUpdated(LocalDateTime.now())
+                .build();
+        price.setId(UUID.randomUUID());
+        
+        product1.setProductPrices(Arrays.asList(price));
+
+        when(productRepository.findByIdWithPricesAndSellers(productId)).thenReturn(java.util.Optional.of(product1));
+
+        // Act
+        com.pricepilot.product.dto.ProductResponseDTO result = productService.getProductById(productId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("iPhone 15 Pro", result.getName());
+        assertNotNull(result.getPrices());
+        assertEquals(1, result.getPrices().size());
+        assertEquals(new BigDecimal("999.00"), result.getPrices().get(0).getCurrentPrice());
+        assertEquals("Amazon", result.getPrices().get(0).getSeller().getName());
+
+        verify(productRepository, times(1)).findByIdWithPricesAndSellers(productId);
+    }
 }

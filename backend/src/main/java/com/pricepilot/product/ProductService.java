@@ -60,7 +60,7 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ProductResponseDTO getProductById(UUID id) {
-        ProductEntity entity = productRepository.findById(id)
+        ProductEntity entity = productRepository.findByIdWithPricesAndSellers(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
         ProductResponseDTO dto = ProductResponseDTO.fromEntity(entity);
         if (entity.getProductPrices() != null) {
