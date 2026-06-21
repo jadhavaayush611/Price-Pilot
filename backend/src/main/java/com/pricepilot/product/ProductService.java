@@ -5,17 +5,23 @@ import com.pricepilot.product.dto.ProductRequestDTO;
 import com.pricepilot.product.dto.ProductResponseDTO;
 import com.pricepilot.product.dto.ProductSearchResultDTO;
 import com.pricepilot.product.dto.ProductPriceSearchResultDTO;
+import com.pricepilot.product.dto.KeysetPageResponse;
+import com.pricepilot.product.dto.PageResponse;
 import com.pricepilot.productprice.ProductPriceEntity;
 import com.pricepilot.productprice.ProductPriceRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +39,10 @@ public class ProductService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "product-searches", allEntries = true),
+        @CacheEvict(value = "popular-products", allEntries = true)
+    })
     public ProductResponseDTO createProduct(ProductRequestDTO requestDTO) {
         ProductEntity entity = ProductEntity.builder()
                 .name(requestDTO.getName())
@@ -59,6 +69,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "product-details", key = "#id")
     public ProductResponseDTO getProductById(UUID id) {
         ProductEntity entity = productRepository.findByIdWithPricesAndSellers(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
@@ -83,6 +94,11 @@ public class ProductService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "product-details", key = "#id"),
+        @CacheEvict(value = "product-searches", allEntries = true),
+        @CacheEvict(value = "popular-products", allEntries = true)
+    })
     public ProductResponseDTO updateProduct(UUID id, ProductRequestDTO requestDTO) {
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
@@ -98,6 +114,11 @@ public class ProductService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "product-details", key = "#id"),
+        @CacheEvict(value = "product-searches", allEntries = true),
+        @CacheEvict(value = "popular-products", allEntries = true)
+    })
     public void deleteProduct(UUID id) {
         if (!productRepository.existsById(id)) {
             throw new ResourceNotFoundException("Product not found with id: " + id);
@@ -106,7 +127,8 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ProductSearchResultDTO> searchProducts(
+    @Cacheable(value = "product-searches", key = "T(java.util.Objects).hash(#keyword, #category, #brand, #page, #size, #sortStr)")
+    public PageResponse<ProductSearchResultDTO> searchProducts(
             String keyword,
             String category,
             String brand,
@@ -139,8 +161,8 @@ public class ProductService {
                 }
                 sort = Sort.by(direction, property);
             }
-        } else {
-            // Default sort
+        } else if (keyword == null || keyword.trim().isEmpty()) {
+            // Default sort by createdAt only if keyword search is NOT active (since keyword search applies FTS ranking order)
             sort = Sort.by(Sort.Direction.DESC, "createdAt");
         }
 
@@ -153,7 +175,7 @@ public class ProductService {
         Page<ProductEntity> productPage = productRepository.findAll(spec, pageable);
 
         if (productPage.isEmpty()) {
-            return Page.empty(pageable);
+            return PageResponse.from(productPage, java.util.Collections.emptyList());
         }
 
         // Gather all product IDs to load their associated prices in a single query (prevents N+1)
@@ -167,7 +189,7 @@ public class ProductService {
         Map<UUID, List<ProductPriceEntity>> pricesByProductId = prices.stream()
                 .collect(Collectors.groupingBy(p -> p.getProduct().getId()));
 
-        return productPage.map(product -> {
+        List<ProductSearchResultDTO> contentList = productPage.getContent().stream().map(product -> {
             List<ProductPriceEntity> productPrices = pricesByProductId.getOrDefault(product.getId(), List.of());
             List<ProductPriceSearchResultDTO> priceDTOs = productPrices.stream()
                     .map(ProductPriceSearchResultDTO::fromEntity)
@@ -188,6 +210,81 @@ public class ProductService {
             dto.setLowestPrice(lowest);
             dto.setHighestPrice(highest);
             return dto;
-        });
+        }).collect(Collectors.toList());
+
+        return PageResponse.from(productPage, contentList);
+    }
+
+    @Transactional(readOnly = true)
+    public KeysetPageResponse<ProductResponseDTO> getProductsKeyset(String cursor, int limit, String direction) {
+        List<ProductEntity> results;
+        PageRequest pageRequest = PageRequest.of(0, limit + 1); // request limit + 1 to check hasMore
+
+        if (cursor == null || cursor.trim().isEmpty()) {
+            results = productRepository.findFirstPage(pageRequest);
+        } else {
+            try {
+                int underscoreIdx = cursor.lastIndexOf('_');
+                if (underscoreIdx == -1) {
+                    throw new IllegalArgumentException("Invalid cursor format");
+                }
+                String timeStr = cursor.substring(0, underscoreIdx);
+                String uuidStr = cursor.substring(underscoreIdx + 1);
+                
+                java.time.LocalDateTime createdAt = java.time.LocalDateTime.parse(timeStr);
+                UUID id = UUID.fromString(uuidStr);
+
+                if ("prev".equalsIgnoreCase(direction)) {
+                    results = productRepository.findPrevPage(createdAt, id, pageRequest);
+                } else {
+                    results = productRepository.findNextPage(createdAt, id, pageRequest);
+                }
+            } catch (Exception e) {
+                // Fall back to first page on invalid cursor
+                results = productRepository.findFirstPage(pageRequest);
+            }
+        }
+
+        boolean hasMore = results.size() > limit;
+        List<ProductEntity> pageContent = hasMore ? new ArrayList<>(results.subList(0, limit)) : new ArrayList<>(results);
+
+        // If we queried 'prev' page, the results are in ASC order (to get closest items),
+        // we must reverse them to return them in DESC order (newest first).
+        if (cursor != null && "prev".equalsIgnoreCase(direction)) {
+            java.util.Collections.reverse(pageContent);
+        }
+
+        List<ProductResponseDTO> contentDTOs = pageContent.stream()
+                .map(ProductResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+
+        String nextCursor = null;
+        String prevCursor = null;
+
+        if (!contentDTOs.isEmpty()) {
+            // Next cursor is for retrieving older items (further down the list)
+            ProductResponseDTO lastItem = contentDTOs.get(contentDTOs.size() - 1);
+            nextCursor = lastItem.getCreatedAt().toString() + "_" + lastItem.getId().toString();
+
+            // Prev cursor is for retrieving newer items (further up the list)
+            ProductResponseDTO firstItem = contentDTOs.get(0);
+            prevCursor = firstItem.getCreatedAt().toString() + "_" + firstItem.getId().toString();
+        }
+
+        return KeysetPageResponse.<ProductResponseDTO>builder()
+                .content(contentDTOs)
+                .nextCursor(nextCursor)
+                .prevCursor(prevCursor)
+                .hasMore(hasMore)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "popular-products")
+    public List<ProductResponseDTO> getPopularProducts(int limit) {
+        List<ProductEntity> entities = productRepository.findPopularProducts(PageRequest.of(0, limit));
+        return entities.stream()
+                .map(ProductResponseDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 }

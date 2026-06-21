@@ -16,17 +16,18 @@ public class ProductSpecifications {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // 1. Keyword search (partial matching on name, brand, category, and description)
+            // 1. Keyword search (using PostgreSQL Full Text Search GIN index)
             if (keyword != null && !keyword.trim().isEmpty()) {
-                String pattern = "%" + keyword.trim().toLowerCase() + "%";
-                Predicate namePred = cb.like(cb.lower(root.get("name")), pattern);
-                Predicate brandPred = cb.like(cb.lower(root.get("brand")), pattern);
-                Predicate catPred = cb.like(cb.lower(root.get("category")), pattern);
-                
-                // Let's also support matching description safely
-                Predicate descPred = cb.like(cb.lower(root.get("description")), pattern);
-                
-                predicates.add(cb.or(namePred, brandPred, catPred, descPred));
+                Predicate ftsMatch = cb.isTrue(
+                    cb.function("fts_match", Boolean.class, root.get("searchVector"), cb.literal(keyword.trim()))
+                );
+                predicates.add(ftsMatch);
+
+                // Add FTS-based ranking support to default search order if sorting isn't explicitly configured
+                if (customSortField == null && query.getResultType() != Long.class && query.getResultType() != long.class) {
+                    Expression<Double> rankExpr = cb.function("fts_rank", Double.class, root.get("searchVector"), cb.literal(keyword.trim()));
+                    query.orderBy(cb.desc(rankExpr));
+                }
             }
 
             // 2. Category filter (case-insensitive)

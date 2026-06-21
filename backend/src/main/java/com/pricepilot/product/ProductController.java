@@ -38,6 +38,23 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
+    @GetMapping("/popular")
+    public ResponseEntity<java.util.List<ProductResponseDTO>> getPopularProducts(
+            @RequestParam(defaultValue = "10") int limit) {
+        java.util.List<ProductResponseDTO> popular = productService.getPopularProducts(limit);
+        return ResponseEntity.ok(popular);
+    }
+
+    @GetMapping("/keyset")
+    public ResponseEntity<com.pricepilot.product.dto.KeysetPageResponse<ProductResponseDTO>> getProductsKeyset(
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(defaultValue = "next") String direction) {
+        com.pricepilot.product.dto.KeysetPageResponse<ProductResponseDTO> response = 
+                productService.getProductsKeyset(cursor, limit, direction);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable UUID id) {
         ProductResponseDTO product = productService.getProductById(id);

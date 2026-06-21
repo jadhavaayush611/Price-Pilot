@@ -59,6 +59,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/health").permitAll()
                 .requestMatchers("/api/v1/search/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
                 
                 // Protected Endpoints
                 .requestMatchers(HttpMethod.POST, "/api/v1/products").hasAnyRole("USER", "ADMIN")

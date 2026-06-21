@@ -45,6 +45,9 @@ public class ProductEntity extends BaseEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "search_vector", columnDefinition = "tsvector", insertable = false, updatable = false)
+    private String searchVector;
+
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ProductPriceEntity> productPrices = new ArrayList<>();

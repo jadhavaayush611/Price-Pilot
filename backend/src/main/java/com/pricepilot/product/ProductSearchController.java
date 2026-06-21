@@ -1,7 +1,7 @@
 package com.pricepilot.product;
 
+import com.pricepilot.product.dto.PageResponse;
 import com.pricepilot.product.dto.ProductSearchResultDTO;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +17,7 @@ public class ProductSearchController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductSearchResultDTO>> search(
+    public ResponseEntity<PageResponse<ProductSearchResultDTO>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String brand,
@@ -25,7 +25,7 @@ public class ProductSearchController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sort) {
         
-        Page<ProductSearchResultDTO> results = productService.searchProducts(
+        PageResponse<ProductSearchResultDTO> results = productService.searchProducts(
                 keyword, category, brand, page, size, sort);
         return ResponseEntity.ok(results);
     }
