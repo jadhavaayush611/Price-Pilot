@@ -62,7 +62,24 @@ public class ProductService {
     public ProductResponseDTO getProductById(UUID id) {
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-        return ProductResponseDTO.fromEntity(entity);
+        ProductResponseDTO dto = ProductResponseDTO.fromEntity(entity);
+        if (entity.getProductPrices() != null) {
+            dto.setPrices(entity.getProductPrices().stream()
+                    .map(priceEntity -> com.pricepilot.productprice.dto.ProductPriceResponseDTO.builder()
+                            .id(priceEntity.getId())
+                            .currentPrice(priceEntity.getCurrentPrice())
+                            .originalPrice(priceEntity.getOriginalPrice())
+                            .discountPercentage(priceEntity.getDiscountPercentage())
+                            .productUrl(priceEntity.getProductUrl())
+                            .lastUpdated(priceEntity.getLastUpdated())
+                            .seller(com.pricepilot.seller.dto.SellerResponseDTO.fromEntity(priceEntity.getSeller()))
+                            .createdAt(priceEntity.getCreatedAt())
+                            .updatedAt(priceEntity.getUpdatedAt())
+                            .build()
+                    )
+                    .collect(java.util.stream.Collectors.toList()));
+        }
+        return dto;
     }
 
     @Transactional

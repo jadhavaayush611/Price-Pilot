@@ -1,268 +1,138 @@
-# PricePilot Architecture
+# PricePilot Architecture Overview
 
-## System Vision
-
-PricePilot follows a clean layered architecture designed for maintainability, scalability, and backend engineering best practices.
+PricePilot follows a clean, layered architecture designed for separation of concerns, scalability, and ease of maintainability.
 
 ---
 
-# High Level Architecture
+## 1. High-Level System Architecture
 
-User
-│
-▼
-React Frontend
-│
-▼
-Spring Boot REST API
-│
-▼
-Service Layer
-│
-▼
-Repository Layer
-│
-▼
-PostgreSQL
+The project consists of three primary tiers:
 
----
-
-# Backend Architecture
-
-## Layer Structure
-
-Controller
-→ Service
-→ Repository
-→ Database
-
----
-
-## Controller Layer
-
-Responsibilities:
-
-* Receive HTTP requests
-* Validate request structure
-* Return HTTP responses
-
-Rules:
-
-* No business logic
-* No database access
+```
+┌────────────────────────────────────────────────────────┐
+│                   Client Browser                       │
+│  - Executes React UI & Framer Motion animations        │
+│  - Communicates with API via Axios (using localhost)   │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           │ HTTP/REST (Port 80/8080)
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│             Nginx Frontend Container (Port 80)          │
+│  - Serves static compiled React & HTML/CSS/JS assets   │
+│  - Custom routing resolves paths to index.html         │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           │ Internal Network API Calls
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│          Spring Boot Backend Container (Port 8080)     │
+│  - Active Profile: Prod (Java 25 runtime environment)  │
+│  - Manages REST endpoints, mappings, validations       │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           │ PostgreSQL TCP (Port 5432)
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│            PostgreSQL DB Container (Port 5432)         │
+│  - Persistent Volume: postgres_data                    │
+│  - Source of truth for products, sellers, and prices  │
+└────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Service Layer
+## 2. Backend Design Patterns
 
-Responsibilities:
+The backend code is organized into feature-driven packages and strictly implements the standard **Controller → Service → Repository** model:
 
-* Business logic
-* Validation rules
-* Product search logic
-* Price comparison logic
+```
+User Request ──> Controller ──> Service ──> Repository ──> PostgreSQL
+      DTO <── Response DTO <── Service <── JPA Entity <── Database
+```
 
-Examples:
-
-* Calculate discount percentages
-* Aggregate seller results
-* Sort product pricing
-
----
-
-## Repository Layer
-
-Responsibilities:
-
-* Database interaction
-* Query execution
-* Pagination
-* Search optimization
-
-Technology:
-
-* Spring Data JPA
-* JPQL
-* Native Queries (when required)
+### Layer Responsibilities
+1. **Controller Layer (REST Endpoints):**
+   * Exposes endpoints (e.g. `ProductController`, `SellerController`).
+   * Handles HTTP routing, input validation (`jakarta.validation.Valid`), and CORS headers (`@CrossOrigin(origins = "*")`).
+   * **Rule:** Controllers never communicate with the database directly. They accept Request DTOs and return Response DTOs.
+2. **Service Layer (Business Logic):**
+   * Encapsulates core algorithms (e.g. `ProductService`, `ProductPriceService`).
+   * Computes price comparisons, discount amounts, and discount percentages.
+   * Handles transactional boundaries (`@Transactional`).
+   * Maps database entities to DTOs.
+   * **Rule:** Services orchestrate domain updates and use repositories to read/write database state.
+3. **Repository Layer (Data Access):**
+   * Declares interfaces (e.g. `ProductRepository`, `ProductPriceRepository`) extending `JpaRepository`.
+   * Implements custom queries (JPQL or Specifications) for multi-faceted filters and sorting.
+   * **Rule:** Isolated to SQL execution and Hibernate translation.
 
 ---
 
-## Database Layer
+## 3. Database Schema & Domain Relationships
 
-Technology:
+The data model connects products to multiple competing sellers via the price record:
 
-* PostgreSQL
+```mermaid
+erDiagram
+    Product ||--o{ ProductPrice : has_prices
+    Seller ||--o{ ProductPrice : lists_prices
+    
+    Product {
+        UUID id PK
+        varchar name
+        varchar brand
+        text description
+        varchar category
+        varchar imageUrl
+        timestamp createdAt
+        timestamp updatedAt
+    }
 
-Primary Goal:
+    Seller {
+        UUID id PK
+        varchar name
+        varchar websiteUrl
+        varchar logoUrl
+        timestamp createdAt
+        timestamp updatedAt
+    }
 
-* Source of truth
+    ProductPrice {
+        UUID id PK
+        UUID productId FK
+        UUID sellerId FK
+        numeric currentPrice
+        numeric originalPrice
+        numeric discountPercentage
+        varchar productUrl
+        timestamp lastUpdated
+        timestamp createdAt
+        timestamp updatedAt
+    }
+```
 
----
-
-# Domain Model
-
-## Product
-
-Represents a searchable product.
-
-Fields:
-
-* id
-* name
-* brand
-* description
-* category
-* imageUrl
-
----
-
-## Seller
-
-Represents a marketplace or vendor.
-
-Fields:
-
-* id
-* name
-* websiteUrl
-* logoUrl
-
----
-
-## ProductPrice
-
-Represents seller-specific pricing.
-
-Fields:
-
-* id
-* productId
-* sellerId
-* currentPrice
-* originalPrice
-* discountPercentage
-* productUrl
-* lastUpdated
+* **One-to-Many Relationships:**
+  * One `Product` has many `ProductPrice` entries.
+  * One `Seller` has many `ProductPrice` entries.
+* **Many-to-One Relationships:**
+  * `ProductPrice` references exactly one `Product` and one `Seller`.
 
 ---
 
-# Relationships
+## 4. Frontend Architecture
 
-Product
-
-1 → Many ProductPrice
-
-Seller
-
-1 → Many ProductPrice
-
-ProductPrice
-
-Many → 1 Product
-
-Many → 1 Seller
+The frontend is a lightweight Single Page Application (SPA) built on React 19, TypeScript, and Vite 8:
+* **Tailwind CSS v4:** Handles all modern styling, utilizing utility classes.
+* **Framer Motion:** Power-packs high-end responsive animations and micro-interactions for a premium feel.
+* **Lucide Icons:** Provides standard high-quality system icons.
+* **Axios API Client:** Coordinates JSON data fetch requests from the backend API.
+* **Environment variables:** Resolves `import.meta.env.VITE_API_BASE_URL` to route requests to the container-exposed backend.
 
 ---
 
-# Search Flow
+## 5. Deployment Orchestration
 
-User Search
-↓
-Search Controller
-↓
-Search Service
-↓
-Repository Query
-↓
-PostgreSQL
-↓
-DTO Mapping
-↓
-Frontend
-
----
-
-# Frontend Architecture
-
-## Design Principles
-
-Inspired by:
-
-* Vercel
-* Linear
-* Stripe
-
-Characteristics:
-
-* Minimal
-* Fast
-* Premium
-* Responsive
-* Motion-driven
-
----
-
-## Structure
-
-src/
-
-components/
-features/
-pages/
-services/
-hooks/
-types/
-lib/
-
----
-
-# Future Architecture
-
-Phase 2
-
-* JWT Authentication
-* User Profiles
-* Search History
-
-Phase 3
-
-* Redis Caching
-* Price Alerts
-* Background Jobs
-
-Phase 4
-
-* AI Recommendations
-* Product Similarity Search
-* Semantic Search
-
-Phase 5
-
-* Microservice Migration (Optional)
-
----
-
-# Non Functional Goals
-
-Performance
-
-* Search response < 500ms
-
-Scalability
-
-* Horizontal scaling support
-
-Maintainability
-
-* Clear separation of concerns
-
-Security
-
-* JWT authentication
-* Input validation
-
-Reliability
-
-* Global exception handling
-* Logging
-* Monitoring
+* **Health Orchestration:** Prevents the backend from starting before the database is ready, and prevents the frontend from starting before the backend is ready.
+* **Docker Network:** All three services communicate on a private bridge network (`pricepilot-network`). Only backend and frontend ports are exposed to the host machine for safety.
+* **Data Volume:** Persists PostgreSQL records across container restarts (`postgres_data`).

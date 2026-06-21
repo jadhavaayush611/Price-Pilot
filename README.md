@@ -1,151 +1,85 @@
 # PricePilot
 
-## Overview
-
-PricePilot is a modern product price comparison platform that helps users discover the best available prices for products across multiple sellers.
-
-Users can:
-
-* Search products
-* Compare seller prices
-* View discounts and offers
-* Sort by best deals
-* Redirect to seller websites
-* Track product pricing (future)
-* Receive price alerts (future)
-
-The platform is not a marketplace and does not process payments.
-
-Its primary objective is to act as a search and comparison engine for consumer products.
+PricePilot is a modern, high-performance product price comparison search engine that compiles and standardizes pricing across multiple sellers, highlighting the best available discounts for consumer products.
 
 ---
 
-## Tech Stack
+## 🚀 Quick Start with Docker
 
-### Backend
-
-* Java 21
-* Spring Boot 3
-* Spring Data JPA
-* Hibernate
-* PostgreSQL
-* Maven
-
-### Frontend
-
-* React
-* Vite
-* TypeScript
-* TailwindCSS
-* ShadCN UI
-* Framer Motion
-
-### Future Technologies
-
-* Redis
-* Docker
-* AWS
-* Vector Databases
-* AI Recommendation Engine
-
----
-
-## Project Goals
-
-### Technical Goals
-
-* Learn production-grade Spring Boot development
-* Implement layered architecture
-* Apply JPA relationships correctly
-* Build scalable REST APIs
-* Practice PostgreSQL optimization
-* Build a modern React frontend
-
-### Product Goals
-
-* Fast search experience
-* Clean and minimal UI
-* Reliable product comparison
-* Seller redirection
-* Extensible architecture
-
----
-
-## Core Features
-
-### MVP
-
-* Product search
-* Product listing
-* Seller listing
-* Price comparison
-* Discount calculation
-* Seller redirection
-
-### Future Features
-
-* Authentication
-* User profiles
-* Search history
-* Saved products
-* Price alerts
-* Affiliate integrations
-* AI-powered recommendations
-* Product trend analysis
-
----
-
-## Local Development
-
-### Backend
+You can launch the complete database, API, and React frontend with a single command:
 
 ```bash
-cd backend
-
-./mvnw spring-boot:run
+docker compose up --build
 ```
 
+* **Frontend UI:** `http://localhost/`
+* **Backend API Health Check:** `http://localhost:8080/api/v1/health`
+
+For more configuration details, check out the [Deployment Guide](docs/DEPLOYMENT.md).
+
+---
+
+## 📖 Project Documentation
+
+Detailed guides are available to help you understand, run, or extend the project:
+
+* 📐 **[Architecture Overview](ARCHITECTURE.md)**: Explore system design, database models, ER diagrams, and backend layering.
+* 💾 **[Installation Guide](docs/INSTALLATION.md)**: Steps to install and run the project manually on your host machine (without Docker).
+* 🚢 **[Deployment Guide](docs/DEPLOYMENT.md)**: Detailed instructions on Docker builds, container health checks, and port customizations.
+* 🔌 **[API Documentation](docs/API_DOCUMENTATION.md)**: Full REST API specs for products, sellers, prices, search parameters, and exception handling.
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+* **Java 25** (latest LTS standard)
+* **Spring Boot 4.1.0** (REST Framework & MVC)
+* **Spring Data JPA** (Data persistence layer)
+* **Hibernate 7.x** (ORM dialect mapper)
+* **PostgreSQL 15** (Source of truth)
+* **Maven** (Dependency builder)
+
 ### Frontend
+* **React 19**
+* **Vite 8**
+* **TypeScript**
+* **Tailwind CSS v4** (Utility layout engine)
+* **ShadCN UI** (Component structure)
+* **Framer Motion** (Micro-interactions and transitions)
 
-```bash
-cd frontend
+---
 
-npm install
-npm run dev
+## 📁 Repository Structure
+
+```
+PricePilot/
+├── backend/            # Spring Boot Maven application
+│   ├── src/            # Java classes, properties, and tests
+│   ├── Dockerfile      # Backend container instructions
+│   └── pom.xml         # Maven project descriptors
+├── frontend/           # React TypeScript application
+│   ├── src/            # Components, pages, and services
+│   ├── Dockerfile      # Frontend container instructions
+│   ├── nginx.conf      # Routing rules for production static server
+│   └── package.json    # Frontend dependency mappings
+├── docs/               # System documentation
+│   ├── API_DOCUMENTATION.md
+│   ├── INSTALLATION.md
+│   └── DEPLOYMENT.md
+├── docker-compose.yml  # Local multi-container orchestration
+├── .env                # Global configuration environment variables
+├── ARCHITECTURE.md     # Architecture documentation
+└── README.md           # Project overview
 ```
 
 ---
 
-## Repository Structure
+## 🌟 Core Features
 
-pricepilot/
-
-├── backend/
-├── frontend/
-├── docs/
-├── README.md
-├── ROADMAP.md
-├── ARCHITECTURE.md
-└── INSTRUCTIONS.md
-
----
-
-## Learning Objectives
-
-This project serves as a practical backend engineering project focused on:
-
-* REST APIs
-* Spring Boot internals
-* Database design
-* System design principles
-* Full-stack integration
-* Production readiness
-
----
-
-## Status
-
-Current Stage:
-
-* **Phase 1 — Foundation Setup**: Complete
-* Next up: **Phase 2 — Product Domain & CRUD APIs**
+* **Advanced Search Filters:** Filter by category, brand, and search keywords.
+* **Smart Sorting:** Sort search results dynamically by lowest price or highest discount.
+* **Best Deal Badging:** Identifies and tags the absolute best discount option automatically.
+* **Direct Redirections:** Quick redirection paths to vendor websites.
+* **Comprehensive API Validation:** Robust input validation and global exception handlers.
+* **Containerized Health Checks:** Dedicated health check paths mapping server status.

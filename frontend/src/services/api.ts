@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { Product, ProductWithPrices, Seller, ProductPrice } from '../types';
 
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -224,10 +224,7 @@ export const apiService = {
   async getProduct(id: string): Promise<ProductWithPrices | null> {
     try {
       const response = await apiClient.get(`/products/${id}`);
-      return {
-        ...response.data,
-        prices: [],
-      };
+      return response.data;
     } catch (error) {
       console.warn(`Failed to get product ${id} from API, trying mock data`);
       await new Promise((resolve) => setTimeout(resolve, 200));
