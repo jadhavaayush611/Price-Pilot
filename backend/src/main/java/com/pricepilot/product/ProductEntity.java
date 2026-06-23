@@ -45,6 +45,10 @@ public class ProductEntity extends BaseEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean archived = false;
+
     @Column(name = "search_vector", columnDefinition = "tsvector", insertable = false, updatable = false)
     private String searchVector;
 

@@ -48,3 +48,14 @@ export interface User {
   enabled: boolean;
 }
 
+export interface SavedProduct {
+  productId: string;
+  name: string;
+  brand: string;
+  category: string;
+  imageUrl: string;
+  bestPrice: number | null;
+  savedAt: string;
+}
+
+

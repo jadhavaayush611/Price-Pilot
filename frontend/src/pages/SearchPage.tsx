@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
 import { SearchBar } from '../components/SearchBar';
@@ -7,9 +7,12 @@ import { SearchFilters } from '../components/SearchFilters';
 import { SearchResults } from '../components/SearchResults';
 import { SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 
 export const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   
   // Extract state from URL query parameters (supports 'keyword' or legacy 'q')
   const query = searchParams.get('keyword') || searchParams.get('q') || '';
@@ -23,6 +26,7 @@ export const SearchPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [savedProductIds, setSavedProductIds] = useState<string[]>([]);
 
   // Available categories and brands extracted from active search results
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -94,6 +98,38 @@ export const SearchPage: React.FC = () => {
         setLoading(false);
       });
   }, [query, urlCategory, urlBrand, urlPage, urlSort]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      apiService.getSavedProducts()
+        .then((saved) => {
+          setSavedProductIds(saved.map(sp => sp.productId));
+        })
+        .catch(err => console.error("Error loading saved products:", err));
+    } else {
+      setSavedProductIds([]);
+    }
+  }, [isAuthenticated]);
+
+  const handleToggleSave = async (productId: string) => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: '/search', search: searchParams.toString() } } });
+      return;
+    }
+
+    const isAlreadySaved = savedProductIds.includes(productId);
+    try {
+      if (isAlreadySaved) {
+        await apiService.removeProduct(productId);
+        setSavedProductIds(prev => prev.filter(id => id !== productId));
+      } else {
+        await apiService.saveProduct(productId);
+        setSavedProductIds(prev => [...prev, productId]);
+      }
+    } catch (err) {
+      console.error("Failed to toggle save:", err);
+    }
+  };
 
   // Handlers
   const handleKeywordChange = (newKeyword: string) => {
@@ -208,6 +244,8 @@ export const SearchPage: React.FC = () => {
             totalPages={totalPages}
             totalElements={totalElements}
             onPageChange={handlePageChange}
+            savedProductIds={savedProductIds}
+            onToggleSave={handleToggleSave}
           />
         </section>
       </div>

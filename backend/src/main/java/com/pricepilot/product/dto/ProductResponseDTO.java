@@ -22,6 +22,7 @@ public class ProductResponseDTO {
     private String category;
     private String description;
     private String imageUrl;
+    private boolean archived;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<com.pricepilot.productprice.dto.ProductPriceResponseDTO> prices;
@@ -37,6 +38,7 @@ public class ProductResponseDTO {
                 .category(entity.getCategory())
                 .description(entity.getDescription())
                 .imageUrl(entity.getImageUrl())
+                .archived(entity.isArchived())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

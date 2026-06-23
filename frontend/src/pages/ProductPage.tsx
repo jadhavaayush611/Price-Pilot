@@ -2,18 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
-import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List } from 'lucide-react';
+import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice } from '../lib/utils';
 import { SellerCard } from '../components/SellerCard';
+import { useAuth } from '../context/AuthContext';
 
 export const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [product, setProduct] = useState<ProductWithPrices | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
+  const [isSaved, setIsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -30,6 +34,38 @@ export const ProductPage: React.FC = () => {
         });
     }
   }, [id]);
+
+  useEffect(() => {
+    if (id && isAuthenticated) {
+      apiService.getSavedProducts()
+        .then((saved) => {
+          setIsSaved(saved.some(sp => sp.productId === id));
+        })
+        .catch(err => console.error("Error checking saved state:", err));
+    }
+  }, [id, isAuthenticated]);
+
+  const handleToggleSave = async () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: `/product/${id}` } } });
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      if (isSaved) {
+        await apiService.removeProduct(id!);
+        setIsSaved(false);
+      } else {
+        await apiService.saveProduct(id!);
+        setIsSaved(true);
+      }
+    } catch (err) {
+      console.error("Failed to toggle save state:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Motion animation config
   const pageVariants = {
@@ -200,9 +236,23 @@ export const ProductPage: React.FC = () => {
             <span className="px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 font-bold tracking-widest uppercase shadow-inner">
               {product.category}
             </span>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white mt-4 mb-2 leading-tight">
-              {product.name}
-            </h1>
+            <div className="flex items-start justify-between gap-4 mt-4 mb-2">
+              <h1 className="text-3xl font-extrabold tracking-tight text-white leading-tight">
+                {product.name}
+              </h1>
+              <button
+                onClick={handleToggleSave}
+                disabled={saving}
+                className={`flex items-center justify-center p-3 rounded-xl border transition-all cursor-pointer active:scale-95 shrink-0 ${
+                  isSaved 
+                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20' 
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+                }`}
+                title={isSaved ? "Remove from Saved" : "Save Product"}
+              >
+                <Heart className={`h-5 w-5 ${isSaved ? 'fill-current text-rose-500' : ''} ${saving ? 'animate-pulse' : ''}`} />
+              </button>
+            </div>
             <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-zinc-500 uppercase">
               <span>Brand: {product.brand}</span>
             </div>

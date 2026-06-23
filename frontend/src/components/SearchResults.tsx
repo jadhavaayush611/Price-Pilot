@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ProductWithPrices } from '../types';
-import { ChevronLeft, ChevronRight, Inbox, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Inbox, ArrowRight, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface SearchResultsProps {
@@ -11,6 +11,8 @@ interface SearchResultsProps {
   totalPages: number;
   totalElements: number;
   onPageChange: (newPage: number) => void;
+  savedProductIds?: string[];
+  onToggleSave?: (productId: string) => void;
 }
 
 export const SearchResults: React.FC<SearchResultsProps> = ({
@@ -19,7 +21,9 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   page,
   totalPages,
   totalElements,
-  onPageChange
+  onPageChange,
+  savedProductIds = [],
+  onToggleSave
 }) => {
   const navigate = useNavigate();
 
@@ -106,6 +110,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
             ? Math.max(...product.prices.map((p) => p.discountPercentage))
             : 0;
           const lowest = product.lowestPrice;
+          const isSaved = savedProductIds.includes(product.id);
 
           return (
             <motion.div
@@ -130,6 +135,23 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                       (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=600';
                     }}
                   />
+                  {onToggleSave && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleSave(product.id);
+                      }}
+                      className={`absolute top-3 left-3 p-2 rounded-lg backdrop-blur-md transition-all active:scale-95 shadow-md border ${
+                        isSaved
+                          ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
+                          : 'bg-zinc-950/60 border-zinc-900/80 text-zinc-400 hover:text-white hover:bg-zinc-950'
+                      }`}
+                      title={isSaved ? "Remove from Saved" : "Save Product"}
+                    >
+                      <Heart className={`h-4 w-4 ${isSaved ? 'fill-current text-rose-500' : ''}`} />
+                    </button>
+                  )}
                   {maxDiscount > 0 && (
                     <span className="absolute top-3 right-3 px-2.5 py-1 rounded bg-rose-500/90 backdrop-blur-sm text-[10px] font-bold text-white tracking-wider uppercase shadow-md">
                       Save {maxDiscount.toFixed(0)}%

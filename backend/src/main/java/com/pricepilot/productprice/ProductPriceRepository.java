@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.pricepilot.productprice.dto.BestPriceProjection;
+
 import java.util.UUID;
 
 @Repository
@@ -25,4 +27,10 @@ public interface ProductPriceRepository extends JpaRepository<ProductPriceEntity
            "JOIN FETCH pp.seller s " +
            "WHERE pp.product.id IN :productIds")
     java.util.List<ProductPriceEntity> findPricesWithSellersByProductIds(@Param("productIds") java.util.List<UUID> productIds);
+
+    @Query("SELECT pp.product.id AS productId, MIN(pp.currentPrice) AS bestPrice " +
+           "FROM ProductPriceEntity pp " +
+           "WHERE pp.product.id IN :productIds " +
+           "GROUP BY pp.product.id")
+    java.util.List<BestPriceProjection> findBestPricesByProductIds(@Param("productIds") java.util.List<UUID> productIds);
 }

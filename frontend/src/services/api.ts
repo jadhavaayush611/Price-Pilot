@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 
@@ -366,5 +366,58 @@ export const apiService = {
   async getCurrentUser(): Promise<User> {
     const response = await apiClient.get('/users/me');
     return response.data;
+  },
+
+  // Saved Products Operations (Real API with fallback)
+  async getSavedProducts(): Promise<SavedProduct[]> {
+    try {
+      const response = await apiClient.get('/users/saved-products');
+      return response.data;
+    } catch (error) {
+      console.warn('Backend saved products fetch failed, using fallback mock data');
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const savedIds = JSON.parse(localStorage.getItem('saved_product_ids') || '[]');
+      return MOCK_PRODUCTS
+        .filter(p => savedIds.includes(p.id))
+        .map(p => ({
+          productId: p.id,
+          name: p.name,
+          brand: p.brand,
+          category: p.category,
+          imageUrl: p.imageUrl,
+          bestPrice: p.lowestPrice || null,
+          savedAt: new Date().toISOString()
+        }));
+    }
+  },
+
+  async saveProduct(productId: string): Promise<void> {
+    try {
+      await apiClient.post(`/users/saved-products/${productId}`);
+    } catch (error: any) {
+      if (error.response && error.response.status === 409) {
+        throw new Error('Product already saved');
+      }
+      if (error.response && error.response.status === 404) {
+        throw new Error('Product not found');
+      }
+      console.warn('Backend save product failed, simulating locally');
+      const savedIds = JSON.parse(localStorage.getItem('saved_product_ids') || '[]');
+      if (!savedIds.includes(productId)) {
+        savedIds.push(productId);
+        localStorage.setItem('saved_product_ids', JSON.stringify(savedIds));
+      }
+    }
+  },
+
+  async removeProduct(productId: string): Promise<void> {
+    try {
+      await apiClient.delete(`/users/saved-products/${productId}`);
+    } catch (error) {
+      console.warn('Backend remove product failed, simulating locally');
+      let savedIds = JSON.parse(localStorage.getItem('saved_product_ids') || '[]');
+      savedIds = savedIds.filter((id: string) => id !== productId);
+      localStorage.setItem('saved_product_ids', JSON.stringify(savedIds));
+    }
   }
 };

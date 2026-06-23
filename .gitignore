@@ -73,3 +73,5 @@ build/
 *.db
 *.sqlite
 *.sqlite3
+
+docs/technical_debts.md

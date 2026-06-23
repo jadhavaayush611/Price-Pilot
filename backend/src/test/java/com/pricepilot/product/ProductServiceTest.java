@@ -1,6 +1,7 @@
 package com.pricepilot.product;
 
 import com.pricepilot.product.dto.ProductSearchResultDTO;
+import com.pricepilot.product.dto.PageResponse;
 import com.pricepilot.productprice.ProductPriceEntity;
 import com.pricepilot.productprice.ProductPriceRepository;
 import com.pricepilot.seller.SellerEntity;
@@ -98,11 +99,15 @@ public class ProductServiceTest {
                 .thenReturn(Arrays.asList(price1, price2));
 
         // Act
-        Page<ProductSearchResultDTO> results = productService.searchProducts("phone", "Electronics", "All", 0, 10, "price-asc");
+        PageResponse<ProductSearchResultDTO> results = productService.searchProducts("phone", "Electronics", "All", 0, 10, "price-asc");
 
         // Assert
         assertNotNull(results);
         assertEquals(2, results.getContent().size());
+        assertEquals(0, results.getNumber());
+        assertEquals(2, results.getSize());
+        assertEquals(2L, results.getTotalElements());
+        assertEquals(1, results.getTotalPages());
 
         ProductSearchResultDTO dto1 = results.getContent().get(0);
         assertEquals("iPhone 15 Pro", dto1.getName());

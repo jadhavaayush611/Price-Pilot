@@ -25,6 +25,7 @@ public class ProductSearchResultDTO {
     private String category;
     private String description;
     private String imageUrl;
+    private boolean archived;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -46,6 +47,7 @@ public class ProductSearchResultDTO {
                 .category(entity.getCategory())
                 .description(entity.getDescription())
                 .imageUrl(entity.getImageUrl())
+                .archived(entity.isArchived())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

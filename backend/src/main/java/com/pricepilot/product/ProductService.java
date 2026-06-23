@@ -50,6 +50,7 @@ public class ProductService {
                 .category(requestDTO.getCategory())
                 .description(requestDTO.getDescription())
                 .imageUrl(requestDTO.getImageUrl())
+                .archived(requestDTO.isArchived())
                 .build();
         
         ProductEntity savedEntity = productRepository.save(entity);
@@ -108,6 +109,7 @@ public class ProductService {
         entity.setCategory(requestDTO.getCategory());
         entity.setDescription(requestDTO.getDescription());
         entity.setImageUrl(requestDTO.getImageUrl());
+        entity.setArchived(requestDTO.isArchived());
 
         ProductEntity updatedEntity = productRepository.save(entity);
         return ProductResponseDTO.fromEntity(updatedEntity);
