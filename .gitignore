@@ -75,3 +75,4 @@ build/
 *.sqlite3
 
 docs/technical_debts.md
+docs/watchlist_architecture_documentation.md

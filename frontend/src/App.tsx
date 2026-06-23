@@ -11,6 +11,7 @@ import { PriceManagementPage } from './pages/PriceManagementPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { SavedProductsPage } from './pages/SavedProductsPage';
+import { WatchlistPage } from './pages/WatchlistPage';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -42,6 +43,14 @@ export const App: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <SavedProductsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/watchlist"
+                element={
+                  <ProtectedRoute>
+                    <WatchlistPage />
                   </ProtectedRoute>
                 }
               />

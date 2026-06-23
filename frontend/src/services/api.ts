@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 
@@ -418,6 +418,111 @@ export const apiService = {
       let savedIds = JSON.parse(localStorage.getItem('saved_product_ids') || '[]');
       savedIds = savedIds.filter((id: string) => id !== productId);
       localStorage.setItem('saved_product_ids', JSON.stringify(savedIds));
+    }
+  },
+
+  // Watchlist Operations (Real API with fallback)
+  async getWatchlists(): Promise<Watchlist[]> {
+    try {
+      const response = await apiClient.get('/watchlists');
+      return response.data;
+    } catch (error) {
+      console.warn('Backend get watchlists failed, using fallback mock data');
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return JSON.parse(localStorage.getItem('price_watchlists') || '[]');
+    }
+  },
+
+  async createWatchlist(productId: string, targetPrice: number): Promise<Watchlist> {
+    try {
+      const response = await apiClient.post('/watchlists', { productId, targetPrice });
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.status === 409) {
+        throw new Error('You are already watching this product');
+      }
+      if (error.response && error.response.status === 400) {
+        throw new Error(error.response.data?.message || 'Invalid target price');
+      }
+      console.warn('Backend create watchlist failed, simulating locally');
+      
+      const watchlists: Watchlist[] = JSON.parse(localStorage.getItem('price_watchlists') || '[]');
+      if (watchlists.some(w => w.productId === productId)) {
+        throw new Error('You are already watching this product');
+      }
+
+      // Find product name and current price from mock products
+      const product = MOCK_PRODUCTS.find(p => p.id === productId);
+      if (!product) {
+        throw new Error('Product not found');
+      }
+
+      const bestPrice = product.lowestPrice || 67999;
+      if (targetPrice >= bestPrice) {
+        throw new Error(`Target price must be less than the current best price (₹${bestPrice.toLocaleString()})`);
+      }
+
+      const newWatchlist: Watchlist = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
+        productId,
+        productName: product.name,
+        brand: product.brand,
+        imageUrl: product.imageUrl,
+        targetPrice,
+        currentBestPrice: bestPrice,
+        priceDifference: bestPrice - targetPrice,
+        active: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      watchlists.push(newWatchlist);
+      localStorage.setItem('price_watchlists', JSON.stringify(watchlists));
+      return newWatchlist;
+    }
+  },
+
+  async updateWatchlist(id: string, targetPrice: number, active?: boolean): Promise<Watchlist> {
+    try {
+      const response = await apiClient.put(`/watchlists/${id}`, { targetPrice, active });
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.status === 400) {
+        throw new Error(error.response.data?.message || 'Invalid target price');
+      }
+      console.warn('Backend update watchlist failed, simulating locally');
+      const watchlists: Watchlist[] = JSON.parse(localStorage.getItem('price_watchlists') || '[]');
+      const index = watchlists.findIndex(w => w.id === id);
+      if (index === -1) {
+        throw new Error('Watchlist entry not found');
+      }
+
+      const w = watchlists[index];
+      if (targetPrice >= w.currentBestPrice) {
+        throw new Error(`Target price must be less than the current best price (₹${w.currentBestPrice.toLocaleString()})`);
+      }
+
+      w.targetPrice = targetPrice;
+      if (active !== undefined) {
+        w.active = active;
+      }
+      w.priceDifference = w.currentBestPrice - targetPrice;
+      w.updatedAt = new Date().toISOString();
+
+      watchlists[index] = w;
+      localStorage.setItem('price_watchlists', JSON.stringify(watchlists));
+      return w;
+    }
+  },
+
+  async deleteWatchlist(id: string): Promise<void> {
+    try {
+      await apiClient.delete(`/watchlists/${id}`);
+    } catch (error) {
+      console.warn('Backend delete watchlist failed, simulating locally');
+      let watchlists: Watchlist[] = JSON.parse(localStorage.getItem('price_watchlists') || '[]');
+      watchlists = watchlists.filter(w => w.id !== id);
+      localStorage.setItem('price_watchlists', JSON.stringify(watchlists));
     }
   }
 };

@@ -58,4 +58,18 @@ export interface SavedProduct {
   savedAt: string;
 }
 
+export interface Watchlist {
+  id: string;
+  productId: string;
+  productName: string;
+  brand: string;
+  imageUrl: string;
+  targetPrice: number;
+  currentBestPrice: number;
+  priceDifference: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 

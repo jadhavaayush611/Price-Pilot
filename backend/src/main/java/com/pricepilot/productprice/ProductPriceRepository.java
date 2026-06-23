@@ -33,4 +33,7 @@ public interface ProductPriceRepository extends JpaRepository<ProductPriceEntity
            "WHERE pp.product.id IN :productIds " +
            "GROUP BY pp.product.id")
     java.util.List<BestPriceProjection> findBestPricesByProductIds(@Param("productIds") java.util.List<UUID> productIds);
+
+    @Query("SELECT MIN(pp.currentPrice) FROM ProductPriceEntity pp WHERE pp.product.id = :productId")
+    java.util.Optional<java.math.BigDecimal> findBestPriceByProductId(@Param("productId") UUID productId);
 }

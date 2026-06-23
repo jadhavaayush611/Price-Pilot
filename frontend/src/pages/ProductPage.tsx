@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
-import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart } from 'lucide-react';
+import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice } from '../lib/utils';
 import { SellerCard } from '../components/SellerCard';
@@ -18,6 +18,14 @@ export const ProductPage: React.FC = () => {
   const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Watchlist specific states
+  const [isTracking, setIsTracking] = useState(false);
+  const [watchlistEntry, setWatchlistEntry] = useState<any>(null);
+  const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+  const [targetPriceInput, setTargetPriceInput] = useState('');
+  const [trackingError, setTrackingError] = useState<string | null>(null);
+  const [isSubmittingTracking, setIsSubmittingTracking] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -45,6 +53,29 @@ export const ProductPage: React.FC = () => {
     }
   }, [id, isAuthenticated]);
 
+  const fetchWatchlistState = async () => {
+    if (id && isAuthenticated) {
+      try {
+        const watchlists = await apiService.getWatchlists();
+        const matched = watchlists.find(w => w.productId === id);
+        if (matched) {
+          setIsTracking(true);
+          setWatchlistEntry(matched);
+          setTargetPriceInput(matched.targetPrice.toString());
+        } else {
+          setIsTracking(false);
+          setWatchlistEntry(null);
+        }
+      } catch (err) {
+        console.error("Error checking watchlist state:", err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchWatchlistState();
+  }, [id, isAuthenticated, product]);
+
   const handleToggleSave = async () => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: { pathname: `/product/${id}` } } });
@@ -64,6 +95,75 @@ export const ProductPage: React.FC = () => {
       console.error("Failed to toggle save state:", err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleOpenTrackingModal = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: `/product/${id}` } } });
+      return;
+    }
+    
+    // Set default target price if not set
+    if (watchlistEntry) {
+      setTargetPriceInput(watchlistEntry.targetPrice.toString());
+    } else {
+      const best = lowestPrice || (product && product.prices && product.prices[0]?.currentPrice) || 0;
+      setTargetPriceInput(Math.floor(best * 0.9).toString());
+    }
+    setTrackingError(null);
+    setIsTrackingModalOpen(true);
+  };
+
+  const handleSaveTracking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = parseFloat(targetPriceInput);
+    if (isNaN(target) || target <= 0) {
+      setTrackingError("Target price must be greater than zero");
+      return;
+    }
+
+    const best = lowestPrice || (product && product.prices && product.prices[0]?.currentPrice) || 0;
+    if (target >= best) {
+      setTrackingError(`Target price must be strictly less than the current best price (${formatPrice(best, currency)})`);
+      return;
+    }
+
+    setIsSubmittingTracking(true);
+    setTrackingError(null);
+
+    try {
+      if (isTracking && watchlistEntry) {
+        // Update existing watchlist
+        const updated = await apiService.updateWatchlist(watchlistEntry.id, target);
+        setWatchlistEntry(updated);
+      } else {
+        // Create new watchlist
+        const created = await apiService.createWatchlist(id!, target);
+        setIsTracking(true);
+        setWatchlistEntry(created);
+      }
+      setIsTrackingModalOpen(false);
+    } catch (err: any) {
+      setTrackingError(err.message || "Failed to update tracking preference");
+    } finally {
+      setIsSubmittingTracking(false);
+    }
+  };
+
+  const handleRemoveTracking = async () => {
+    if (!watchlistEntry) return;
+    setIsSubmittingTracking(true);
+    setTrackingError(null);
+    try {
+      await apiService.deleteWatchlist(watchlistEntry.id);
+      setIsTracking(false);
+      setWatchlistEntry(null);
+      setIsTrackingModalOpen(false);
+    } catch (err: any) {
+      setTrackingError(err.message || "Failed to remove watchlist entry");
+    } finally {
+      setIsSubmittingTracking(false);
     }
   };
 
@@ -240,18 +340,33 @@ export const ProductPage: React.FC = () => {
               <h1 className="text-3xl font-extrabold tracking-tight text-white leading-tight">
                 {product.name}
               </h1>
-              <button
-                onClick={handleToggleSave}
-                disabled={saving}
-                className={`flex items-center justify-center p-3 rounded-xl border transition-all cursor-pointer active:scale-95 shrink-0 ${
-                  isSaved 
-                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20' 
-                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
-                }`}
-                title={isSaved ? "Remove from Saved" : "Save Product"}
-              >
-                <Heart className={`h-5 w-5 ${isSaved ? 'fill-current text-rose-500' : ''} ${saving ? 'animate-pulse' : ''}`} />
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handleOpenTrackingModal}
+                  className={`flex items-center gap-1.5 px-4.5 py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                    isTracking
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                      : 'bg-white hover:bg-zinc-200 text-black border-transparent font-extrabold shadow-md'
+                  }`}
+                  title="Track Price & Get Notified"
+                >
+                  <Bell className={`h-4 w-4 ${isTracking ? 'fill-current' : ''}`} />
+                  <span>{isTracking ? `Tracking at ${formatPrice(watchlistEntry?.targetPrice, currency)}` : 'Track Price'}</span>
+                </button>
+
+                <button
+                  onClick={handleToggleSave}
+                  disabled={saving}
+                  className={`flex items-center justify-center p-3 rounded-xl border transition-all cursor-pointer active:scale-95 shrink-0 ${
+                    isSaved 
+                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20' 
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+                  }`}
+                  title={isSaved ? "Remove from Saved" : "Save Product"}
+                >
+                  <Heart className={`h-5 w-5 ${isSaved ? 'fill-current text-rose-500' : ''} ${saving ? 'animate-pulse' : ''}`} />
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-zinc-500 uppercase">
               <span>Brand: {product.brand}</span>
@@ -512,6 +627,151 @@ export const ProductPage: React.FC = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Price Watchlist Modal */}
+      <AnimatePresence>
+        {isTrackingModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+            {/* Background click handler to close */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsTrackingModalOpen(false)}
+              className="absolute inset-0 cursor-default"
+            />
+
+            {/* Modal content */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: 'spring', duration: 0.3 }}
+              className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-zinc-900 bg-zinc-950 p-6 shadow-2xl"
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setIsTrackingModalOpen(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 transition-all cursor-pointer"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <Bell className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white leading-none">
+                    {isTracking ? 'Edit Price Watchlist' : 'Set Price Watchlist'}
+                  </h3>
+                  <p className="text-[11px] text-zinc-500 mt-1">
+                    Get alerted when this product drops below your target price.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-4 p-3.5 rounded-xl bg-zinc-900/40 border border-zinc-900 flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Product</span>
+                  <span className="text-xs font-semibold text-zinc-200 line-clamp-1 mt-0.5">{product.name}</span>
+                </div>
+                <div className="flex flex-col text-right shrink-0">
+                  <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Best Price</span>
+                  <span className="text-sm font-extrabold text-emerald-400 mt-0.5">
+                    {formatPrice(lowestPrice || product.prices?.[0]?.currentPrice || 0, currency)}
+                  </span>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveTracking} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="targetPrice" className="text-xs font-bold text-zinc-400">
+                    Target Price ({currency === 'INR' ? '₹' : '$'})
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-500 font-bold">
+                      {currency === 'INR' ? '₹' : '$'}
+                    </span>
+                    <input
+                      id="targetPrice"
+                      type="number"
+                      required
+                      placeholder="Enter target price"
+                      value={targetPriceInput}
+                      onChange={(e) => setTargetPriceInput(e.target.value)}
+                      className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-bold text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-700 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Discounts Suggestions */}
+                <div className="flex flex-col gap-2">
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Quick Select Target</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[0.95, 0.9, 0.85].map((factor) => {
+                      const best = lowestPrice || product.prices?.[0]?.currentPrice || 0;
+                      const discounted = Math.floor(best * factor);
+                      const pct = Math.round((1 - factor) * 100);
+                      return (
+                        <button
+                          key={factor}
+                          type="button"
+                          onClick={() => setTargetPriceInput(discounted.toString())}
+                          className="px-2 py-1.5 rounded-lg border border-zinc-900 hover:border-zinc-800 bg-zinc-955 hover:bg-zinc-900 text-[10px] font-bold text-zinc-400 hover:text-white transition-all cursor-pointer text-center"
+                        >
+                          {pct}% Off ({currency === 'INR' ? '₹' : '$'}{discounted.toLocaleString()})
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {trackingError && (
+                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-400 flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>{trackingError}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-3 mt-2 pt-4 border-t border-zinc-900">
+                  {isTracking ? (
+                    <button
+                      type="button"
+                      onClick={handleRemoveTracking}
+                      disabled={isSubmittingTracking}
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Remove</span>
+                    </button>
+                  ) : (
+                    <div />
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsTrackingModalOpen(false)}
+                      disabled={isSubmittingTracking}
+                      className="px-4 py-2.5 text-xs font-bold text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingTracking}
+                      className="px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-extrabold transition-all shadow-md cursor-pointer active:scale-95 disabled:opacity-50"
+                    >
+                      {isSubmittingTracking ? 'Saving...' : isTracking ? 'Update Track' : 'Start Tracking'}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
