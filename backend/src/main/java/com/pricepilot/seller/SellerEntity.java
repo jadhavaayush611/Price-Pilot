@@ -2,6 +2,7 @@ package com.pricepilot.seller;
 
 import com.pricepilot.common.BaseEntity;
 import com.pricepilot.productprice.ProductPriceEntity;
+import com.pricepilot.pricehistory.PriceHistoryEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,4 +32,8 @@ public class SellerEntity extends BaseEntity {
     @OneToMany(mappedBy = "seller", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ProductPriceEntity> productPrices = new ArrayList<>();
+
+    @OneToMany(mappedBy = "seller", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<PriceHistoryEntity> priceHistories = new ArrayList<>();
 }

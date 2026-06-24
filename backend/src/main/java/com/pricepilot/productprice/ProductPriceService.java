@@ -7,6 +7,7 @@ import com.pricepilot.seller.SellerEntity;
 import com.pricepilot.seller.SellerRepository;
 import com.pricepilot.productprice.dto.ProductPriceRequestDTO;
 import com.pricepilot.productprice.dto.ProductPriceResponseDTO;
+import com.pricepilot.pricehistory.PriceHistoryService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,16 @@ public class ProductPriceService {
     private final ProductPriceRepository productPriceRepository;
     private final ProductRepository productRepository;
     private final SellerRepository sellerRepository;
+    private final PriceHistoryService priceHistoryService;
 
     public ProductPriceService(ProductPriceRepository productPriceRepository,
                                ProductRepository productRepository,
-                               SellerRepository sellerRepository) {
+                               SellerRepository sellerRepository,
+                               PriceHistoryService priceHistoryService) {
         this.productPriceRepository = productPriceRepository;
         this.productRepository = productRepository;
         this.sellerRepository = sellerRepository;
+        this.priceHistoryService = priceHistoryService;
     }
 
     @Transactional
@@ -79,13 +83,21 @@ public class ProductPriceService {
         // Validate prices before updating
         validatePrices(requestDTO);
 
+        java.math.BigDecimal oldPrice = entity.getCurrentPrice();
+        java.math.BigDecimal newPrice = requestDTO.getCurrentPrice();
+
         entity.setProduct(product);
         entity.setSeller(seller);
-        entity.setCurrentPrice(requestDTO.getCurrentPrice());
+        entity.setCurrentPrice(newPrice);
         entity.setOriginalPrice(requestDTO.getOriginalPrice());
         entity.setProductUrl(requestDTO.getProductUrl());
 
         ProductPriceEntity updatedEntity = productPriceRepository.save(entity);
+
+        if (oldPrice.compareTo(newPrice) != 0) {
+            priceHistoryService.recordPriceHistory(product, seller, oldPrice, newPrice);
+        }
+
         return ProductPriceResponseDTO.fromEntity(updatedEntity);
     }
 

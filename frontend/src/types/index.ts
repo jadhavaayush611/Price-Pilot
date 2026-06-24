@@ -72,4 +72,17 @@ export interface Watchlist {
   updatedAt: string;
 }
 
+export interface PriceHistory {
+  id: string;
+  productId: string;
+  productName: string;
+  sellerId: string;
+  sellerName: string;
+  oldPrice: number;
+  newPrice: number;
+  priceDifference: number;
+  changePercentage: number;
+  changedAt: string;
+}
+
 

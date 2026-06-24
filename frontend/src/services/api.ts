@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 
@@ -523,6 +523,77 @@ export const apiService = {
       let watchlists: Watchlist[] = JSON.parse(localStorage.getItem('price_watchlists') || '[]');
       watchlists = watchlists.filter(w => w.id !== id);
       localStorage.setItem('price_watchlists', JSON.stringify(watchlists));
+    }
+  },
+
+  // Get price history for a product
+  async getProductPriceHistory(
+    productId: string,
+    page: number,
+    size: number
+  ): Promise<{
+    content: PriceHistory[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number;
+  }> {
+    try {
+      const response = await apiClient.get(`/products/${productId}/price-history`, {
+        params: { page, size, sort: 'changedAt,desc' }
+      });
+      return response.data;
+    } catch (error) {
+      console.warn(`Failed to get price history for product ${productId}, using fallback mock data`);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      
+      // Let's generate mock history for a realistic chart/table
+      const mockHistory: PriceHistory[] = [
+        {
+          id: 'ph1',
+          productId,
+          productName: 'iPhone 15 Pro Max (256GB, Space Black)',
+          sellerId: 's1',
+          sellerName: 'Amazon',
+          oldPrice: 67999,
+          newPrice: 64999,
+          priceDifference: -3000,
+          changePercentage: -4.41,
+          changedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days ago
+        },
+        {
+          id: 'ph2',
+          productId,
+          productName: 'iPhone 15 Pro Max (256GB, Space Black)',
+          sellerId: 's2',
+          sellerName: 'Best Buy',
+          oldPrice: 65999,
+          newPrice: 67999,
+          priceDifference: 2000,
+          changePercentage: 3.03,
+          changedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() // 5 days ago
+        },
+        {
+          id: 'ph3',
+          productId,
+          productName: 'iPhone 15 Pro Max (256GB, Space Black)',
+          sellerId: 's1',
+          sellerName: 'Amazon',
+          oldPrice: 69999,
+          newPrice: 67999,
+          priceDifference: -2000,
+          changePercentage: -2.86,
+          changedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() // 10 days ago
+        }
+      ];
+      
+      return {
+        content: mockHistory,
+        totalPages: 1,
+        totalElements: mockHistory.length,
+        size,
+        number: page
+      };
     }
   }
 };

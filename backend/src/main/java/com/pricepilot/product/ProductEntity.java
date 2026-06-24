@@ -15,6 +15,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import com.pricepilot.productprice.ProductPriceEntity;
+import com.pricepilot.pricehistory.PriceHistoryEntity;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,5 +56,9 @@ public class ProductEntity extends BaseEntity {
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ProductPriceEntity> productPrices = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<PriceHistoryEntity> priceHistories = new ArrayList<>();
 }
 

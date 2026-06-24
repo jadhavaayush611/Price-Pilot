@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice } from '../lib/utils';
 import { SellerCard } from '../components/SellerCard';
 import { useAuth } from '../context/AuthContext';
+import { PriceHistorySection } from '../components/PriceHistorySection';
 
 export const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -627,6 +628,10 @@ export const ProductPage: React.FC = () => {
           </div>
         )}
       </motion.div>
+
+      {product && (
+        <PriceHistorySection productId={product.id} currency={currency} />
+      )}
 
       {/* Price Watchlist Modal */}
       <AnimatePresence>
