@@ -23,7 +23,7 @@ For more configuration details, check out the [Deployment Guide](docs/DEPLOYMENT
 
 Detailed guides are available to help you understand, run, or extend the project:
 
-* 📐 **[Architecture Overview](ARCHITECTURE.md)**: Explore system design, database models, ER diagrams, and backend layering.
+* 📐 **[Architecture Overview](docs/ARCHITECTURE.md)**: Explore system design, database models, ER diagrams, and backend layering.
 * 💾 **[Installation Guide](docs/INSTALLATION.md)**: Steps to install and run the project manually on your host machine (without Docker).
 * 🚢 **[Deployment Guide](docs/DEPLOYMENT.md)**: Detailed instructions on Docker builds, container health checks, and port customizations.
 * 🔌 **[API Documentation](docs/API_DOCUMENTATION.md)**: Full REST API specs for products, sellers, prices, search parameters, and exception handling.

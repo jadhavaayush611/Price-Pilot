@@ -32,6 +32,7 @@ public class PriceWatchlistService {
     private final ProductAnalyticsService productAnalyticsService;
 
     private final UserInteractionEventService eventService;
+    private final com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper;
 
     public PriceWatchlistService(
             PriceWatchlistRepository watchlistRepository,
@@ -39,13 +40,15 @@ public class PriceWatchlistService {
             UserRepository userRepository,
             ProductPriceRepository productPriceRepository,
             ProductAnalyticsService productAnalyticsService,
-            UserInteractionEventService eventService) {
+            UserInteractionEventService eventService,
+            com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper) {
         this.watchlistRepository = watchlistRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.productPriceRepository = productPriceRepository;
         this.productAnalyticsService = productAnalyticsService;
         this.eventService = eventService;
+        this.cacheHelper = cacheHelper;
     }
 
     @Transactional
@@ -86,6 +89,7 @@ public class PriceWatchlistService {
 
         PriceWatchlistEntity saved = watchlistRepository.save(watchlist);
         productAnalyticsService.incrementWatchlistCount(product.getId());
+        cacheHelper.evictUserCaches(user.getId());
 
         eventService.trackEvent(
                 email,
@@ -129,10 +133,10 @@ public class PriceWatchlistService {
             watchlist.setActive(requestDTO.getActive());
         }
 
-        // Keep currentBestPrice updated to current best price on modification
         watchlist.setCurrentBestPrice(bestPrice);
 
         PriceWatchlistEntity updated = watchlistRepository.save(watchlist);
+        cacheHelper.evictUserCaches(watchlist.getUser().getId());
         return WatchlistResponseDTO.fromEntity(updated);
     }
 
@@ -147,6 +151,7 @@ public class PriceWatchlistService {
 
         watchlistRepository.delete(watchlist);
         productAnalyticsService.decrementWatchlistCount(watchlist.getProduct().getId());
+        cacheHelper.evictUserCaches(watchlist.getUser().getId());
 
         eventService.trackEvent(
                 email,

@@ -28,16 +28,19 @@ public class UserInteractionEventService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final SellerRepository sellerRepository;
+    private final com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper;
 
     public UserInteractionEventService(
             UserInteractionEventRepository eventRepository,
             UserRepository userRepository,
             ProductRepository productRepository,
-            SellerRepository sellerRepository) {
+            SellerRepository sellerRepository,
+            com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.sellerRepository = sellerRepository;
+        this.cacheHelper = cacheHelper;
     }
 
     /**
@@ -75,6 +78,10 @@ public class UserInteractionEventService {
                 .build();
 
         eventRepository.save(event);
+
+        if (user != null) {
+            cacheHelper.evictUserCaches(user.getId());
+        }
     }
 
     /**

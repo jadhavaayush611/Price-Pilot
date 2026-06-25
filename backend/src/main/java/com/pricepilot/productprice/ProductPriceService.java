@@ -22,15 +22,18 @@ public class ProductPriceService {
     private final ProductRepository productRepository;
     private final SellerRepository sellerRepository;
     private final PriceHistoryService priceHistoryService;
+    private final com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper;
 
     public ProductPriceService(ProductPriceRepository productPriceRepository,
                                ProductRepository productRepository,
                                SellerRepository sellerRepository,
-                               PriceHistoryService priceHistoryService) {
+                               PriceHistoryService priceHistoryService,
+                               com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper) {
         this.productPriceRepository = productPriceRepository;
         this.productRepository = productRepository;
         this.sellerRepository = sellerRepository;
         this.priceHistoryService = priceHistoryService;
+        this.cacheHelper = cacheHelper;
     }
 
     @Transactional
@@ -53,6 +56,7 @@ public class ProductPriceService {
                 .build();
 
         ProductPriceEntity savedEntity = productPriceRepository.save(entity);
+        cacheHelper.evictAllCaches();
         return ProductPriceResponseDTO.fromEntity(savedEntity);
     }
 
@@ -93,6 +97,7 @@ public class ProductPriceService {
         entity.setProductUrl(requestDTO.getProductUrl());
 
         ProductPriceEntity updatedEntity = productPriceRepository.save(entity);
+        cacheHelper.evictAllCaches();
 
         if (oldPrice.compareTo(newPrice) != 0) {
             priceHistoryService.recordPriceHistory(product, seller, oldPrice, newPrice);
@@ -107,6 +112,7 @@ public class ProductPriceService {
             throw new ResourceNotFoundException("Product price not found with id: " + id);
         }
         productPriceRepository.deleteById(id);
+        cacheHelper.evictAllCaches();
     }
 
     private void validatePrices(ProductPriceRequestDTO requestDTO) {

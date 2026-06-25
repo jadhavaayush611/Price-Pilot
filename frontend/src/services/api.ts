@@ -759,5 +759,97 @@ export const apiService = {
     } catch (error) {
       console.warn('Backend trackSellerClick failed', error);
     }
+  },
+
+  // Get recommendations (Real API with fallback)
+  async getRecommendations(params?: {
+    category?: string;
+    brand?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sort?: string;
+    page?: number;
+    size?: number;
+  }): Promise<{
+    content: ProductWithPrices[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number;
+  }> {
+    try {
+      const response = await apiClient.get('/recommendations', { params });
+      return response.data;
+    } catch (error) {
+      console.warn('Backend getRecommendations failed, using mock recommendations');
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return {
+        content: MOCK_PRODUCTS.slice(0, 2),
+        totalPages: 1,
+        totalElements: 2,
+        size: 10,
+        number: 0
+      };
+    }
+  },
+
+  // Get similar products (Real API with fallback)
+  async getSimilarProducts(productId: string, limit: number = 10): Promise<ProductWithPrices[]> {
+    try {
+      const response = await apiClient.get(`/recommendations/similar/${productId}`, { params: { limit } });
+      return response.data;
+    } catch (error) {
+      console.warn('Backend getSimilarProducts failed, using mock products');
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return MOCK_PRODUCTS.filter(p => p.id !== productId).slice(0, limit);
+    }
+  },
+
+  // Get dashboard data (Real API with fallback)
+  async getDashboard(): Promise<any> {
+    try {
+      const response = await apiClient.get('/dashboard');
+      return response.data;
+    } catch (error) {
+      console.warn('Backend getDashboard failed, constructing dashboard locally from fallbacks');
+      const [saved, watchlists, events, trending] = await Promise.all([
+        this.getSavedProducts().catch(() => []),
+        this.getWatchlists().catch(() => []),
+        this.getMyEvents(0, 20).catch(() => ({ content: [] })),
+        this.getTrendingProducts(10).catch(() => [])
+      ]);
+
+      const email = 'user@example.com';
+      const recentActivity = events.content;
+      const recentSearches = recentActivity
+        .filter((e: any) => e.interactionType === 'SEARCH')
+        .map((e: any) => e.metadata?.keyword)
+        .filter(Boolean);
+
+      const priceDropAlerts = watchlists.filter((w: any) => w.active && w.currentBestPrice <= w.targetPrice);
+
+      return {
+        firstName: 'Demo',
+        lastName: 'User',
+        email,
+        role: 'USER',
+        savedCount: saved.length,
+        watchlistCount: watchlists.length,
+        totalActivitiesCount: recentActivity.length,
+        activePriceAlertsCount: priceDropAlerts.length,
+        recommendations: MOCK_PRODUCTS.slice(0, 2),
+        recentlyViewed: MOCK_PRODUCTS.slice(2, 4),
+        priceDropAlerts,
+        trendingProducts: trending,
+        watchlists,
+        savedProducts: saved,
+        recentActivity,
+        recentSearches,
+        mostClickedSellers: [
+          { name: 'Amazon', count: 3 },
+          { name: 'Best Buy', count: 1 }
+        ]
+      };
+    }
   }
 };

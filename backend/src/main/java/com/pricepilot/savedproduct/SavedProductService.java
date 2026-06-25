@@ -33,6 +33,7 @@ public class SavedProductService {
     private final ProductAnalyticsService productAnalyticsService;
 
     private final UserInteractionEventService eventService;
+    private final com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper;
 
     public SavedProductService(
             SavedProductRepository savedProductRepository,
@@ -40,13 +41,15 @@ public class SavedProductService {
             UserRepository userRepository,
             ProductPriceRepository productPriceRepository,
             ProductAnalyticsService productAnalyticsService,
-            UserInteractionEventService eventService) {
+            UserInteractionEventService eventService,
+            com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper) {
         this.savedProductRepository = savedProductRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.productPriceRepository = productPriceRepository;
         this.productAnalyticsService = productAnalyticsService;
         this.eventService = eventService;
+        this.cacheHelper = cacheHelper;
     }
 
     @Transactional
@@ -74,6 +77,7 @@ public class SavedProductService {
 
         savedProductRepository.save(savedProduct);
         productAnalyticsService.incrementSaveCount(productId);
+        cacheHelper.evictUserCaches(user.getId());
 
         eventService.trackEvent(
                 email,
@@ -100,6 +104,7 @@ public class SavedProductService {
 
         savedProductRepository.deleteById(savedProductId);
         productAnalyticsService.decrementSaveCount(productId);
+        cacheHelper.evictUserCaches(user.getId());
 
         eventService.trackEvent(
                 email,

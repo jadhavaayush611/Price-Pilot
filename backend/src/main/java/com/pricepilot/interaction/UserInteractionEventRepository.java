@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.UUID;
@@ -54,4 +55,13 @@ public interface UserInteractionEventRepository
            "GROUP BY FUNCTION('jsonb_extract_path_text', e.metadata, 'keyword') " +
            "ORDER BY count DESC")
     List<AnalyticsCountProjection> findMostSearchedKeywords(Pageable pageable);
+
+    @Query("SELECT e FROM UserInteractionEventEntity e " +
+           "LEFT JOIN FETCH e.product p " +
+           "LEFT JOIN FETCH e.seller s " +
+           "WHERE e.user.id = :userId " +
+           "ORDER BY e.createdAt DESC")
+    List<UserInteractionEventEntity> findByUserIdWithRelations(@Param("userId") UUID userId, Pageable pageable);
+
+    long countByUserId(UUID userId);
 }

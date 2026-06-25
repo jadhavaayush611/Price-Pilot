@@ -66,6 +66,39 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, J
             "GROUP BY p " +
             "ORDER BY SUM(ph.priceDifference) ASC, p.id DESC")
     java.util.List<ProductEntity> findProductsWithBiggestDrops(org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT p FROM ProductEntity p " +
+            "LEFT JOIN FETCH p.productPrices pp " +
+            "LEFT JOIN FETCH pp.seller " +
+            "WHERE p.archived = false " +
+            "AND p.id NOT IN :excludedIds")
+    java.util.List<ProductEntity> findActiveProductsExcluding(
+            @org.springframework.data.repository.query.Param("excludedIds") java.util.Collection<java.util.UUID> excludedIds,
+            org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT p FROM ProductEntity p " +
+            "LEFT JOIN FETCH p.productPrices pp " +
+            "LEFT JOIN FETCH pp.seller " +
+            "WHERE p.archived = false " +
+            "AND p.id NOT IN :excludedIds " +
+            "AND (p.category IN :categories OR p.brand IN :brands)")
+    java.util.List<ProductEntity> findCandidateProducts(
+            @org.springframework.data.repository.query.Param("excludedIds") java.util.Collection<java.util.UUID> excludedIds,
+            @org.springframework.data.repository.query.Param("categories") java.util.Collection<String> categories,
+            @org.springframework.data.repository.query.Param("brands") java.util.Collection<String> brands,
+            org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT p FROM ProductEntity p " +
+            "LEFT JOIN FETCH p.productPrices pp " +
+            "LEFT JOIN FETCH pp.seller " +
+            "WHERE p.archived = false " +
+            "AND p.id <> :targetId " +
+            "AND (p.category = :category OR p.brand = :brand)")
+    java.util.List<ProductEntity> findSimilarCandidates(
+            @org.springframework.data.repository.query.Param("targetId") java.util.UUID targetId,
+            @org.springframework.data.repository.query.Param("category") String category,
+            @org.springframework.data.repository.query.Param("brand") String brand,
+            org.springframework.data.domain.Pageable pageable);
 }
 
 

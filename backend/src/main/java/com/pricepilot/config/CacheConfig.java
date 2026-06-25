@@ -37,7 +37,9 @@ public class CacheConfig {
                 .withInitialCacheConfigurations(Map.of(
                         "product-details", createCacheConfig(Duration.ofMinutes(30)),
                         "product-searches", createCacheConfig(Duration.ofMinutes(5)),
-                        "popular-products", createCacheConfig(Duration.ofMinutes(60))
+                        "popular-products", createCacheConfig(Duration.ofMinutes(60)),
+                        "recommendations", createCacheConfig(Duration.ofMinutes(10)),
+                        "dashboard", createCacheConfig(Duration.ofMinutes(5))
                 ))
                 .build();
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
 import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity } from 'lucide-react';
@@ -31,6 +31,7 @@ export const ProductPage: React.FC = () => {
   // Analytics states
   const [analytics, setAnalytics] = useState<any | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [similarProducts, setSimilarProducts] = useState<ProductWithPrices[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -44,6 +45,15 @@ export const ProductPage: React.FC = () => {
           setTimeout(() => {
             setLoading(false);
           }, 300);
+        });
+
+      // Fetch similar products
+      apiService.getSimilarProducts(id, 4)
+        .then((data) => {
+          setSimilarProducts(data);
+        })
+        .catch((err) => {
+          console.error("Error loading similar products:", err);
         });
 
       // Fetch analytics
@@ -750,6 +760,41 @@ export const ProductPage: React.FC = () => {
 
       {product && (
         <PriceHistorySection productId={product.id} currency={currency} />
+      )}
+
+      {similarProducts.length > 0 && (
+        <div className="flex flex-col gap-6 mt-12 border-t border-zinc-900 pt-12 text-left">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-indigo-400" />
+            Similar Products You Might Like
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {similarProducts.map((p) => {
+              const lowest = p.lowestPrice || (p.prices && p.prices.length > 0 ? Math.min(...p.prices.map(pr => pr.currentPrice)) : 0);
+              return (
+                <div key={p.id} className="bg-zinc-955 border border-zinc-900 hover:border-zinc-800 p-3 rounded-2xl flex flex-col gap-3 group relative overflow-hidden transition-all hover:bg-zinc-900/10">
+                  <div className="aspect-square w-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-900">
+                    <img src={p.imageUrl} alt={p.name} className="h-full w-full object-cover group-hover:scale-103 transition-transform duration-300" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <Link to={`/product/${p.id}`} className="text-white hover:text-blue-400 text-xs font-bold truncate block">
+                      {p.name}
+                    </Link>
+                    <span className="text-[9px] text-zinc-500 font-bold mt-0.5">{p.brand}</span>
+                    <div className="flex justify-between items-baseline mt-2">
+                      <span className="text-xs font-mono font-extrabold text-white">
+                        {lowest > 0 ? formatPrice(lowest, currency) : 'N/A'}
+                      </span>
+                      <Link to={`/product/${p.id}`} className="text-[10px] text-blue-450 font-bold hover:underline">
+                        View
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* Price Watchlist Modal */}
