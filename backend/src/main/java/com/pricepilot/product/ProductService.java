@@ -1,6 +1,7 @@
 package com.pricepilot.product;
 
 import com.pricepilot.exception.ResourceNotFoundException;
+import com.pricepilot.exception.InvalidCursorException;
 import com.pricepilot.product.dto.ProductRequestDTO;
 import com.pricepilot.product.dto.ProductResponseDTO;
 import com.pricepilot.product.dto.ProductSearchResultDTO;
@@ -246,7 +247,7 @@ public class ProductService {
             try {
                 int underscoreIdx = cursor.lastIndexOf('_');
                 if (underscoreIdx == -1) {
-                    throw new IllegalArgumentException("Invalid cursor format");
+                    throw new InvalidCursorException("Invalid cursor format");
                 }
                 String timeStr = cursor.substring(0, underscoreIdx);
                 String uuidStr = cursor.substring(underscoreIdx + 1);

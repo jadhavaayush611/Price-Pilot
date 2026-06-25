@@ -1,6 +1,8 @@
 package com.pricepilot.watchlist;
 
 import com.pricepilot.exception.DuplicateWatchlistException;
+import com.pricepilot.exception.ProductArchivedException;
+import com.pricepilot.exception.InvalidWatchlistPriceException;
 import com.pricepilot.exception.ResourceNotFoundException;
 import com.pricepilot.product.ProductEntity;
 import com.pricepilot.product.ProductRepository;
@@ -53,14 +55,24 @@ public class PriceWatchlistService {
 
     @Transactional
     public WatchlistResponseDTO createWatchlist(String email, CreateWatchlistRequestDTO requestDTO) {
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        UserEntity user;
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof com.pricepilot.security.UserPrincipal) {
+            com.pricepilot.security.UserPrincipal principal = (com.pricepilot.security.UserPrincipal) authentication.getPrincipal();
+            user = userRepository.getReferenceById(principal.getId());
+        } else {
+            user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        }
 
-        ProductEntity product = productRepository.findById(requestDTO.getProductId())
+        Object[] productAndBestPrice = productRepository.findProductAndBestPrice(requestDTO.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + requestDTO.getProductId()));
 
+        ProductEntity product = (ProductEntity) productAndBestPrice[0];
+        BigDecimal bestPrice = (BigDecimal) productAndBestPrice[1];
+
         if (product.isArchived()) {
-            throw new IllegalArgumentException("Product must be active");
+            throw new ProductArchivedException("Product must be active");
         }
 
         if (watchlistRepository.existsByUserIdAndProductId(user.getId(), product.getId())) {
@@ -69,14 +81,15 @@ public class PriceWatchlistService {
 
         BigDecimal targetPrice = requestDTO.getTargetPrice();
         if (targetPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Target price must be greater than zero");
+            throw new InvalidWatchlistPriceException("Target price must be greater than zero");
         }
 
-        BigDecimal bestPrice = productPriceRepository.findBestPriceByProductId(product.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Cannot track product: no prices found for this product"));
+        if (bestPrice == null) {
+            throw new InvalidWatchlistPriceException("Cannot track product: no prices found for this product");
+        }
 
         if (targetPrice.compareTo(bestPrice) >= 0) {
-            throw new IllegalArgumentException("Target price must be less than the current best price (" + bestPrice + ")");
+            throw new InvalidWatchlistPriceException("Target price must be less than the current best price (" + bestPrice + ")");
         }
 
         PriceWatchlistEntity watchlist = PriceWatchlistEntity.builder()
@@ -118,14 +131,14 @@ public class PriceWatchlistService {
 
         BigDecimal targetPrice = requestDTO.getTargetPrice();
         if (targetPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Target price must be greater than zero");
+            throw new InvalidWatchlistPriceException("Target price must be greater than zero");
         }
 
         BigDecimal bestPrice = productPriceRepository.findBestPriceByProductId(watchlist.getProduct().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Cannot track product: no prices found for this product"));
+                .orElseThrow(() -> new InvalidWatchlistPriceException("Cannot track product: no prices found for this product"));
 
         if (targetPrice.compareTo(bestPrice) >= 0) {
-            throw new IllegalArgumentException("Target price must be less than the current best price (" + bestPrice + ")");
+            throw new InvalidWatchlistPriceException("Target price must be less than the current best price (" + bestPrice + ")");
         }
 
         watchlist.setTargetPrice(targetPrice);

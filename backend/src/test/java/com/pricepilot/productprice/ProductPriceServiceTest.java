@@ -38,6 +38,9 @@ public class ProductPriceServiceTest {
     @Mock
     private PriceHistoryService priceHistoryService;
 
+    @Mock
+    private com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper;
+
     @InjectMocks
     private ProductPriceService productPriceService;
 

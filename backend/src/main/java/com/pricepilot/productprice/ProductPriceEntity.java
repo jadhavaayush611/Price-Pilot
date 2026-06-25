@@ -3,6 +3,7 @@ package com.pricepilot.productprice;
 import com.pricepilot.common.BaseEntity;
 import com.pricepilot.product.ProductEntity;
 import com.pricepilot.seller.SellerEntity;
+import com.pricepilot.exception.InvalidPriceException;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -51,19 +52,19 @@ public class ProductPriceEntity extends BaseEntity {
         this.lastUpdated = LocalDateTime.now();
 
         if (originalPrice == null || currentPrice == null) {
-            throw new IllegalArgumentException("Original price and current price must not be null");
+            throw new InvalidPriceException("Original price and current price must not be null");
         }
 
         if (originalPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Original price must be greater than zero");
+            throw new InvalidPriceException("Original price must be greater than zero");
         }
 
         if (currentPrice.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Current price cannot be negative");
+            throw new InvalidPriceException("Current price cannot be negative");
         }
 
         if (currentPrice.compareTo(originalPrice) > 0) {
-            throw new IllegalArgumentException("Current price cannot be greater than original price (invalid discount)");
+            throw new InvalidPriceException("Current price cannot be greater than original price (invalid discount)");
         }
 
         // Formula: ((originalPrice - currentPrice) / originalPrice) * 100

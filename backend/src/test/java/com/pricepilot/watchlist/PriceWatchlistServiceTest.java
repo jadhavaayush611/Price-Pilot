@@ -1,6 +1,8 @@
 package com.pricepilot.watchlist;
 
 import com.pricepilot.exception.DuplicateWatchlistException;
+import com.pricepilot.exception.ProductArchivedException;
+import com.pricepilot.exception.InvalidWatchlistPriceException;
 import com.pricepilot.exception.ResourceNotFoundException;
 import com.pricepilot.product.ProductEntity;
 import com.pricepilot.product.ProductRepository;
@@ -45,6 +47,12 @@ public class PriceWatchlistServiceTest {
 
     @Mock
     private com.pricepilot.analytics.ProductAnalyticsService productAnalyticsService;
+
+    @Mock
+    private com.pricepilot.interaction.UserInteractionEventService eventService;
+
+    @Mock
+    private com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper;
 
     @InjectMocks
     private PriceWatchlistService watchlistService;
@@ -107,9 +115,9 @@ public class PriceWatchlistServiceTest {
                 .build();
 
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(productRepository.findById(activeProduct.getId())).thenReturn(Optional.of(activeProduct));
+        when(productRepository.findProductAndBestPrice(activeProduct.getId()))
+                .thenReturn(Optional.of(new Object[] { activeProduct, new BigDecimal("67999.00") }));
         when(watchlistRepository.existsByUserIdAndProductId(user.getId(), activeProduct.getId())).thenReturn(false);
-        when(productPriceRepository.findBestPriceByProductId(activeProduct.getId())).thenReturn(Optional.of(new BigDecimal("67999.00")));
         when(watchlistRepository.save(any(PriceWatchlistEntity.class))).thenReturn(watchlist);
 
         WatchlistResponseDTO response = watchlistService.createWatchlist("test@example.com", request);
@@ -133,9 +141,10 @@ public class PriceWatchlistServiceTest {
                 .build();
 
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(productRepository.findById(archivedProduct.getId())).thenReturn(Optional.of(archivedProduct));
+        when(productRepository.findProductAndBestPrice(archivedProduct.getId()))
+                .thenReturn(Optional.of(new Object[] { archivedProduct, new BigDecimal("50000.00") }));
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+        ProductArchivedException ex = assertThrows(ProductArchivedException.class, () -> {
             watchlistService.createWatchlist("test@example.com", request);
         });
         assertEquals("Product must be active", ex.getMessage());
@@ -150,7 +159,8 @@ public class PriceWatchlistServiceTest {
                 .build();
 
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(productRepository.findById(activeProduct.getId())).thenReturn(Optional.of(activeProduct));
+        when(productRepository.findProductAndBestPrice(activeProduct.getId()))
+                .thenReturn(Optional.of(new Object[] { activeProduct, new BigDecimal("67999.00") }));
         when(watchlistRepository.existsByUserIdAndProductId(user.getId(), activeProduct.getId())).thenReturn(true);
 
         DuplicateWatchlistException ex = assertThrows(DuplicateWatchlistException.class, () -> {
@@ -168,11 +178,11 @@ public class PriceWatchlistServiceTest {
                 .build();
 
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
-        when(productRepository.findById(activeProduct.getId())).thenReturn(Optional.of(activeProduct));
+        when(productRepository.findProductAndBestPrice(activeProduct.getId()))
+                .thenReturn(Optional.of(new Object[] { activeProduct, new BigDecimal("67999.00") }));
         when(watchlistRepository.existsByUserIdAndProductId(user.getId(), activeProduct.getId())).thenReturn(false);
-        when(productPriceRepository.findBestPriceByProductId(activeProduct.getId())).thenReturn(Optional.of(new BigDecimal("67999.00")));
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+        InvalidWatchlistPriceException ex = assertThrows(InvalidWatchlistPriceException.class, () -> {
             watchlistService.createWatchlist("test@example.com", request);
         });
         assertTrue(ex.getMessage().contains("Target price must be less than the current best price"));

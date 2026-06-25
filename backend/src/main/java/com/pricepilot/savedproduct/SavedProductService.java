@@ -1,6 +1,7 @@
 package com.pricepilot.savedproduct;
 
 import com.pricepilot.exception.DuplicateSaveException;
+import com.pricepilot.exception.ProductArchivedException;
 import com.pricepilot.exception.ResourceNotFoundException;
 import com.pricepilot.product.ProductEntity;
 import com.pricepilot.product.ProductRepository;
@@ -61,7 +62,7 @@ public class SavedProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
 
         if (product.isArchived()) {
-            throw new IllegalArgumentException("Cannot save an archived product");
+            throw new ProductArchivedException("Cannot save an archived product");
         }
 
         SavedProductId savedProductId = new SavedProductId(user.getId(), product.getId());

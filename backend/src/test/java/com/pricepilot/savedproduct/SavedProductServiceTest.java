@@ -1,6 +1,7 @@
 package com.pricepilot.savedproduct;
 
 import com.pricepilot.exception.DuplicateSaveException;
+import com.pricepilot.exception.ProductArchivedException;
 import com.pricepilot.exception.ResourceNotFoundException;
 import com.pricepilot.product.ProductEntity;
 import com.pricepilot.product.ProductRepository;
@@ -41,6 +42,12 @@ public class SavedProductServiceTest {
 
     @Mock
     private com.pricepilot.analytics.ProductAnalyticsService productAnalyticsService;
+
+    @Mock
+    private com.pricepilot.interaction.UserInteractionEventService eventService;
+
+    @Mock
+    private com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper;
 
     @InjectMocks
     private SavedProductService savedProductService;
@@ -92,7 +99,7 @@ public class SavedProductServiceTest {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
         when(productRepository.findById(archivedProduct.getId())).thenReturn(Optional.of(archivedProduct));
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+        ProductArchivedException ex = assertThrows(ProductArchivedException.class, () -> {
             savedProductService.saveProduct("test@example.com", archivedProduct.getId());
         });
         assertEquals("Cannot save an archived product", ex.getMessage());

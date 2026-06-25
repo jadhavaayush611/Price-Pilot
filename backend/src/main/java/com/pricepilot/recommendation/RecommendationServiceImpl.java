@@ -1,6 +1,7 @@
 package com.pricepilot.recommendation;
 
 import com.pricepilot.ai.RecommendationService;
+import com.pricepilot.exception.ResourceNotFoundException;
 import com.pricepilot.product.ProductEntity;
 import com.pricepilot.product.ProductRepository;
 import com.pricepilot.product.dto.ProductResponseDTO;
@@ -220,7 +221,7 @@ public class RecommendationServiceImpl implements RecommendationService {
     @Cacheable(value = "recommendations", key = "'similar_' + T(java.util.Objects).hash(#productId, #limit)")
     public List<ProductResponseDTO> getSimilarProducts(UUID productId, int limit) {
         ProductEntity target = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
 
         // Get candidates that share category or brand
         List<ProductEntity> candidates = productRepository.findSimilarCandidates(

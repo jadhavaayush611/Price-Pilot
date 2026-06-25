@@ -99,6 +99,11 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, J
             @org.springframework.data.repository.query.Param("category") String category,
             @org.springframework.data.repository.query.Param("brand") String brand,
             org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT p, (SELECT MIN(pp.currentPrice) FROM ProductPriceEntity pp WHERE pp.product.id = p.id) " +
+            "FROM ProductEntity p " +
+            "WHERE p.id = :productId")
+    java.util.Optional<Object[]> findProductAndBestPrice(@org.springframework.data.repository.query.Param("productId") java.util.UUID productId);
 }
 
 

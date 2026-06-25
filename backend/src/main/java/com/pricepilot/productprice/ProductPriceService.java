@@ -1,6 +1,7 @@
 package com.pricepilot.productprice;
 
 import com.pricepilot.exception.ResourceNotFoundException;
+import com.pricepilot.exception.InvalidPriceException;
 import com.pricepilot.product.ProductEntity;
 import com.pricepilot.product.ProductRepository;
 import com.pricepilot.seller.SellerEntity;
@@ -117,13 +118,13 @@ public class ProductPriceService {
 
     private void validatePrices(ProductPriceRequestDTO requestDTO) {
         if (requestDTO.getOriginalPrice().compareTo(java.math.BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Original price must be greater than zero");
+            throw new InvalidPriceException("Original price must be greater than zero");
         }
         if (requestDTO.getCurrentPrice().compareTo(java.math.BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Current price cannot be negative");
+            throw new InvalidPriceException("Current price cannot be negative");
         }
         if (requestDTO.getCurrentPrice().compareTo(requestDTO.getOriginalPrice()) > 0) {
-            throw new IllegalArgumentException("Current price cannot be greater than original price (invalid discount)");
+            throw new InvalidPriceException("Current price cannot be greater than original price (invalid discount)");
         }
     }
 }

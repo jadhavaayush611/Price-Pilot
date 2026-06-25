@@ -45,7 +45,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             userEmail = jwtService.extractUsername(jwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                String role = jwtService.extractRole(jwt);
+                java.util.UUID userId = jwtService.extractUserId(jwt);
+
+                UserDetails userDetails;
+                if (role != null && userId != null) {
+                    userDetails = new UserPrincipal(
+                            userId,
+                            userEmail,
+                            "", // password is not needed for token validation
+                            com.pricepilot.user.Role.valueOf(role),
+                            true
+                    );
+                } else {
+                    userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                }
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
