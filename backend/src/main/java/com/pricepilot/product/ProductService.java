@@ -9,6 +9,8 @@ import com.pricepilot.product.dto.KeysetPageResponse;
 import com.pricepilot.product.dto.PageResponse;
 import com.pricepilot.productprice.ProductPriceEntity;
 import com.pricepilot.productprice.ProductPriceRepository;
+import com.pricepilot.analytics.ProductAnalyticsEntity;
+import com.pricepilot.analytics.ProductAnalyticsRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,10 +34,15 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductPriceRepository productPriceRepository;
+    private final ProductAnalyticsRepository productAnalyticsRepository;
 
-    public ProductService(ProductRepository productRepository, ProductPriceRepository productPriceRepository) {
+    public ProductService(
+            ProductRepository productRepository,
+            ProductPriceRepository productPriceRepository,
+            ProductAnalyticsRepository productAnalyticsRepository) {
         this.productRepository = productRepository;
         this.productPriceRepository = productPriceRepository;
+        this.productAnalyticsRepository = productAnalyticsRepository;
     }
 
     @Transactional
@@ -54,6 +61,17 @@ public class ProductService {
                 .build();
         
         ProductEntity savedEntity = productRepository.save(entity);
+
+        // Automatically create analytics record when product is created
+        ProductAnalyticsEntity analytics = ProductAnalyticsEntity.builder()
+                .product(savedEntity)
+                .viewCount(0L)
+                .saveCount(0L)
+                .watchlistCount(0L)
+                .priceChangeCount(0L)
+                .build();
+        productAnalyticsRepository.save(analytics);
+
         return ProductResponseDTO.fromEntity(savedEntity);
     }
 
@@ -288,5 +306,64 @@ public class ProductService {
         return entities.stream()
                 .map(ProductResponseDTO::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> getTrendingProducts(int limit) {
+        List<ProductEntity> entities = productRepository.findTrendingProducts(PageRequest.of(0, limit));
+        return mapProductsToResponseDTOs(entities);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> getMostWatchedProducts(int limit) {
+        List<ProductEntity> entities = productRepository.findMostWatchedProducts(PageRequest.of(0, limit));
+        return mapProductsToResponseDTOs(entities);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> getMostSavedProducts(int limit) {
+        List<ProductEntity> entities = productRepository.findMostSavedProducts(PageRequest.of(0, limit));
+        return mapProductsToResponseDTOs(entities);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> getProductsWithBiggestDrops(int limit) {
+        List<ProductEntity> entities = productRepository.findProductsWithBiggestDrops(PageRequest.of(0, limit));
+        return mapProductsToResponseDTOs(entities);
+    }
+
+    private List<ProductResponseDTO> mapProductsToResponseDTOs(List<ProductEntity> products) {
+        if (products.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<UUID> productIds = products.stream()
+                .map(ProductEntity::getId)
+                .collect(Collectors.toList());
+
+        List<ProductPriceEntity> prices = productPriceRepository.findPricesWithSellersByProductIds(productIds);
+
+        Map<UUID, List<ProductPriceEntity>> pricesByProductId = prices.stream()
+                .collect(Collectors.groupingBy(p -> p.getProduct().getId()));
+
+        return products.stream().map(product -> {
+            ProductResponseDTO dto = ProductResponseDTO.fromEntity(product);
+            List<ProductPriceEntity> productPrices = pricesByProductId.getOrDefault(product.getId(), List.of());
+            dto.setPrices(productPrices.stream()
+                    .map(priceEntity -> com.pricepilot.productprice.dto.ProductPriceResponseDTO.builder()
+                            .id(priceEntity.getId())
+                            .currentPrice(priceEntity.getCurrentPrice())
+                            .originalPrice(priceEntity.getOriginalPrice())
+                            .discountPercentage(priceEntity.getDiscountPercentage())
+                            .productUrl(priceEntity.getProductUrl())
+                            .lastUpdated(priceEntity.getLastUpdated())
+                            .seller(com.pricepilot.seller.dto.SellerResponseDTO.fromEntity(priceEntity.getSeller()))
+                            .createdAt(priceEntity.getCreatedAt())
+                            .updatedAt(priceEntity.getUpdatedAt())
+                            .build()
+                    )
+                    .collect(Collectors.toList()));
+            return dto;
+        }).collect(Collectors.toList());
     }
 }

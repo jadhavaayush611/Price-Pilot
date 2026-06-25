@@ -31,6 +31,9 @@ public class PriceHistoryServiceTest {
     @Mock
     private PriceHistoryRepository priceHistoryRepository;
 
+    @Mock
+    private com.pricepilot.analytics.ProductAnalyticsService productAnalyticsService;
+
     @InjectMocks
     private PriceHistoryService priceHistoryService;
 
@@ -74,6 +77,7 @@ public class PriceHistoryServiceTest {
 
         ArgumentCaptor<PriceHistoryEntity> captor = ArgumentCaptor.forClass(PriceHistoryEntity.class);
         verify(priceHistoryRepository, times(1)).save(captor.capture());
+        verify(productAnalyticsService, times(1)).incrementPriceChangeCount(product.getId());
 
         PriceHistoryEntity saved = captor.getValue();
         assertEquals(product, saved.getProduct());

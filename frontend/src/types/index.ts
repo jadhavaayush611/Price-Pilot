@@ -85,4 +85,13 @@ export interface PriceHistory {
   changedAt: string;
 }
 
+export interface ProductAnalytics {
+  productId: string;
+  viewCount: number;
+  saveCount: number;
+  watchlistCount: number;
+  priceChangeCount: number;
+  trendingScore: number;
+}
+
 

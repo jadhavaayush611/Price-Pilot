@@ -43,6 +43,9 @@ public class PriceWatchlistServiceTest {
     @Mock
     private ProductPriceRepository productPriceRepository;
 
+    @Mock
+    private com.pricepilot.analytics.ProductAnalyticsService productAnalyticsService;
+
     @InjectMocks
     private PriceWatchlistService watchlistService;
 
@@ -119,6 +122,7 @@ public class PriceWatchlistServiceTest {
         assertEquals(new BigDecimal("67999.00"), response.getCurrentBestPrice());
         assertEquals(new BigDecimal("7999.00"), response.getPriceDifference());
         assertTrue(response.isActive());
+        verify(productAnalyticsService, times(1)).incrementWatchlistCount(activeProduct.getId());
     }
 
     @Test
@@ -214,6 +218,7 @@ public class PriceWatchlistServiceTest {
         watchlistService.deleteWatchlist("test@example.com", watchlist.getId());
 
         verify(watchlistRepository, times(1)).delete(watchlist);
+        verify(productAnalyticsService, times(1)).decrementWatchlistCount(watchlist.getProduct().getId());
     }
 
     @Test

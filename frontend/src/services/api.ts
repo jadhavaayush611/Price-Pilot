@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 
@@ -593,6 +593,76 @@ export const apiService = {
         totalElements: mockHistory.length,
         size,
         number: page
+      };
+    }
+  },
+
+  // Analytics and Trending Endpoints
+  async getTrendingProducts(limit: number = 10): Promise<ProductWithPrices[]> {
+    try {
+      const response = await apiClient.get('/products/trending', { params: { limit } });
+      return response.data;
+    } catch (error) {
+      console.warn('Backend trending products fetch failed, using fallback mock data');
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return MOCK_PRODUCTS.slice(0, Math.min(limit, MOCK_PRODUCTS.length));
+    }
+  },
+
+  async getBiggestDrops(limit: number = 10): Promise<ProductWithPrices[]> {
+    try {
+      const response = await apiClient.get('/products/biggest-drops', { params: { limit } });
+      return response.data;
+    } catch (error) {
+      console.warn('Backend biggest drops fetch failed, using fallback mock data');
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return MOCK_PRODUCTS.slice(0, Math.min(limit, MOCK_PRODUCTS.length));
+    }
+  },
+
+  async getMostWatchedProducts(limit: number = 10): Promise<ProductWithPrices[]> {
+    try {
+      const response = await apiClient.get('/products/most-watched', { params: { limit } });
+      return response.data;
+    } catch (error) {
+      console.warn('Backend most watched products fetch failed, using fallback mock data');
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return MOCK_PRODUCTS.slice(0, Math.min(limit, MOCK_PRODUCTS.length));
+    }
+  },
+
+  async getMostSavedProducts(limit: number = 10): Promise<ProductWithPrices[]> {
+    try {
+      const response = await apiClient.get('/products/most-saved', { params: { limit } });
+      return response.data;
+    } catch (error) {
+      console.warn('Backend most saved products fetch failed, using fallback mock data');
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return MOCK_PRODUCTS.slice(0, Math.min(limit, MOCK_PRODUCTS.length));
+    }
+  },
+
+  async getProductAnalytics(productId: string): Promise<ProductAnalytics> {
+    try {
+      const response = await apiClient.get(`/analytics/products/${productId}`);
+      return response.data;
+    } catch (error) {
+      console.warn(`Backend analytics for product ${productId} failed, returning mock analytics`);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      // Calculate a deterministic mock score based on productId
+      const seed = productId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const viewCount = (seed * 7) % 150 + 20;
+      const saveCount = (seed * 3) % 25 + 2;
+      const watchlistCount = (seed * 2) % 15 + 1;
+      const priceChangeCount = seed % 8 + 1;
+      const trendingScore = viewCount * 1 + saveCount * 5 + watchlistCount * 10 + priceChangeCount * 2;
+      return {
+        productId,
+        viewCount,
+        saveCount,
+        watchlistCount,
+        priceChangeCount,
+        trendingScore
       };
     }
   }

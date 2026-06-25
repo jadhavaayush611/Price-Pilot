@@ -44,6 +44,28 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, J
             @org.springframework.data.repository.query.Param("createdAt") java.time.LocalDateTime createdAt,
             @org.springframework.data.repository.query.Param("id") java.util.UUID id,
             org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM ProductEntity p " +
+            "LEFT JOIN ProductAnalyticsEntity pa ON pa.product.id = p.id " +
+            "ORDER BY (COALESCE(pa.viewCount, 0) * 1 + COALESCE(pa.saveCount, 0) * 5 + COALESCE(pa.watchlistCount, 0) * 10 + COALESCE(pa.priceChangeCount, 0) * 2) DESC, p.id DESC")
+    java.util.List<ProductEntity> findTrendingProducts(org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM ProductEntity p " +
+            "LEFT JOIN ProductAnalyticsEntity pa ON pa.product.id = p.id " +
+            "ORDER BY COALESCE(pa.watchlistCount, 0) DESC, p.id DESC")
+    java.util.List<ProductEntity> findMostWatchedProducts(org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM ProductEntity p " +
+            "LEFT JOIN ProductAnalyticsEntity pa ON pa.product.id = p.id " +
+            "ORDER BY COALESCE(pa.saveCount, 0) DESC, p.id DESC")
+    java.util.List<ProductEntity> findMostSavedProducts(org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM ProductEntity p " +
+            "JOIN p.priceHistories ph " +
+            "WHERE ph.priceDifference < 0 " +
+            "GROUP BY p " +
+            "ORDER BY SUM(ph.priceDifference) ASC, p.id DESC")
+    java.util.List<ProductEntity> findProductsWithBiggestDrops(org.springframework.data.domain.Pageable pageable);
 }
 
 

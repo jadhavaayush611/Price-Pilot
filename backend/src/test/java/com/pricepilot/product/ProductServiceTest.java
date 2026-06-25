@@ -36,6 +36,9 @@ public class ProductServiceTest {
     @Mock
     private ProductPriceRepository productPriceRepository;
 
+    @Mock
+    private com.pricepilot.analytics.ProductAnalyticsRepository productAnalyticsRepository;
+
     @InjectMocks
     private ProductService productService;
 

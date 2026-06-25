@@ -10,6 +10,7 @@ import com.pricepilot.productprice.dto.BestPriceProjection;
 import com.pricepilot.savedproduct.dto.SavedProductResponseDTO;
 import com.pricepilot.user.UserEntity;
 import com.pricepilot.user.UserRepository;
+import com.pricepilot.analytics.ProductAnalyticsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,16 +28,19 @@ public class SavedProductService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final ProductPriceRepository productPriceRepository;
+    private final ProductAnalyticsService productAnalyticsService;
 
     public SavedProductService(
             SavedProductRepository savedProductRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
-            ProductPriceRepository productPriceRepository) {
+            ProductPriceRepository productPriceRepository,
+            ProductAnalyticsService productAnalyticsService) {
         this.savedProductRepository = savedProductRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.productPriceRepository = productPriceRepository;
+        this.productAnalyticsService = productAnalyticsService;
     }
 
     @Transactional
@@ -63,6 +67,7 @@ public class SavedProductService {
                 .build();
 
         savedProductRepository.save(savedProduct);
+        productAnalyticsService.incrementSaveCount(productId);
     }
 
     @Transactional
@@ -76,6 +81,7 @@ public class SavedProductService {
         }
 
         savedProductRepository.deleteById(savedProductId);
+        productAnalyticsService.decrementSaveCount(productId);
     }
 
     @Transactional(readOnly = true)

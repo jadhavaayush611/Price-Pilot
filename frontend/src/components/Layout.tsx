@@ -39,6 +39,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <nav className="hidden md:flex items-center gap-6 text-sm">
               <NavLink to="/" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Discover</NavLink>
               <NavLink to="/search" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Compare</NavLink>
+              <NavLink to="/trending" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Trending</NavLink>
               {isAuthenticated && (
                 <NavLink to="/saved-products" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Saved Products</NavLink>
               )}

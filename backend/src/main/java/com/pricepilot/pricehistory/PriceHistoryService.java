@@ -3,6 +3,7 @@ package com.pricepilot.pricehistory;
 import com.pricepilot.pricehistory.dto.PriceHistoryResponseDTO;
 import com.pricepilot.product.ProductEntity;
 import com.pricepilot.seller.SellerEntity;
+import com.pricepilot.analytics.ProductAnalyticsService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,9 +21,13 @@ import java.util.stream.Collectors;
 public class PriceHistoryService {
 
     private final PriceHistoryRepository priceHistoryRepository;
+    private final ProductAnalyticsService productAnalyticsService;
 
-    public PriceHistoryService(PriceHistoryRepository priceHistoryRepository) {
+    public PriceHistoryService(
+            PriceHistoryRepository priceHistoryRepository,
+            ProductAnalyticsService productAnalyticsService) {
         this.priceHistoryRepository = priceHistoryRepository;
+        this.productAnalyticsService = productAnalyticsService;
     }
 
     @Transactional(readOnly = true)
@@ -70,6 +75,7 @@ public class PriceHistoryService {
                 .build();
 
         priceHistoryRepository.save(priceHistory);
+        productAnalyticsService.incrementPriceChangeCount(product.getId());
     }
 
     @Transactional(readOnly = true)

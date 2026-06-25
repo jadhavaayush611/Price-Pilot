@@ -10,6 +10,7 @@ import com.pricepilot.user.UserRepository;
 import com.pricepilot.watchlist.dto.CreateWatchlistRequestDTO;
 import com.pricepilot.watchlist.dto.UpdateWatchlistRequestDTO;
 import com.pricepilot.watchlist.dto.WatchlistResponseDTO;
+import com.pricepilot.analytics.ProductAnalyticsService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,16 +27,19 @@ public class PriceWatchlistService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final ProductPriceRepository productPriceRepository;
+    private final ProductAnalyticsService productAnalyticsService;
 
     public PriceWatchlistService(
             PriceWatchlistRepository watchlistRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
-            ProductPriceRepository productPriceRepository) {
+            ProductPriceRepository productPriceRepository,
+            ProductAnalyticsService productAnalyticsService) {
         this.watchlistRepository = watchlistRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.productPriceRepository = productPriceRepository;
+        this.productAnalyticsService = productAnalyticsService;
     }
 
     @Transactional
@@ -75,6 +79,7 @@ public class PriceWatchlistService {
                 .build();
 
         PriceWatchlistEntity saved = watchlistRepository.save(watchlist);
+        productAnalyticsService.incrementWatchlistCount(product.getId());
         return WatchlistResponseDTO.fromEntity(saved);
     }
 
@@ -121,6 +126,7 @@ public class PriceWatchlistService {
         }
 
         watchlistRepository.delete(watchlist);
+        productAnalyticsService.decrementWatchlistCount(watchlist.getProduct().getId());
     }
 
     @Transactional(readOnly = true)

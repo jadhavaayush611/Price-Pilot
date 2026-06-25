@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
-import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice } from '../lib/utils';
 import { SellerCard } from '../components/SellerCard';
@@ -28,6 +28,10 @@ export const ProductPage: React.FC = () => {
   const [trackingError, setTrackingError] = useState<string | null>(null);
   const [isSubmittingTracking, setIsSubmittingTracking] = useState(false);
 
+  // Analytics states
+  const [analytics, setAnalytics] = useState<any | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+
   useEffect(() => {
     if (id) {
       setLoading(true);
@@ -40,6 +44,19 @@ export const ProductPage: React.FC = () => {
           setTimeout(() => {
             setLoading(false);
           }, 300);
+        });
+
+      // Fetch analytics
+      setAnalyticsLoading(true);
+      apiService.getProductAnalytics(id)
+        .then((data) => {
+          setAnalytics(data);
+        })
+        .catch((err) => {
+          console.error("Error loading analytics:", err);
+        })
+        .finally(() => {
+          setAnalyticsLoading(false);
         });
     }
   }, [id]);
@@ -628,6 +645,107 @@ export const ProductPage: React.FC = () => {
           </div>
         )}
       </motion.div>
+
+      {product && (
+        <motion.div 
+          variants={childVariants}
+          className="flex flex-col gap-6"
+        >
+          <div className="border-b border-zinc-900 pb-5">
+            <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+              <Activity className="h-5 w-5 text-zinc-400" />
+              Product Interaction & Metrics
+            </h2>
+            <p className="text-xs text-zinc-500 mt-0.5">Real-time demand analytics and price volatility indicators</p>
+          </div>
+
+          {analyticsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-1 h-36 rounded-2xl bg-zinc-950/40 border border-zinc-900 animate-pulse" />
+              <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map(n => (
+                  <div key={n} className="h-16 rounded-xl bg-zinc-950/40 border border-zinc-900 animate-pulse" />
+                ))}
+              </div>
+            </div>
+          ) : !analytics ? (
+            <div className="flex flex-col items-center justify-center py-6 px-4 border border-zinc-900 border-dashed rounded-2xl bg-zinc-950/10 text-center">
+              <p className="text-xs text-zinc-500">Analytics data is currently unavailable for this product.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Trending Score Card */}
+              <div className="md:col-span-1 p-6 rounded-2xl bg-gradient-to-b from-zinc-900/40 to-zinc-950/80 border border-zinc-900 flex flex-col justify-between gap-4 relative overflow-hidden group shadow-lg">
+                <div className="absolute top-[-20%] right-[-20%] w-32 h-32 bg-zinc-800/10 rounded-full blur-xl pointer-events-none" />
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3 text-amber-500" />
+                    Trending Score
+                  </span>
+                  <p className="text-xs text-zinc-500 leading-relaxed mt-1">
+                    Calculated dynamically from views (x1), saves (x5), watchlists (x10), and price adjustments (x2).
+                  </p>
+                </div>
+                <div className="flex items-baseline gap-2.5 mt-2">
+                  <span className="text-4xl font-black text-white tracking-tight font-mono">
+                    {analytics.trendingScore}
+                  </span>
+                  <span className="text-[10px] font-bold text-zinc-400 bg-zinc-900/80 border border-zinc-800 px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">
+                    Score
+                  </span>
+                </div>
+              </div>
+
+              {/* Metrics Grid */}
+              <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Views Card */}
+                <div className="p-5 rounded-xl bg-zinc-950/40 border border-zinc-900/80 hover:border-zinc-850 flex items-center justify-between gap-4 transition-all duration-300">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Product Views</span>
+                    <span className="text-2xl font-black text-zinc-100 font-mono">{analytics.viewCount}</span>
+                  </div>
+                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-zinc-400">
+                    <Eye className="h-5 w-5" />
+                  </div>
+                </div>
+
+                {/* Saves Card */}
+                <div className="p-5 rounded-xl bg-zinc-950/40 border border-zinc-900/80 hover:border-zinc-850 flex items-center justify-between gap-4 transition-all duration-300">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Saved Count</span>
+                    <span className="text-2xl font-black text-rose-400 font-mono">{analytics.saveCount}</span>
+                  </div>
+                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-rose-500/80">
+                    <Heart className="h-5 w-5" />
+                  </div>
+                </div>
+
+                {/* Watchlists Card */}
+                <div className="p-5 rounded-xl bg-zinc-950/40 border border-zinc-900/80 hover:border-zinc-850 flex items-center justify-between gap-4 transition-all duration-300">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Active Watchlists</span>
+                    <span className="text-2xl font-black text-emerald-400 font-mono">{analytics.watchlistCount}</span>
+                  </div>
+                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-emerald-500/80">
+                    <Bell className="h-5 w-5" />
+                  </div>
+                </div>
+
+                {/* Price Changes Card */}
+                <div className="p-5 rounded-xl bg-zinc-950/40 border border-zinc-900/80 hover:border-zinc-850 flex items-center justify-between gap-4 transition-all duration-300">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Price Updates</span>
+                    <span className="text-2xl font-black text-amber-500 font-mono">{analytics.priceChangeCount}</span>
+                  </div>
+                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-amber-500/80">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {product && (
         <PriceHistorySection productId={product.id} currency={currency} />

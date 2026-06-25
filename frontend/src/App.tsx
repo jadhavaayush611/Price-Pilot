@@ -5,6 +5,7 @@ import { Layout } from './components/Layout';
 import { LandingPage } from './pages/LandingPage';
 import { SearchPage } from './pages/SearchPage';
 import { ProductPage } from './pages/ProductPage';
+import { TrendingProductsPage } from './pages/TrendingProductsPage';
 import { ProductManagementPage } from './pages/ProductManagementPage';
 import { SellerManagementPage } from './pages/SellerManagementPage';
 import { PriceManagementPage } from './pages/PriceManagementPage';
@@ -36,6 +37,7 @@ export const App: React.FC = () => {
               <Route path="/" element={<LandingPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/product/:id" element={<ProductPage />} />
+              <Route path="/trending" element={<TrendingProductsPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route

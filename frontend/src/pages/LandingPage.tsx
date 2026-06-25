@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -12,10 +12,31 @@ import {
   CheckCircle2,
   LineChart
 } from 'lucide-react';
+import { apiService } from '../services/api';
+import type { ProductWithPrices } from '../types';
 
 export const LandingPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+
+  const [trendingProducts, setTrendingProducts] = useState<ProductWithPrices[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    apiService.getTrendingProducts(3)
+      .then((data) => {
+        setTrendingProducts(data);
+      })
+      .catch((err) => {
+        console.error('Error fetching trending products:', err);
+        setError(true);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,6 +226,111 @@ export const LandingPage: React.FC = () => {
             </p>
           </motion.div>
         </motion.div>
+      </section>
+
+      {/* Trending Products Section */}
+      <section className="relative max-w-6xl mx-auto px-6 z-10 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-bold tracking-widest text-zinc-500 uppercase flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-zinc-400" />
+              Live Rankings
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Trending on PricePilot.
+            </h2>
+          </div>
+          <button
+            onClick={() => navigate('/trending')}
+            className="inline-flex items-center gap-1 text-sm font-semibold text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer group"
+          >
+            Explore all lists
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="h-[280px] rounded-2xl bg-zinc-950/40 border border-zinc-900 animate-pulse" />
+            ))}
+          </div>
+        ) : error || trendingProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 px-4 border border-zinc-900/60 border-dashed rounded-2xl bg-zinc-950/20 text-center">
+            <p className="text-sm text-zinc-500">Failed to load trending products or no data available.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {trendingProducts.map((product) => {
+              const bestPrice = product.prices && product.prices.length > 0 
+                ? Math.min(...product.prices.map(p => p.currentPrice))
+                : null;
+              const originalPrice = product.prices && product.prices.length > 0
+                ? product.prices.find(p => p.currentPrice === bestPrice)?.originalPrice
+                : null;
+              const discount = bestPrice && originalPrice && originalPrice > bestPrice
+                ? Math.round(((originalPrice - bestPrice) / originalPrice) * 100)
+                : 0;
+
+              return (
+                <motion.div
+                  key={product.id}
+                  whileHover={{ y: -4, borderColor: 'rgba(255,255,255,0.1)' }}
+                  onClick={() => navigate(`/product/${product.id}`)}
+                  className="flex flex-col h-full rounded-2xl bg-zinc-950/45 border border-zinc-900 hover:shadow-[0_0_30px_rgba(255,255,255,0.01)] transition-all duration-300 cursor-pointer overflow-hidden group"
+                >
+                  <div className="h-44 w-full bg-zinc-900/40 border-b border-zinc-900 relative flex items-center justify-center overflow-hidden">
+                    {product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <span className="text-zinc-700 text-xs font-medium uppercase font-mono">No image available</span>
+                    )}
+                    {discount > 0 && (
+                      <span className="absolute top-3.5 right-3.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-mono">
+                        -{discount}% OFF
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col flex-grow p-5 justify-between gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{product.brand}</span>
+                      <h3 className="font-bold text-zinc-100 text-sm group-hover:text-white line-clamp-1 transition-colors">
+                        {product.name}
+                      </h3>
+                      <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                        {product.description || 'No description provided.'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-1 pt-4 border-t border-zinc-900/80">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Best price</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-base font-extrabold text-white font-mono">
+                            {bestPrice ? `$${bestPrice.toLocaleString()}` : 'N/A'}
+                          </span>
+                          {originalPrice && originalPrice > bestPrice! && (
+                            <span className="text-xs text-zinc-600 line-through font-mono">
+                              ${originalPrice.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="h-7 w-7 flex items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 group-hover:text-white group-hover:bg-zinc-800 transition-all">
+                        <ChevronRight className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Benefits Section */}

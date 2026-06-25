@@ -39,6 +39,9 @@ public class SavedProductServiceTest {
     @Mock
     private ProductPriceRepository productPriceRepository;
 
+    @Mock
+    private com.pricepilot.analytics.ProductAnalyticsService productAnalyticsService;
+
     @InjectMocks
     private SavedProductService savedProductService;
 
@@ -81,6 +84,7 @@ public class SavedProductServiceTest {
         savedProductService.saveProduct("test@example.com", activeProduct.getId());
 
         verify(savedProductRepository, times(1)).save(any(SavedProductEntity.class));
+        verify(productAnalyticsService, times(1)).incrementSaveCount(activeProduct.getId());
     }
 
     @Test
@@ -116,6 +120,7 @@ public class SavedProductServiceTest {
         savedProductService.removeProduct("test@example.com", activeProduct.getId());
 
         verify(savedProductRepository, times(1)).deleteById(any(SavedProductId.class));
+        verify(productAnalyticsService, times(1)).decrementSaveCount(activeProduct.getId());
     }
 
     @Test
