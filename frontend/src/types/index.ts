@@ -94,4 +94,27 @@ export interface ProductAnalytics {
   trendingScore: number;
 }
 
+export interface UserInteractionEvent {
+  id: string;
+  userId?: string;
+  userEmail?: string;
+  productId?: string;
+  productName?: string;
+  sellerId?: string;
+  sellerName?: string;
+  interactionType:
+    | 'PRODUCT_VIEW'
+    | 'PRODUCT_SAVE'
+    | 'PRODUCT_UNSAVE'
+    | 'WATCHLIST_CREATE'
+    | 'WATCHLIST_DELETE'
+    | 'PRICE_HISTORY_VIEW'
+    | 'SELLER_CLICK'
+    | 'SEARCH'
+    | 'TRENDING_VIEW';
+  metadata: Record<string, any>;
+  createdAt: string;
+}
+
+
 

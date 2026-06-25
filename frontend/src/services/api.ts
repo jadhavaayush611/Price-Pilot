@@ -665,5 +665,99 @@ export const apiService = {
         trendingScore
       };
     }
+  },
+
+  // Get my events (User Interaction Events)
+  async getMyEvents(
+    page: number,
+    size: number
+  ): Promise<{
+    content: any[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number;
+    last: boolean;
+  }> {
+    try {
+      const response = await apiClient.get('/events/me', {
+        params: { page, size, sort: 'createdAt,desc' }
+      });
+      return response.data;
+    } catch (error) {
+      console.warn('Backend getMyEvents failed, using mock activity events');
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const mockEvents = [
+        {
+          id: 'ev1',
+          userId: 'u1',
+          userEmail: 'user@example.com',
+          productId: 'p1',
+          productName: 'iPhone 15 Pro Max (256GB, Space Black)',
+          sellerId: 's1',
+          sellerName: 'Amazon',
+          interactionType: 'PRODUCT_VIEW',
+          metadata: { productName: 'iPhone 15 Pro Max (256GB, Space Black)', brand: 'Apple', category: 'Electronics' },
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'ev2',
+          userId: 'u1',
+          userEmail: 'user@example.com',
+          productId: 'p1',
+          productName: 'iPhone 15 Pro Max (256GB, Space Black)',
+          sellerId: 's1',
+          sellerName: 'Amazon',
+          interactionType: 'SELLER_CLICK',
+          metadata: { seller: 'Amazon', product: 'iPhone 15 Pro Max (256GB, Space Black)', destinationUrl: 'https://amazon.com', timestamp: new Date().toISOString() },
+          createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+        },
+        {
+          id: 'ev3',
+          userId: 'u1',
+          userEmail: 'user@example.com',
+          productId: 'p2',
+          productName: 'Sony WH-1000XM5 Wireless Headphones',
+          interactionType: 'PRODUCT_SAVE',
+          metadata: { productName: 'Sony WH-1000XM5 Wireless Headphones', brand: 'Sony', category: 'Electronics' },
+          createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString()
+        },
+        {
+          id: 'ev4',
+          userId: 'u1',
+          userEmail: 'user@example.com',
+          productId: 'p2',
+          productName: 'Sony WH-1000XM5 Wireless Headphones',
+          interactionType: 'WATCHLIST_CREATE',
+          metadata: { productName: 'Sony WH-1000XM5 Wireless Headphones', targetPrice: 299.0, currentBestPrice: 328.0 },
+          createdAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString()
+        },
+        {
+          id: 'ev5',
+          userId: 'u1',
+          userEmail: 'user@example.com',
+          interactionType: 'SEARCH',
+          metadata: { keyword: 'laptop', filters: { brand: 'Apple' }, resultCount: 5 },
+          createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString()
+        }
+      ];
+      return {
+        content: mockEvents,
+        totalPages: 1,
+        totalElements: mockEvents.length,
+        size,
+        number: page,
+        last: true
+      };
+    }
+  },
+
+  // Track seller click event
+  async trackSellerClick(priceId: string): Promise<void> {
+    try {
+      await apiClient.post(`/events/seller-click/${priceId}`);
+    } catch (error) {
+      console.warn('Backend trackSellerClick failed', error);
+    }
   }
 };

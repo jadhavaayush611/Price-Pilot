@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import com.pricepilot.interaction.UserInteractionEventService;
+import com.pricepilot.interaction.InteractionType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -17,9 +22,11 @@ import java.util.UUID;
 public class PriceHistoryController {
 
     private final PriceHistoryService priceHistoryService;
+    private final UserInteractionEventService eventService;
 
-    public PriceHistoryController(PriceHistoryService priceHistoryService) {
+    public PriceHistoryController(PriceHistoryService priceHistoryService, UserInteractionEventService eventService) {
         this.priceHistoryService = priceHistoryService;
+        this.eventService = eventService;
     }
 
     @GetMapping("/price-history")
@@ -34,6 +41,18 @@ public class PriceHistoryController {
             @PathVariable UUID productId,
             @PageableDefault(size = 10, sort = "changedAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<PriceHistoryResponseDTO> history = priceHistoryService.getPriceHistoryByProduct(productId, pageable);
+
+        eventService.trackEvent(
+                getAuthenticatedUserEmailOptional(),
+                productId,
+                null,
+                InteractionType.PRICE_HISTORY_VIEW,
+                java.util.Map.of(
+                        "productId", productId.toString(),
+                        "resultCount", history.getTotalElements()
+                )
+        );
+
         return ResponseEntity.ok(history);
     }
 
@@ -61,5 +80,21 @@ public class PriceHistoryController {
     public ResponseEntity<List<PriceHistoryResponseDTO>> getRecentPriceChanges(
             @RequestParam(defaultValue = "10") int limit) {
         return ResponseEntity.ok(priceHistoryService.getRecentPriceChanges(limit));
+    }
+    private String getAuthenticatedUserEmailOptional() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        } else {
+            String name = principal.toString();
+            if ("anonymousUser".equals(name)) {
+                return null;
+            }
+            return name;
+        }
     }
 }

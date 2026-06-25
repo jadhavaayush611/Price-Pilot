@@ -616,6 +616,7 @@ export const ProductPage: React.FC = () => {
                                 href={price.productUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={() => apiService.trackSellerClick(price.id)}
                                 className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border transition-all active:scale-95 ${
                                   isLowest
                                     ? 'bg-white text-black hover:bg-zinc-200 border-white shadow-md'

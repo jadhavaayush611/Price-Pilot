@@ -59,6 +59,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/health").permitAll()
                 .requestMatchers("/api/v1/search/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                .requestMatchers("/api/v1/events/me").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/v1/events/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/events/seller-click/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 
                 // Protected Endpoints

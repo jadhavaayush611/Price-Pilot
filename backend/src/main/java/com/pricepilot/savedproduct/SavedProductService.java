@@ -11,6 +11,8 @@ import com.pricepilot.savedproduct.dto.SavedProductResponseDTO;
 import com.pricepilot.user.UserEntity;
 import com.pricepilot.user.UserRepository;
 import com.pricepilot.analytics.ProductAnalyticsService;
+import com.pricepilot.interaction.UserInteractionEventService;
+import com.pricepilot.interaction.InteractionType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,17 +32,21 @@ public class SavedProductService {
     private final ProductPriceRepository productPriceRepository;
     private final ProductAnalyticsService productAnalyticsService;
 
+    private final UserInteractionEventService eventService;
+
     public SavedProductService(
             SavedProductRepository savedProductRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
             ProductPriceRepository productPriceRepository,
-            ProductAnalyticsService productAnalyticsService) {
+            ProductAnalyticsService productAnalyticsService,
+            UserInteractionEventService eventService) {
         this.savedProductRepository = savedProductRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.productPriceRepository = productPriceRepository;
         this.productAnalyticsService = productAnalyticsService;
+        this.eventService = eventService;
     }
 
     @Transactional
@@ -68,6 +74,18 @@ public class SavedProductService {
 
         savedProductRepository.save(savedProduct);
         productAnalyticsService.incrementSaveCount(productId);
+
+        eventService.trackEvent(
+                email,
+                productId,
+                null,
+                InteractionType.PRODUCT_SAVE,
+                Map.of(
+                        "productName", product.getName(),
+                        "brand", product.getBrand() != null ? product.getBrand() : "",
+                        "category", product.getCategory()
+                )
+        );
     }
 
     @Transactional
@@ -82,6 +100,14 @@ public class SavedProductService {
 
         savedProductRepository.deleteById(savedProductId);
         productAnalyticsService.decrementSaveCount(productId);
+
+        eventService.trackEvent(
+                email,
+                productId,
+                null,
+                InteractionType.PRODUCT_UNSAVE,
+                Map.of()
+        );
     }
 
     @Transactional(readOnly = true)

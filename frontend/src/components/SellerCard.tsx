@@ -3,6 +3,7 @@ import type { ProductPrice } from '../types';
 import { ExternalLink, Sparkles, Tag, Clock, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatPrice } from '../lib/utils';
+import { apiService } from '../services/api';
 
 interface SellerCardProps {
   price: ProductPrice;
@@ -128,6 +129,7 @@ export const SellerCard: React.FC<SellerCardProps> = ({
           href={price.productUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => apiService.trackSellerClick(price.id)}
           className={`flex items-center justify-center gap-2 w-full py-3 px-4 text-xs font-bold rounded-xl border transition-all active:scale-[0.98] ${
             isBestDeal
               ? 'bg-white hover:bg-zinc-200 text-black border-white shadow-[0_4px_12px_rgba(255,255,255,0.08)]'

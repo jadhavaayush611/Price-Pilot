@@ -13,6 +13,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { SavedProductsPage } from './pages/SavedProductsPage';
 import { WatchlistPage } from './pages/WatchlistPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -53,6 +54,14 @@ export const App: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <WatchlistPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardPage />
                   </ProtectedRoute>
                 }
               />

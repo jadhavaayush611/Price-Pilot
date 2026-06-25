@@ -11,6 +11,8 @@ import com.pricepilot.watchlist.dto.CreateWatchlistRequestDTO;
 import com.pricepilot.watchlist.dto.UpdateWatchlistRequestDTO;
 import com.pricepilot.watchlist.dto.WatchlistResponseDTO;
 import com.pricepilot.analytics.ProductAnalyticsService;
+import com.pricepilot.interaction.UserInteractionEventService;
+import com.pricepilot.interaction.InteractionType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,17 +31,21 @@ public class PriceWatchlistService {
     private final ProductPriceRepository productPriceRepository;
     private final ProductAnalyticsService productAnalyticsService;
 
+    private final UserInteractionEventService eventService;
+
     public PriceWatchlistService(
             PriceWatchlistRepository watchlistRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
             ProductPriceRepository productPriceRepository,
-            ProductAnalyticsService productAnalyticsService) {
+            ProductAnalyticsService productAnalyticsService,
+            UserInteractionEventService eventService) {
         this.watchlistRepository = watchlistRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.productPriceRepository = productPriceRepository;
         this.productAnalyticsService = productAnalyticsService;
+        this.eventService = eventService;
     }
 
     @Transactional
@@ -80,6 +86,20 @@ public class PriceWatchlistService {
 
         PriceWatchlistEntity saved = watchlistRepository.save(watchlist);
         productAnalyticsService.incrementWatchlistCount(product.getId());
+
+        eventService.trackEvent(
+                email,
+                product.getId(),
+                null,
+                InteractionType.WATCHLIST_CREATE,
+                java.util.Map.of(
+                        "productId", product.getId().toString(),
+                        "productName", product.getName(),
+                        "targetPrice", targetPrice.doubleValue(),
+                        "currentBestPrice", bestPrice.doubleValue()
+                )
+        );
+
         return WatchlistResponseDTO.fromEntity(saved);
     }
 
@@ -127,6 +147,18 @@ public class PriceWatchlistService {
 
         watchlistRepository.delete(watchlist);
         productAnalyticsService.decrementWatchlistCount(watchlist.getProduct().getId());
+
+        eventService.trackEvent(
+                email,
+                watchlist.getProduct().getId(),
+                null,
+                InteractionType.WATCHLIST_DELETE,
+                java.util.Map.of(
+                        "productId", watchlist.getProduct().getId().toString(),
+                        "productName", watchlist.getProduct().getName(),
+                        "targetPrice", watchlist.getTargetPrice().doubleValue()
+                )
+        );
     }
 
     @Transactional(readOnly = true)
