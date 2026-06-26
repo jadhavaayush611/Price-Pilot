@@ -68,8 +68,16 @@ public class PriceWatchlistService {
         Object[] productAndBestPrice = productRepository.findProductAndBestPrice(requestDTO.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + requestDTO.getProductId()));
 
-        ProductEntity product = (ProductEntity) productAndBestPrice[0];
-        BigDecimal bestPrice = (BigDecimal) productAndBestPrice[1];
+        ProductEntity product;
+        BigDecimal bestPrice;
+        if (productAndBestPrice[0] instanceof Object[]) {
+            Object[] row = (Object[]) productAndBestPrice[0];
+            product = (ProductEntity) row[0];
+            bestPrice = (BigDecimal) row[1];
+        } else {
+            product = (ProductEntity) productAndBestPrice[0];
+            bestPrice = (BigDecimal) productAndBestPrice[1];
+        }
 
         if (product.isArchived()) {
             throw new ProductArchivedException("Product must be active");
@@ -89,7 +97,7 @@ public class PriceWatchlistService {
         }
 
         if (targetPrice.compareTo(bestPrice) >= 0) {
-            throw new InvalidWatchlistPriceException("Target price must be less than the current best price (" + bestPrice + ")");
+            throw new InvalidWatchlistPriceException("INVALID_TARGET_PRICE", "Target price must be less than the current best price.", bestPrice, "USD");
         }
 
         PriceWatchlistEntity watchlist = PriceWatchlistEntity.builder()
@@ -138,7 +146,7 @@ public class PriceWatchlistService {
                 .orElseThrow(() -> new InvalidWatchlistPriceException("Cannot track product: no prices found for this product"));
 
         if (targetPrice.compareTo(bestPrice) >= 0) {
-            throw new InvalidWatchlistPriceException("Target price must be less than the current best price (" + bestPrice + ")");
+            throw new InvalidWatchlistPriceException("INVALID_TARGET_PRICE", "Target price must be less than the current best price.", bestPrice, "USD");
         }
 
         watchlist.setTargetPrice(targetPrice);

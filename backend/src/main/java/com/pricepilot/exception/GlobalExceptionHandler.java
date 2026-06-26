@@ -51,7 +51,6 @@ public class GlobalExceptionHandler {
             IllegalArgumentException.class,
             ProductArchivedException.class,
             InvalidPriceException.class,
-            InvalidWatchlistPriceException.class,
             InvalidCursorException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequestExceptions(RuntimeException ex, HttpServletRequest request) {
@@ -64,6 +63,28 @@ public class GlobalExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidWatchlistPriceException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidWatchlistPriceException(InvalidWatchlistPriceException ex, HttpServletRequest request) {
+        ErrorResponse.ErrorResponseBuilder builder = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI());
+
+        if (ex.getErrorCode() != null) {
+            builder.code(ex.getErrorCode());
+        }
+        if (ex.getCurrentBestPrice() != null) {
+            java.util.Map<String, Object> details = new java.util.HashMap<>();
+            details.put("currentBestPrice", ex.getCurrentBestPrice());
+            details.put("currency", ex.getBaselineCurrency() != null ? ex.getBaselineCurrency() : "USD");
+            builder.details(details);
+        }
+
+        return new ResponseEntity<>(builder.build(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(DuplicateSaveException.class)

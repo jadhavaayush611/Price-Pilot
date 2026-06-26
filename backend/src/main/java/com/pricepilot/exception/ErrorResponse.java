@@ -22,6 +22,12 @@ public class ErrorResponse {
     private String path;
     private List<ValidationError> validationErrors;
 
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String code;
+
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private java.util.Map<String, Object> details;
+
     @Getter
     @Setter
     @AllArgsConstructor

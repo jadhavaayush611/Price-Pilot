@@ -474,15 +474,15 @@ export const apiService = {
         throw new Error('You are already watching this product');
       }
       if (error.response && error.response.status === 400) {
-        const msg = error.response.data?.message || 'Invalid target price';
-        const match = msg.match(/current best price \(([\d.]+)\)/);
-        if (match) {
-          const usdPrice = parseFloat(match[1]);
+        const data = error.response.data;
+        const details = data?.details;
+        if (details && typeof details.currentBestPrice === 'number') {
+          const usdPrice = details.currentBestPrice;
           const localPrice = getDisplayPrice(usdPrice, userCurrency);
           const formattedLocalPrice = formatPrice(localPrice, userCurrency);
-          throw new Error(msg.replace(`(${match[1]})`, `(${formattedLocalPrice})`));
+          throw new Error(`${data.message || 'Target price must be less than the current best price.'} (${formattedLocalPrice})`);
         }
-        throw new Error(msg);
+        throw new Error(data?.message || 'Invalid target price');
       }
       console.warn('Backend create watchlist failed, simulating locally');
       
@@ -546,15 +546,15 @@ export const apiService = {
       };
     } catch (error: any) {
       if (error.response && error.response.status === 400) {
-        const msg = error.response.data?.message || 'Invalid target price';
-        const match = msg.match(/current best price \(([\d.]+)\)/);
-        if (match) {
-          const usdPrice = parseFloat(match[1]);
+        const data = error.response.data;
+        const details = data?.details;
+        if (details && typeof details.currentBestPrice === 'number') {
+          const usdPrice = details.currentBestPrice;
           const localPrice = getDisplayPrice(usdPrice, userCurrency);
           const formattedLocalPrice = formatPrice(localPrice, userCurrency);
-          throw new Error(msg.replace(`(${match[1]})`, `(${formattedLocalPrice})`));
+          throw new Error(`${data.message || 'Target price must be less than the current best price.'} (${formattedLocalPrice})`);
         }
-        throw new Error(msg);
+        throw new Error(data?.message || 'Invalid target price');
       }
       console.warn('Backend update watchlist failed, simulating locally');
       const watchlists: Watchlist[] = JSON.parse(localStorage.getItem('price_watchlists') || '[]');
