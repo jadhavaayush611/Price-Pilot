@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Bell, Heart, TrendingDown, ChevronRight, Inbox, RefreshCw, Sparkles } from 'lucide-react';
 import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
+import { formatPrice, getDisplayPrice, getSavedCurrency } from '../lib/utils';
 
 type ActiveTab = 'trending' | 'watched' | 'saved' | 'drops';
 
 export const TrendingProductsPage: React.FC = () => {
   const navigate = useNavigate();
+  const currency = getSavedCurrency();
   const [activeTab, setActiveTab] = useState<ActiveTab>('trending');
   const [products, setProducts] = useState<ProductWithPrices[]>([]);
   const [loading, setLoading] = useState(true);
@@ -232,17 +234,15 @@ export const TrendingProductsPage: React.FC = () => {
 
                     <div className="flex items-center justify-between mt-1 pt-4 border-t border-zinc-900/80">
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Best price</span>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-base font-extrabold text-white font-mono">
-                            {bestPrice ? `$${bestPrice.toLocaleString()}` : 'N/A'}
+                        <span className="text-[10px] text-zinc-550 uppercase tracking-wider">Best price</span>
+                        <span className="text-sm font-extrabold text-white">
+                            {bestPrice ? formatPrice(getDisplayPrice(bestPrice, currency), currency) : 'N/A'}
+                        </span>
+                        {originalPrice && originalPrice > bestPrice! && (
+                          <span className="text-[10px] text-zinc-550 line-through font-mono">
+                              {formatPrice(getDisplayPrice(originalPrice, currency), currency)}
                           </span>
-                          {originalPrice && originalPrice > bestPrice! && (
-                            <span className="text-xs text-zinc-600 line-through font-mono">
-                              ${originalPrice.toLocaleString()}
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
                       <span className="h-7 w-7 flex items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 group-hover:text-white group-hover:bg-zinc-800 transition-all">
                         <ChevronRight className="h-4 w-4" />

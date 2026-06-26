@@ -4,12 +4,13 @@ import { apiService } from '../services/api';
 import type { Watchlist } from '../types';
 import { Bell, Trash2, ArrowLeft, Edit2, AlertCircle, ToggleLeft, ToggleRight, Inbox, ShoppingBag, Eye, CheckCircle2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice } from '../lib/utils';
+import { formatPrice, getSavedCurrency, type CurrencyCode, CURRENCY_SYMBOLS } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 
 export const WatchlistPage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const currency: CurrencyCode = getSavedCurrency();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +84,7 @@ export const WatchlistPage: React.FC = () => {
     }
 
     if (target >= editingItem.currentBestPrice) {
-      setEditError(`Target price must be strictly less than the current best price (${formatPrice(editingItem.currentBestPrice)})`);
+      setEditError(`Target price must be strictly less than the current best price (${formatPrice(editingItem.currentBestPrice, currency)})`);
       return;
     }
 
@@ -274,14 +275,14 @@ export const WatchlistPage: React.FC = () => {
                     <div className="flex flex-col">
                       <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Best Price</span>
                       <span className={`text-sm font-extrabold ${targetMet && item.active ? 'text-emerald-400' : 'text-zinc-200'}`}>
-                        {formatPrice(item.currentBestPrice)}
+                        {formatPrice(item.currentBestPrice, currency)}
                       </span>
                     </div>
 
                     <div className="flex flex-col">
                       <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Target Price</span>
                       <span className="text-sm font-extrabold text-emerald-400">
-                        {formatPrice(item.targetPrice)}
+                        {formatPrice(item.targetPrice, currency)}
                       </span>
                     </div>
 
@@ -290,7 +291,7 @@ export const WatchlistPage: React.FC = () => {
                       <span className={`text-sm font-extrabold ${item.priceDifference <= 0 ? 'text-emerald-400' : 'text-zinc-400'}`}>
                         {item.priceDifference <= 0 
                           ? 'Triggered' 
-                          : `+${formatPrice(item.priceDifference)}`
+                          : `+${formatPrice(item.priceDifference, currency)}`
                         }
                       </span>
                     </div>
@@ -408,7 +409,7 @@ export const WatchlistPage: React.FC = () => {
                 <div className="flex flex-col text-right shrink-0">
                   <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Best Price</span>
                   <span className="text-sm font-extrabold text-emerald-400 mt-0.5">
-                    {formatPrice(editingItem.currentBestPrice)}
+                    {formatPrice(editingItem.currentBestPrice, currency)}
                   </span>
                 </div>
               </div>
@@ -417,7 +418,7 @@ export const WatchlistPage: React.FC = () => {
                 <div className="flex flex-col gap-2">
                   <label htmlFor="editTargetPrice" className="text-xs font-bold text-zinc-400">Target Price</label>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-500 font-bold">₹</span>
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-500 font-bold">{CURRENCY_SYMBOLS[currency]}</span>
                     <input
                       id="editTargetPrice"
                       type="number"
@@ -432,7 +433,7 @@ export const WatchlistPage: React.FC = () => {
 
                 {/* Suggestions */}
                 <div className="flex flex-col gap-2">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Quick Select Target</span>
+                  <span className="text-[10px] font-bold text-zinc-555 uppercase tracking-wider">Quick Select Target</span>
                   <div className="grid grid-cols-3 gap-2">
                     {[0.95, 0.9, 0.85].map((factor) => {
                       const discounted = Math.floor(editingItem.currentBestPrice * factor);
@@ -444,7 +445,7 @@ export const WatchlistPage: React.FC = () => {
                           onClick={() => setEditTargetPrice(discounted.toString())}
                           className="px-2 py-1.5 rounded-lg border border-zinc-900 hover:border-zinc-800 bg-zinc-955 hover:bg-zinc-900 text-[10px] font-bold text-zinc-400 hover:text-white transition-all cursor-pointer text-center"
                         >
-                          {pct}% Off (₹{discounted.toLocaleString()})
+                          {pct}% Off ({formatPrice(discounted, currency)})
                         </button>
                       );
                     })}

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics } from '../types';
+import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../lib/utils';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 
@@ -425,24 +426,63 @@ export const apiService = {
   async getWatchlists(): Promise<Watchlist[]> {
     try {
       const response = await apiClient.get('/watchlists');
-      return response.data;
+      const userCurrency = getSavedCurrency();
+      return response.data.map((item: any) => {
+        const targetPrice = getDisplayPrice(item.targetPrice, userCurrency);
+        const currentBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
+        return {
+          ...item,
+          targetPrice,
+          currentBestPrice,
+          priceDifference: currentBestPrice - targetPrice
+        };
+      });
     } catch (error) {
       console.warn('Backend get watchlists failed, using fallback mock data');
       await new Promise((resolve) => setTimeout(resolve, 200));
-      return JSON.parse(localStorage.getItem('price_watchlists') || '[]');
+      const watchlists: Watchlist[] = JSON.parse(localStorage.getItem('price_watchlists') || '[]');
+      const userCurrency = getSavedCurrency();
+      return watchlists.map((item: any) => {
+        const targetPrice = getDisplayPrice(item.targetPrice, userCurrency);
+        const currentBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
+        return {
+          ...item,
+          targetPrice,
+          currentBestPrice,
+          priceDifference: currentBestPrice - targetPrice
+        };
+      });
     }
   },
 
   async createWatchlist(productId: string, targetPrice: number): Promise<Watchlist> {
+    const userCurrency = getSavedCurrency();
+    const targetPriceInUsd = convertToUsd(targetPrice, userCurrency);
     try {
-      const response = await apiClient.post('/watchlists', { productId, targetPrice });
-      return response.data;
+      const response = await apiClient.post('/watchlists', { productId, targetPrice: targetPriceInUsd });
+      const item = response.data;
+      const localTargetPrice = getDisplayPrice(item.targetPrice, userCurrency);
+      const localBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
+      return {
+        ...item,
+        targetPrice: localTargetPrice,
+        currentBestPrice: localBestPrice,
+        priceDifference: localBestPrice - localTargetPrice
+      };
     } catch (error: any) {
       if (error.response && error.response.status === 409) {
         throw new Error('You are already watching this product');
       }
       if (error.response && error.response.status === 400) {
-        throw new Error(error.response.data?.message || 'Invalid target price');
+        const msg = error.response.data?.message || 'Invalid target price';
+        const match = msg.match(/current best price \(([\d.]+)\)/);
+        if (match) {
+          const usdPrice = parseFloat(match[1]);
+          const localPrice = getDisplayPrice(usdPrice, userCurrency);
+          const formattedLocalPrice = formatPrice(localPrice, userCurrency);
+          throw new Error(msg.replace(`(${match[1]})`, `(${formattedLocalPrice})`));
+        }
+        throw new Error(msg);
       }
       console.warn('Backend create watchlist failed, simulating locally');
       
@@ -457,9 +497,10 @@ export const apiService = {
         throw new Error('Product not found');
       }
 
-      const bestPrice = product.lowestPrice || 67999;
-      if (targetPrice >= bestPrice) {
-        throw new Error(`Target price must be less than the current best price (₹${bestPrice.toLocaleString()})`);
+      const bestPriceInUsd = product.lowestPrice || 679.99;
+      if (targetPriceInUsd >= bestPriceInUsd) {
+        const localBestPrice = getDisplayPrice(bestPriceInUsd, userCurrency);
+        throw new Error(`Target price must be less than the current best price (${formatPrice(localBestPrice, userCurrency)})`);
       }
 
       const newWatchlist: Watchlist = {
@@ -468,27 +509,52 @@ export const apiService = {
         productName: product.name,
         brand: product.brand,
         imageUrl: product.imageUrl,
-        targetPrice,
-        currentBestPrice: bestPrice,
-        priceDifference: bestPrice - targetPrice,
+        targetPrice: targetPrice,
+        currentBestPrice: getDisplayPrice(bestPriceInUsd, userCurrency),
+        priceDifference: getDisplayPrice(bestPriceInUsd, userCurrency) - targetPrice,
         active: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
 
-      watchlists.push(newWatchlist);
+      const serializedWatchlist: Watchlist = {
+        ...newWatchlist,
+        targetPrice: targetPriceInUsd,
+        currentBestPrice: bestPriceInUsd,
+        priceDifference: bestPriceInUsd - targetPriceInUsd
+      };
+
+      watchlists.push(serializedWatchlist);
       localStorage.setItem('price_watchlists', JSON.stringify(watchlists));
       return newWatchlist;
     }
   },
 
   async updateWatchlist(id: string, targetPrice: number, active?: boolean): Promise<Watchlist> {
+    const userCurrency = getSavedCurrency();
+    const targetPriceInUsd = convertToUsd(targetPrice, userCurrency);
     try {
-      const response = await apiClient.put(`/watchlists/${id}`, { targetPrice, active });
-      return response.data;
+      const response = await apiClient.put(`/watchlists/${id}`, { targetPrice: targetPriceInUsd, active });
+      const item = response.data;
+      const localTargetPrice = getDisplayPrice(item.targetPrice, userCurrency);
+      const localBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
+      return {
+        ...item,
+        targetPrice: localTargetPrice,
+        currentBestPrice: localBestPrice,
+        priceDifference: localBestPrice - localTargetPrice
+      };
     } catch (error: any) {
       if (error.response && error.response.status === 400) {
-        throw new Error(error.response.data?.message || 'Invalid target price');
+        const msg = error.response.data?.message || 'Invalid target price';
+        const match = msg.match(/current best price \(([\d.]+)\)/);
+        if (match) {
+          const usdPrice = parseFloat(match[1]);
+          const localPrice = getDisplayPrice(usdPrice, userCurrency);
+          const formattedLocalPrice = formatPrice(localPrice, userCurrency);
+          throw new Error(msg.replace(`(${match[1]})`, `(${formattedLocalPrice})`));
+        }
+        throw new Error(msg);
       }
       console.warn('Backend update watchlist failed, simulating locally');
       const watchlists: Watchlist[] = JSON.parse(localStorage.getItem('price_watchlists') || '[]');
@@ -498,20 +564,27 @@ export const apiService = {
       }
 
       const w = watchlists[index];
-      if (targetPrice >= w.currentBestPrice) {
-        throw new Error(`Target price must be less than the current best price (₹${w.currentBestPrice.toLocaleString()})`);
+      if (targetPriceInUsd >= w.currentBestPrice) {
+        const localBestPrice = getDisplayPrice(w.currentBestPrice, userCurrency);
+        throw new Error(`Target price must be less than the current best price (${formatPrice(localBestPrice, userCurrency)})`);
       }
 
-      w.targetPrice = targetPrice;
+      w.targetPrice = targetPriceInUsd;
       if (active !== undefined) {
         w.active = active;
       }
-      w.priceDifference = w.currentBestPrice - targetPrice;
+      w.priceDifference = w.currentBestPrice - targetPriceInUsd;
       w.updatedAt = new Date().toISOString();
 
       watchlists[index] = w;
       localStorage.setItem('price_watchlists', JSON.stringify(watchlists));
-      return w;
+      
+      return {
+        ...w,
+        targetPrice: targetPrice,
+        currentBestPrice: getDisplayPrice(w.currentBestPrice, userCurrency),
+        priceDifference: getDisplayPrice(w.currentBestPrice, userCurrency) - targetPrice
+      };
     }
   },
 
@@ -809,7 +882,26 @@ export const apiService = {
   async getDashboard(): Promise<any> {
     try {
       const response = await apiClient.get('/dashboard');
-      return response.data;
+      const userCurrency = getSavedCurrency();
+      const convertWatchlist = (item: any) => {
+        const targetPrice = getDisplayPrice(item.targetPrice, userCurrency);
+        const currentBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
+        return {
+          ...item,
+          targetPrice,
+          currentBestPrice,
+          priceDifference: currentBestPrice - targetPrice
+        };
+      };
+      
+      const data = response.data;
+      if (data.priceDropAlerts) {
+        data.priceDropAlerts = data.priceDropAlerts.map(convertWatchlist);
+      }
+      if (data.watchlists) {
+        data.watchlists = data.watchlists.map(convertWatchlist);
+      }
+      return data;
     } catch (error) {
       console.warn('Backend getDashboard failed, constructing dashboard locally from fallbacks');
       const [saved, watchlists, events, trending] = await Promise.all([

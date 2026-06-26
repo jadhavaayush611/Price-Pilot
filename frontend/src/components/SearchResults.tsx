@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ProductWithPrices } from '../types';
 import { ChevronLeft, ChevronRight, Inbox, ArrowRight, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { formatPrice, getDisplayPrice, getSavedCurrency } from '../lib/utils';
 
 interface SearchResultsProps {
   products: ProductWithPrices[];
@@ -26,6 +27,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   onToggleSave
 }) => {
   const navigate = useNavigate();
+  const currency = getSavedCurrency();
 
   // Motion variants for container and items
   const containerVariants = {
@@ -184,7 +186,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                     <>
                       <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider">Prices From</span>
                       <span className="text-lg font-extrabold text-white">
-                        ${lowest}
+                        {formatPrice(getDisplayPrice(lowest, currency), currency)}
                       </span>
                     </>
                   ) : (

@@ -5,9 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -31,30 +34,56 @@ public class CacheConfig {
     }
 
     @Bean
-    public CacheManager cacheManager(RedisConnectionFactory connectionFactory, MeterRegistry meterRegistry) {
-        RedisCacheManager redisCacheManager = RedisCacheManager.builder(connectionFactory)
-                .cacheDefaults(cacheConfiguration())
-                .withInitialCacheConfigurations(Map.of(
-                        "product-details", createCacheConfig(Duration.ofMinutes(30)),
-                        "product-searches", createCacheConfig(Duration.ofMinutes(5)),
-                        "popular-products", createCacheConfig(Duration.ofMinutes(60)),
-                        "recommendations", createCacheConfig(Duration.ofMinutes(10)),
-                        "dashboard", createCacheConfig(Duration.ofMinutes(5))
-                ))
-                .build();
+    public CacheManager cacheManager(
+            @Value("${spring.cache.type:simple}") String cacheType,
+            ObjectProvider<RedisConnectionFactory> connectionFactoryProvider,
+            MeterRegistry meterRegistry) {
 
-        return new CacheManager() {
-            @Override
-            public Cache getCache(String name) {
-                Cache cache = redisCacheManager.getCache(name);
-                return cache == null ? null : new InstrumentedCache(cache, meterRegistry);
-            }
+        RedisConnectionFactory connectionFactory = connectionFactoryProvider.getIfAvailable();
 
-            @Override
-            public Collection<String> getCacheNames() {
-                return redisCacheManager.getCacheNames();
-            }
-        };
+        if ("redis".equalsIgnoreCase(cacheType) && connectionFactory != null) {
+            RedisCacheManager redisCacheManager = RedisCacheManager.builder(connectionFactory)
+                    .cacheDefaults(cacheConfiguration())
+                    .withInitialCacheConfigurations(Map.of(
+                            "product-details", createCacheConfig(Duration.ofMinutes(30)),
+                            "product-searches", createCacheConfig(Duration.ofMinutes(5)),
+                            "popular-products", createCacheConfig(Duration.ofMinutes(60)),
+                            "recommendations", createCacheConfig(Duration.ofMinutes(10)),
+                            "dashboard", createCacheConfig(Duration.ofMinutes(5))
+                    ))
+                    .build();
+
+            return new CacheManager() {
+                @Override
+                public Cache getCache(String name) {
+                    Cache cache = redisCacheManager.getCache(name);
+                    return cache == null ? null : new InstrumentedCache(cache, meterRegistry);
+                }
+
+                @Override
+                public Collection<String> getCacheNames() {
+                    return redisCacheManager.getCacheNames();
+                }
+            };
+        } else {
+            // Fallback to simple in-memory ConcurrentMap cache
+            ConcurrentMapCacheManager concurrentMapCacheManager = new ConcurrentMapCacheManager(
+                    "product-details", "product-searches", "popular-products", "recommendations", "dashboard"
+            );
+
+            return new CacheManager() {
+                @Override
+                public Cache getCache(String name) {
+                    Cache cache = concurrentMapCacheManager.getCache(name);
+                    return cache == null ? null : new InstrumentedCache(cache, meterRegistry);
+                }
+
+                @Override
+                public Collection<String> getCacheNames() {
+                    return concurrentMapCacheManager.getCacheNames();
+                }
+            };
+        }
     }
 
     private RedisCacheConfiguration createCacheConfig(Duration ttl) {

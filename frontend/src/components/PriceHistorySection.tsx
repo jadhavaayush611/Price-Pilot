@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import type { PriceHistory } from '../types';
-import { formatPrice } from '../lib/utils';
+import { formatPrice, type CurrencyCode } from '../lib/utils';
 import { 
   History, 
   TrendingDown, 
@@ -17,7 +17,7 @@ import { motion } from 'framer-motion';
 
 interface PriceHistorySectionProps {
   productId: string;
-  currency: 'INR' | 'USD';
+  currency: CurrencyCode;
 }
 
 export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ productId, currency }) => {

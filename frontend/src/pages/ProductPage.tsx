@@ -4,7 +4,7 @@ import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
 import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice } from '../lib/utils';
+import { formatPrice, getSavedCurrency, saveCurrency, getDisplayPrice, type CurrencyCode, CURRENCY_SYMBOLS } from '../lib/utils';
 import { SellerCard } from '../components/SellerCard';
 import { useAuth } from '../context/AuthContext';
 import { PriceHistorySection } from '../components/PriceHistorySection';
@@ -16,7 +16,11 @@ export const ProductPage: React.FC = () => {
   const [product, setProduct] = useState<ProductWithPrices | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
-  const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
+  const [currency, setCurrency] = useState<CurrencyCode>(getSavedCurrency());
+
+  useEffect(() => {
+    saveCurrency(currency);
+  }, [currency]);
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -136,7 +140,7 @@ export const ProductPage: React.FC = () => {
     if (watchlistEntry) {
       setTargetPriceInput(watchlistEntry.targetPrice.toString());
     } else {
-      const best = lowestPrice || (product && product.prices && product.prices[0]?.currentPrice) || 0;
+      const best = lowestPrice || (product && product.prices && product.prices[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0);
       setTargetPriceInput(Math.floor(best * 0.9).toString());
     }
     setTrackingError(null);
@@ -151,9 +155,9 @@ export const ProductPage: React.FC = () => {
       return;
     }
 
-    const best = lowestPrice || (product && product.prices && product.prices[0]?.currentPrice) || 0;
-    if (target >= best) {
-      setTrackingError(`Target price must be strictly less than the current best price (${formatPrice(best, currency)})`);
+    const bestLocal = lowestPrice || (product && product.prices && product.prices[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0);
+    if (target >= bestLocal) {
+      setTrackingError(`Target price must be strictly less than the current best price (${formatPrice(bestLocal, currency)})`);
       return;
     }
 
@@ -219,14 +223,9 @@ export const ProductPage: React.FC = () => {
     }
   };
 
-  // Helper to check original currency and display correctly
-  const getDisplayPrice = (val: number) => {
-    const isOriginallyUSD = val < 5000;
-    if (currency === 'INR') {
-      return isOriginallyUSD ? val * 80 : val;
-    } else {
-      return isOriginallyUSD ? val : val / 80;
-    }
+  // Helper to check original currency and display correctly using the utils helper
+  const getDisplayPriceVal = (val: number) => {
+    return getDisplayPrice(val, currency);
   };
 
   if (loading) {
@@ -313,8 +312,8 @@ export const ProductPage: React.FC = () => {
   const processedPrices = product.prices
     ? product.prices.map((p) => ({
         ...p,
-        currentPrice: getDisplayPrice(p.currentPrice),
-        originalPrice: getDisplayPrice(p.originalPrice),
+        currentPrice: getDisplayPriceVal(p.currentPrice),
+        originalPrice: getDisplayPriceVal(p.originalPrice),
       })).sort((a, b) => a.currentPrice - b.currentPrice)
     : [];
 
@@ -444,27 +443,20 @@ export const ProductPage: React.FC = () => {
 
           <div className="flex items-center gap-3.5 self-end sm:self-auto">
             {/* Currency Selector */}
-            <div className="flex items-center rounded-xl bg-zinc-950/80 border border-zinc-900 p-1">
-              <button
-                onClick={() => setCurrency('INR')}
-                className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all ${
-                  currency === 'INR'
-                    ? 'bg-zinc-850 text-white border border-zinc-800 shadow-inner'
-                    : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                ₹ INR
-              </button>
-              <button
-                onClick={() => setCurrency('USD')}
-                className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all ${
-                  currency === 'USD'
-                    ? 'bg-zinc-850 text-white border border-zinc-800 shadow-inner'
-                    : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                $ USD
-              </button>
+            <div className="flex items-center rounded-xl bg-zinc-950/80 border border-zinc-900 p-1 gap-1">
+              {(['USD', 'INR', 'EUR', 'GBP', 'JPY'] as CurrencyCode[]).map((cur) => (
+                <button
+                  key={cur}
+                  onClick={() => setCurrency(cur)}
+                  className={`px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                    currency === cur
+                      ? 'bg-zinc-850 text-white border border-zinc-800 shadow-inner'
+                      : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  {CURRENCY_SYMBOLS[cur]} {cur}
+                </button>
+              ))}
             </div>
 
             {/* Layout View Mode Switcher */}
@@ -856,11 +848,11 @@ export const ProductPage: React.FC = () => {
               <form onSubmit={handleSaveTracking} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
                   <label htmlFor="targetPrice" className="text-xs font-bold text-zinc-400">
-                    Target Price ({currency === 'INR' ? '₹' : '$'})
+                    Target Price ({CURRENCY_SYMBOLS[currency]})
                   </label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-500 font-bold">
-                      {currency === 'INR' ? '₹' : '$'}
+                      {CURRENCY_SYMBOLS[currency]}
                     </span>
                     <input
                       id="targetPrice"
@@ -879,7 +871,7 @@ export const ProductPage: React.FC = () => {
                   <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Quick Select Target</span>
                   <div className="grid grid-cols-3 gap-2">
                     {[0.95, 0.9, 0.85].map((factor) => {
-                      const best = lowestPrice || product.prices?.[0]?.currentPrice || 0;
+                      const best = lowestPrice || (product.prices?.[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0);
                       const discounted = Math.floor(best * factor);
                       const pct = Math.round((1 - factor) * 100);
                       return (
@@ -889,7 +881,7 @@ export const ProductPage: React.FC = () => {
                           onClick={() => setTargetPriceInput(discounted.toString())}
                           className="px-2 py-1.5 rounded-lg border border-zinc-900 hover:border-zinc-800 bg-zinc-955 hover:bg-zinc-900 text-[10px] font-bold text-zinc-400 hover:text-white transition-all cursor-pointer text-center"
                         >
-                          {pct}% Off ({currency === 'INR' ? '₹' : '$'}{discounted.toLocaleString()})
+                          {pct}% Off ({formatPrice(discounted, currency)})
                         </button>
                       );
                     })}

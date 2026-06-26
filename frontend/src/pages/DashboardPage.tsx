@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { UserInteractionEvent, ProductWithPrices, Watchlist, SavedProduct } from '../types';
+import { formatPrice, getDisplayPrice, getSavedCurrency } from '../lib/utils';
 import {
   Eye,
   Heart,
@@ -51,6 +52,7 @@ interface DashboardData {
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const currency = getSavedCurrency();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -248,7 +250,7 @@ export const DashboardPage: React.FC = () => {
             <Link to={`/product/${productId}`} className="text-white hover:text-emerald-400 font-semibold hover:underline">
               {productName || 'product'}
             </Link>{' '}
-            at target <span className="text-emerald-400 font-mono font-bold">₹{metadata.targetPrice}</span>
+            at target <span className="text-emerald-400 font-mono font-bold">{formatPrice(metadata.targetPrice, currency)}</span>
           </span>
         );
       case 'WATCHLIST_DELETE':
@@ -476,8 +478,8 @@ export const DashboardPage: React.FC = () => {
                             </Link>
                             <span className="text-[10px] text-zinc-500 font-medium truncate">{alert.brand}</span>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-emerald-400 text-xs font-mono font-bold">₹{alert.currentBestPrice}</span>
-                              <span className="text-zinc-500 text-[10px] line-through font-mono">₹{alert.targetPrice}</span>
+                              <span className="text-emerald-400 text-xs font-mono font-bold">{formatPrice(alert.currentBestPrice, currency)}</span>
+                              <span className="text-zinc-500 text-[10px] line-through font-mono">{formatPrice(alert.targetPrice, currency)}</span>
                             </div>
                           </div>
                         </div>
@@ -526,7 +528,7 @@ export const DashboardPage: React.FC = () => {
                               <span className="text-[10px] text-zinc-500 mt-0.5 font-bold uppercase tracking-wider">{product.brand} • {product.category}</span>
                               <div className="flex items-baseline justify-between mt-2">
                                 <span className="text-sm font-mono font-extrabold text-white">
-                                  {lowest ? `₹${lowest.toLocaleString()}` : 'N/A'}
+                                  {lowest ? formatPrice(getDisplayPrice(lowest, currency), currency) : 'N/A'}
                                 </span>
                                 <span className="text-[10px] text-zinc-500 font-medium">Best Price</span>
                               </div>
@@ -559,7 +561,7 @@ export const DashboardPage: React.FC = () => {
                               <Link to={`/product/${p.id}`} className="text-white hover:text-blue-450 text-xs font-bold truncate block">
                                 {p.name}
                               </Link>
-                              <span className="text-[9px] font-mono text-zinc-550 font-bold mt-0.5">₹{price ? price.toLocaleString() : 'N/A'}</span>
+                              <span className="text-[9px] font-mono text-zinc-555 font-bold mt-0.5">{price ? formatPrice(getDisplayPrice(price, currency), currency) : 'N/A'}</span>
                             </div>
                           </div>
                         );
@@ -709,7 +711,7 @@ export const DashboardPage: React.FC = () => {
                             <div className="flex flex-col">
                               <span className="text-[10px] text-zinc-500 font-medium">Price Range</span>
                               <span className="text-sm font-mono font-extrabold text-white">
-                                {lowest ? `₹${lowest.toLocaleString()}` : 'N/A'} - {highest ? `₹${highest.toLocaleString()}` : ''}
+                                {lowest ? formatPrice(getDisplayPrice(lowest, currency), currency) : 'N/A'} - {highest ? formatPrice(getDisplayPrice(highest, currency), currency) : ''}
                               </span>
                             </div>
                             <Link to={`/product/${product.id}`} className="inline-flex items-center gap-1 text-xs text-blue-400 font-bold hover:text-blue-300">
@@ -766,17 +768,17 @@ export const DashboardPage: React.FC = () => {
                           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-zinc-900">
                             <div className="flex flex-col">
                               <span className="text-[9px] text-zinc-500 font-bold uppercase">Best Price</span>
-                              <span className="text-xs font-mono font-bold text-emerald-400">₹{alert.currentBestPrice.toLocaleString()}</span>
+                              <span className="text-xs font-mono font-bold text-emerald-400">{formatPrice(alert.currentBestPrice, currency)}</span>
                             </div>
                             <div className="flex flex-col">
                               <span className="text-[9px] text-zinc-500 font-bold uppercase">Target Price</span>
-                              <span className="text-xs font-mono font-bold text-white">₹{alert.targetPrice.toLocaleString()}</span>
+                              <span className="text-xs font-mono font-bold text-white">{formatPrice(alert.targetPrice, currency)}</span>
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[9px] text-zinc-550 font-bold uppercase">Savings</span>
+                              <span className="text-[9px] text-zinc-555 font-bold uppercase">Savings</span>
                               <span className="text-xs font-mono font-bold text-emerald-450 flex items-center gap-0.5">
                                 <TrendingDown className="h-3.5 w-3.5" />
-                                ₹{diff.toLocaleString()}
+                                {formatPrice(diff, currency)}
                               </span>
                             </div>
                           </div>
@@ -827,7 +829,7 @@ export const DashboardPage: React.FC = () => {
                         <span className="text-[10px] text-zinc-500 font-bold uppercase mt-0.5">{product.brand} • {product.category}</span>
                         <div className="flex items-baseline justify-between mt-3 pt-2.5 border-t border-zinc-900">
                           <span className="text-xs font-mono font-bold text-white">
-                            {lowest ? `₹${lowest.toLocaleString()}` : 'N/A'}
+                            {lowest ? formatPrice(getDisplayPrice(lowest, currency), currency) : 'N/A'}
                           </span>
                           <Link to={`/product/${product.id}`} className="text-[11px] text-blue-450 font-bold hover:text-blue-350 flex items-center gap-0.5">
                             Go To Product <ArrowRight className="h-3 w-3" />
