@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ProductWithPrices } from '../types';
 import { ChevronLeft, ChevronRight, Inbox, ArrowRight, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { formatPrice, getDisplayPrice, getSavedCurrency } from '../lib/utils';
+import { formatPrice, getDisplayPrice, getSavedCurrency } from '../currency';
 
 interface SearchResultsProps {
   products: ProductWithPrices[];

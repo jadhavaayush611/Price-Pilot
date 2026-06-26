@@ -4,7 +4,7 @@ import { apiService } from '../services/api';
 import type { Watchlist } from '../types';
 import { Bell, Trash2, ArrowLeft, Edit2, AlertCircle, ToggleLeft, ToggleRight, Inbox, ShoppingBag, Eye, CheckCircle2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice, getSavedCurrency, type CurrencyCode, CURRENCY_SYMBOLS } from '../lib/utils';
+import { formatPrice, getSavedCurrency, type CurrencyCode, CURRENCY_SYMBOLS } from '../currency';
 import { useAuth } from '../context/AuthContext';
 
 export const WatchlistPage: React.FC = () => {

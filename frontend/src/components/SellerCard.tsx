@@ -2,7 +2,7 @@ import React from 'react';
 import type { ProductPrice } from '../types';
 import { ExternalLink, Sparkles, Tag, Clock, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { formatPrice, type CurrencyCode } from '../lib/utils';
+import { formatPrice, type CurrencyCode } from '../currency';
 import { apiService } from '../services/api';
 
 interface SellerCardProps {

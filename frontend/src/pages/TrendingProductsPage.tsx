@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Bell, Heart, TrendingDown, ChevronRight, Inbox, RefreshCw, Sparkles } from 'lucide-react';
 import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
-import { formatPrice, getDisplayPrice, getSavedCurrency } from '../lib/utils';
+import { formatPrice, getDisplayPrice, getSavedCurrency } from '../currency';
 
 type ActiveTab = 'trending' | 'watched' | 'saved' | 'drops';
 

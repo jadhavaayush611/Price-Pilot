@@ -4,7 +4,7 @@ import { apiService } from '../services/api';
 import type { SavedProduct } from '../types';
 import { Heart, Inbox, ArrowLeft, Trash2, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice } from '../lib/utils';
+import { formatPrice } from '../currency';
 import { useAuth } from '../context/AuthContext';
 
 export const SavedProductsPage: React.FC = () => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import type { PriceHistory } from '../types';
-import { formatPrice, type CurrencyCode } from '../lib/utils';
+import { formatPrice, type CurrencyCode } from '../currency';
 import { 
   History, 
   TrendingDown, 

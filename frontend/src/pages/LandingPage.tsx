@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
-import { formatPrice, getDisplayPrice, getSavedCurrency } from '../lib/utils';
+import { formatPrice, getDisplayPrice, getSavedCurrency } from '../currency';
 
 export const LandingPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');

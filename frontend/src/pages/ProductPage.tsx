@@ -4,7 +4,7 @@ import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
 import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice, getSavedCurrency, saveCurrency, getDisplayPrice, type CurrencyCode, CURRENCY_SYMBOLS } from '../lib/utils';
+import { formatPrice, getSavedCurrency, saveCurrency, getDisplayPrice, type CurrencyCode, CURRENCY_SYMBOLS } from '../currency';
 import { SellerCard } from '../components/SellerCard';
 import { useAuth } from '../context/AuthContext';
 import { PriceHistorySection } from '../components/PriceHistorySection';

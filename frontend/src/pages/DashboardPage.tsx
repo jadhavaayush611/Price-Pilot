@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { UserInteractionEvent, ProductWithPrices, Watchlist, SavedProduct } from '../types';
-import { formatPrice, getDisplayPrice, getSavedCurrency } from '../lib/utils';
+import { formatPrice, getDisplayPrice, getSavedCurrency } from '../currency';
 import {
   Eye,
   Heart,

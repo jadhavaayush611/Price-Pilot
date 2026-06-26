@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics } from '../types';
-import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../lib/utils';
+import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../currency';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 
