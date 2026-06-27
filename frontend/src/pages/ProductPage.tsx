@@ -686,7 +686,7 @@ export const ProductPage: React.FC = () => {
                     Trending Score
                   </span>
                   <p className="text-xs text-zinc-500 leading-relaxed mt-1">
-                    Calculated dynamically from views (x1), saves (x5), watchlists (x10), and price adjustments (x2).
+                    A higher Trending Score indicates stronger customer interest and recent marketplace activity.
                   </p>
                 </div>
                 <div className="flex items-baseline gap-2.5 mt-2">

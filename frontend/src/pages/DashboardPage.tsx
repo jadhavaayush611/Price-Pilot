@@ -804,7 +804,7 @@ export const DashboardPage: React.FC = () => {
                   <TrendingUp className="h-5.5 w-5.5 text-indigo-400" />
                   Trending on PricePilot
                 </h2>
-                <p className="text-xs text-zinc-500">Popular products computed dynamically using platform views, saves, and watchlist frequencies.</p>
+                <p className="text-xs text-zinc-500">Explore the most active and popular products on the platform based on recent shopper activity.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
