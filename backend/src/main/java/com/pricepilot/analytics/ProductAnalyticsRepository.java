@@ -2,6 +2,7 @@ package com.pricepilot.analytics;
 
 import com.pricepilot.analytics.dto.ProductAnalyticsProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ProductAnalyticsRepository extends JpaRepository<ProductAnalyticsEntity, UUID> {
+public interface ProductAnalyticsRepository extends JpaRepository<ProductAnalyticsEntity, UUID>, JpaSpecificationExecutor<ProductAnalyticsEntity> {
 
     @Query("SELECT pa FROM ProductAnalyticsEntity pa WHERE pa.product.id = :productId")
     Optional<ProductAnalyticsEntity> findByProductId(@Param("productId") UUID productId);

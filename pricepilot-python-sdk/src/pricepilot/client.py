@@ -7,6 +7,7 @@ from pricepilot.recommendations import RecommendationsModule
 from pricepilot.watchlists import WatchlistsModule
 from pricepilot.dashboard import DashboardModule
 from pricepilot.analytics import AnalyticsModule
+from pricepilot.datasets import DatasetsModule
 
 class PricePilotClient:
     """The main client for the PricePilot Python SDK.
@@ -62,6 +63,7 @@ class PricePilotClient:
         self.watchlists = WatchlistsModule(self._http)
         self.dashboard = DashboardModule(self._http)
         self.analytics = AnalyticsModule(self._http)
+        self.datasets = DatasetsModule(self._http)
         
     def set_token(self, token: Optional[str]) -> None:
         """Sets the active Bearer token for requests."""

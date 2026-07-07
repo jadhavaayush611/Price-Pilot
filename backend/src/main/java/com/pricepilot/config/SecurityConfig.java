@@ -72,6 +72,7 @@ public class SecurityConfig {
                 // Admin Only Endpoints
                 .requestMatchers("/api/v1/sellers/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/prices/**").hasRole("ADMIN")
+                .requestMatchers("/api/v1/datasets/**").hasRole("ADMIN")
                 
                 // Any other request must be authenticated
                 .anyRequest().authenticated()
