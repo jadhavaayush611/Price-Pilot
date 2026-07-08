@@ -14,43 +14,44 @@ A production-quality, type-safe Python SDK for the PricePilot REST API. Suitable
   - `client.dashboard` — Combined summaries and user activities
   - `client.analytics` — Product view counts, save counts, and trending metrics
   - `client.ml` — Model training, offline evaluation, model metadata, and explainable predictions
+  - `client.ai` — Direct interaction with the FastAPI AI Microservice (inference, similar products, model reload, health, metrics)
 - **Resilient Networking**: Automatic HTTP connection pooling, configurable timeouts, and smart retries with exponential backoff.
 - **Robust Error Handling**: Standardizes backend API HTTP error statuses into a clean, typed Python exception hierarchy.
 - **Fully Type-Hinted**: Clean types, signatures, and static checking compatibilities.
 - **Standard Logging**: Uses Python's built-in `logging` module. Zero print statements.
-
+ 
 ---
-
+ 
 ## Installation
-
+ 
 ### From Source (Development Mode)
 ```bash
 git clone https://github.com/jadhavaayush611/Price-Pilot.git
 cd Price-Pilot/pricepilot-python-sdk
 pip install -e .
 ```
-
+ 
 ### Development Dependencies
 To install with testing and linting tools:
 ```bash
 pip install -e .[dev]
 ```
-
+ 
 ---
-
+ 
 ## Quick Start
-
+ 
 ### 1. Initialization and Auth
 ```python
 import logging
 from pricepilot import PricePilotClient, ValidationError, AuthenticationError
-
+ 
 # Enable logging
 logging.basicConfig(level=logging.INFO)
-
+ 
 # Initialize client
 client = PricePilotClient(base_url="http://localhost:8080/api/v1")
-
+ 
 try:
     # Login (stores token automatically for subsequent calls)
     auth_response = client.auth.login(email="user@example.com", password="password123")
@@ -58,7 +59,7 @@ try:
 except AuthenticationError:
     print("Invalid credentials.")
 ```
-
+ 
 ### 2. Product Search (Faceted & Paginated)
 ```python
 # Faceted Search
@@ -70,30 +71,30 @@ results = client.products.search(
     size=10,
     sort="price-asc"
 )
-
+ 
 print(f"Found {results.total_elements} products.")
 for product in results.content:
     print(f"- {product.name} | Lowest Price: ${product.lowest_price}")
 ```
-
+ 
 ### 3. Fetching Recommendations & Dashboard
 ```python
 # Recommendations
 recs = client.recommendations.get_recommendations(size=5)
 for product in recs.content:
     print(f"Personalized Pick: {product.name}")
-
+ 
 # Dashboard Data
 dashboard = client.dashboard.get_dashboard_data()
 print(f"Total Watchlists: {dashboard.watchlist_count}")
 print(f"Active Price Alerts: {dashboard.active_price_alerts_count}")
 ```
-
+ 
 ### 4. Watchlist Management (CRUD)
 ```python
 # Save a product to favorites
 client.watchlists.save_product(product_id="8b4c5d6e-7f8a-9b0c-1d2e-3f4a5b6c7d8e")
-
+ 
 # Add a price alert trigger
 alert = client.watchlists.create_watchlist_item(
     product_id="8b4c5d6e-7f8a-9b0c-1d2e-3f4a5b6c7d8e",
@@ -101,22 +102,44 @@ alert = client.watchlists.create_watchlist_item(
 )
 print(f"Watchlist alert created with ID: {alert.id}")
 ```
-
+ 
 ### 5. Machine Learning Operations (Model Training & Evaluation)
 ```python
 # Trigger pipeline training for a dataset version
 report = client.ml.train(dataset_version="1.0.0", k=10)
 print(f"Model trained at: {report['trainedAt']}")
-
+ 
 # Fetch model metadata for the Hybrid recommender
 metadata = client.ml.model_metadata(algorithm="Hybrid")
 print(f"Precision@10: {metadata['precisionAtK']:.4f}")
-
+ 
 # Generate predictions using the Collaborative filtering recommender
 predictions = client.ml.predict(algorithm="Collaborative", user_id="8b4c5d6e-7f8a-9b0c-1d2e-3f4a5b6c7d8e", limit=5)
 for pred in predictions:
     print(f"Product: {pred['name']} | Algorithm: {pred['recommendationAlgorithm']}")
     print(f"Reasons: {', '.join(pred['recommendationReasons'])}")
+```
+ 
+### 6. FastAPI AI Microservice Operations
+```python
+# Configure client with FastAPI URL and key
+client.config.ai_base_url = "http://localhost:8000"
+client.config.ai_api_key = "pricepilot-secret-api-key"
+ 
+# Direct inference via FastAPI
+predictions = client.ai.predict(
+    user_id="user_123",
+    candidates=[{"productId": "prod_1", "category": "Electronics", "brand": "BrandX"}],
+    algorithm="Hybrid",
+    limit=5
+)
+for rec in predictions["recommendations"]:
+    print(f"Product: {rec['productId']} | Score: {rec['score']}")
+    print(f"Reasons: {rec['reasons']}")
+ 
+# Check health of AI service
+health = client.ai.health()
+print(f"AI Service Status: {health['status']}")
 ```
 
 ---

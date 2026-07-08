@@ -12,6 +12,7 @@ public class ScoredProduct {
     private final ProductEntity product;
     private final double score;
     private List<String> reasons;
+    private String algorithm;
 
     public ScoredProduct(ProductEntity product, double score) {
         this.product = product;
@@ -22,5 +23,12 @@ public class ScoredProduct {
         this.product = product;
         this.score = score;
         this.reasons = reasons;
+    }
+
+    public ScoredProduct(ProductEntity product, double score, List<String> reasons, String algorithm) {
+        this.product = product;
+        this.score = score;
+        this.reasons = reasons;
+        this.algorithm = algorithm;
     }
 }

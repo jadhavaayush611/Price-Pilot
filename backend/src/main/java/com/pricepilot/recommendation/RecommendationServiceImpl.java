@@ -33,6 +33,7 @@ import com.pricepilot.recommendation.engine.CollaborativeFilteringEngine;
 import com.pricepilot.recommendation.engine.HybridRecommendationEngine;
 import com.pricepilot.recommendation.dto.ScoredProduct;
 import org.springframework.beans.factory.annotation.Value;
+import com.pricepilot.ai.AiGatewayService;
 
 @Service
 public class RecommendationServiceImpl implements RecommendationService {
@@ -48,6 +49,7 @@ public class RecommendationServiceImpl implements RecommendationService {
     private final ContentBasedRecommendationEngine contentEngine;
     private final CollaborativeFilteringEngine collaborativeEngine;
     private final HybridRecommendationEngine hybridEngine;
+    private final AiGatewayService aiGatewayService;
 
     @Value("${pricepilot.recommendation.strategy:RULE_BASED}")
     private String strategy;
@@ -62,7 +64,8 @@ public class RecommendationServiceImpl implements RecommendationService {
             PopularityRecommendationEngine popularityEngine,
             ContentBasedRecommendationEngine contentEngine,
             CollaborativeFilteringEngine collaborativeEngine,
-            HybridRecommendationEngine hybridEngine) {
+            HybridRecommendationEngine hybridEngine,
+            AiGatewayService aiGatewayService) {
         this.productRepository = productRepository;
         this.productPriceRepository = productPriceRepository;
         this.savedProductRepository = savedProductRepository;
@@ -73,6 +76,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         this.contentEngine = contentEngine;
         this.collaborativeEngine = collaborativeEngine;
         this.hybridEngine = hybridEngine;
+        this.aiGatewayService = aiGatewayService;
     }
 
     public RecommendationEngine getActiveEngine() {
@@ -156,9 +160,8 @@ public class RecommendationServiceImpl implements RecommendationService {
             }
         }
 
-        // 4. Delegate to active RecommendationEngine
-        RecommendationEngine engine = getActiveEngine();
-        List<ScoredProduct> scored = engine.recommend(userId, candidates, profile, saved, watchlists, limit);
+        // 4. Delegate to AI Gateway
+        List<ScoredProduct> scored = aiGatewayService.recommend(userId, candidates, profile, saved, watchlists, strategy, limit);
 
         // 5. Map to DTOs in a single batch (no N+1 queries)
         List<ProductEntity> recommendedProducts = scored.stream()
@@ -173,7 +176,7 @@ public class RecommendationServiceImpl implements RecommendationService {
             ScoredProduct sp = scoredMap.get(dto.getId());
             if (sp != null) {
                 dto.setRecommendationScore(sp.getScore());
-                dto.setRecommendationAlgorithm(engine.getAlgorithmName());
+                dto.setRecommendationAlgorithm(sp.getAlgorithm() != null ? sp.getAlgorithm() : strategy);
                 dto.setRecommendationReasons(sp.getReasons());
             }
         }

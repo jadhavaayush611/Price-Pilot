@@ -46,7 +46,12 @@ class HttpClientSession:
         """Removes the authentication token."""
         self.set_token(None)
         
-    def _build_url(self, path: str) -> str:
+    def _build_url(self, path: str, is_ai: bool = False) -> str:
+        if is_ai:
+            base = self.config.ai_base_url.rstrip("/")
+            # Remove any /api/v1 prefix if FastAPI endpoints are root-level
+            sub = path.lstrip("/")
+            return f"{base}/{sub}"
         base = self.config.base_url.rstrip("/")
         sub = path.lstrip("/")
         return f"{base}/{sub}"
@@ -58,14 +63,19 @@ class HttpClientSession:
         params: Optional[Dict[str, Any]] = None,
         json: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, Any]] = None,
-        timeout: Optional[float] = None
+        timeout: Optional[float] = None,
+        is_ai: bool = False
     ) -> Any:
-        url = self._build_url(path)
+        url = self._build_url(path, is_ai=is_ai)
         req_headers = headers or {}
+        
+        if is_ai:
+            req_headers["X-API-Key"] = self.config.ai_api_key
         
         # Merge extra headers
         for k, v in req_headers.items():
             self.session.headers[k] = v
+
             
         use_timeout = timeout if timeout is not None else self.config.timeout
         

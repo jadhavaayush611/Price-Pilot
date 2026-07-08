@@ -252,3 +252,30 @@ Medium
 
 Target Phase:
 FastAPI Integration / Phase 4
+
+## Phase 3
+
+### AI Gateway Request Contract
+
+Current
+
+Gateway assembles recommendation payloads directly from business-layer objects.
+
+Future
+
+Introduce versioned inference request DTOs containing only engineered features required by the AI service.
+
+Benefits
+
+- Smaller payloads
+- Stable AI contracts
+- Easier model evolution
+- Independent deployment
+
+Priority
+
+Medium
+
+Target
+
+Cloud Deployment Phase

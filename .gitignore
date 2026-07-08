@@ -123,3 +123,8 @@ INSTRUCTIONS.md
 # Machine Learning Datasets and Models
 /datasets/
 /models/recommendation/*.pkl
+
+# FastAPI AI Service Specific Ignores
+/pricepilot-ai/.env
+/pricepilot-ai/models/
+/pricepilot-ai/datasets/

@@ -9,6 +9,7 @@ from pricepilot.dashboard import DashboardModule
 from pricepilot.analytics import AnalyticsModule
 from pricepilot.datasets import DatasetsModule
 from pricepilot.ml import MlModule
+from pricepilot.ai import AiModule
 
 class PricePilotClient:
     """The main client for the PricePilot Python SDK.
@@ -66,6 +67,7 @@ class PricePilotClient:
         self.analytics = AnalyticsModule(self._http)
         self.datasets = DatasetsModule(self._http)
         self.ml = MlModule(self._http)
+        self.ai = AiModule(self._http)
         
     def set_token(self, token: Optional[str]) -> None:
         """Sets the active Bearer token for requests."""

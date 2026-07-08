@@ -16,3 +16,6 @@ class PricePilotConfig:
     max_retries: int = 3
     backoff_factor: float = 0.3
     verify_ssl: bool = True
+    ai_base_url: str = "http://localhost:8000"
+    ai_api_key: str = "pricepilot-secret-api-key"
+

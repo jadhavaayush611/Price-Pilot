@@ -47,6 +47,9 @@ public class RecommendationEngineTest {
     private ContentBasedRecommendationEngine contentEngine;
     private CollaborativeFilteringEngine collaborativeEngine;
     private HybridRecommendationEngine hybridEngine;
+    @Mock
+    private com.pricepilot.ai.AiGatewayService aiGatewayService;
+
     private RecommendationServiceImpl recommendationService;
 
     private UUID userId;
@@ -69,7 +72,7 @@ public class RecommendationEngineTest {
 
         recommendationService = new RecommendationServiceImpl(
                 productRepository, productPriceRepository, savedProductRepository, watchlistRepository, profileService,
-                ruleBasedEngine, popularityEngine, contentEngine, collaborativeEngine, hybridEngine
+                ruleBasedEngine, popularityEngine, contentEngine, collaborativeEngine, hybridEngine, aiGatewayService
         );
 
         userId = UUID.randomUUID();
