@@ -1,0 +1,58 @@
+{
+    "datasetVersion": "1.0.0",
+    "trainedAt": "2026-07-08T18:08:35.054495Z",
+    "metrics": {
+        "popularity": {
+            "algorithm": "Popularity",
+            "k": 10,
+            "precisionAtK": 0.03333333333333333,
+            "recallAtK": 0.1527777777777778,
+            "mapAtK": 0.027722663139329806,
+            "ndcgAtK": 0.07000169435602505,
+            "coverage": 0.2,
+            "diversity": 0.8666666666666667,
+            "novelty": 2.280261534893817,
+            "popularityBias": 4.900000000000001,
+            "timestamp": "2026-07-08T18:08:34.486634Z"
+        },
+        "content": {
+            "algorithm": "Content",
+            "k": 10,
+            "precisionAtK": 0.03888888888888889,
+            "recallAtK": 0.18981481481481477,
+            "mapAtK": 0.03875661375661375,
+            "ndcgAtK": 0.09056514792430272,
+            "coverage": 0.82,
+            "diversity": 0.7395061728395063,
+            "novelty": 2.740145684450707,
+            "popularityBias": 3.638888888888889,
+            "timestamp": "2026-07-08T18:08:34.660065Z"
+        },
+        "collaborative": {
+            "algorithm": "Collaborative",
+            "k": 10,
+            "precisionAtK": 0.03888888888888889,
+            "recallAtK": 0.18055555555555555,
+            "mapAtK": 0.04351851851851851,
+            "ndcgAtK": 0.09488670069723198,
+            "coverage": 0.62,
+            "diversity": 0.7839506172839505,
+            "novelty": 1.751077486045932,
+            "popularityBias": 6.272222222222222,
+            "timestamp": "2026-07-08T18:08:34.829141Z"
+        },
+        "hybrid": {
+            "algorithm": "Hybrid",
+            "k": 10,
+            "precisionAtK": 0.03333333333333334,
+            "recallAtK": 0.125,
+            "mapAtK": 0.03490593768371546,
+            "ndcgAtK": 0.07476460346175366,
+            "coverage": 0.66,
+            "diversity": 0.7604938271604939,
+            "novelty": 2.02367778463321,
+            "popularityBias": 5.505555555555556,
+            "timestamp": "2026-07-08T18:08:35.050669Z"
+        }
+    }
+}

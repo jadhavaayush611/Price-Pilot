@@ -23,5 +23,8 @@ public interface SavedProductRepository extends JpaRepository<SavedProductEntity
 
     @Query("SELECT COUNT(sp) FROM SavedProductEntity sp WHERE sp.id.userId = :userId")
     long countByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT sp FROM SavedProductEntity sp WHERE sp.id.productId = :productId")
+    List<SavedProductEntity> findAllByProductId(@Param("productId") UUID productId);
 }
 

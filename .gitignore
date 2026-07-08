@@ -119,3 +119,7 @@ docs/user_interaction_architecture.md
 ROADMAP.md
 AGENT_RULES.md
 INSTRUCTIONS.md
+
+# Machine Learning Datasets and Models
+/datasets/
+/models/recommendation/*.pkl

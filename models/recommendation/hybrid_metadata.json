@@ -1,0 +1,24 @@
+{
+    "algorithm": "Hybrid",
+    "datasetVersion": "1.0.0",
+    "featureVersion": "1.0.0",
+    "trainedAt": "2026-07-08T18:08:35.053805Z",
+    "modelFile": "hybrid_model.pkl",
+    "configuration": {
+        "weights": {
+            "popularity": 0.2,
+            "content": 0.35,
+            "collaborative": 0.45
+        }
+    },
+    "k": 10,
+    "precisionAtK": 0.03333333333333334,
+    "recallAtK": 0.125,
+    "mapAtK": 0.03490593768371546,
+    "ndcgAtK": 0.07476460346175366,
+    "coverage": 0.66,
+    "diversity": 0.7604938271604939,
+    "novelty": 2.02367778463321,
+    "popularityBias": 5.505555555555556,
+    "timestamp": "2026-07-08T18:08:35.050669Z"
+}

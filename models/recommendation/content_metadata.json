@@ -1,0 +1,18 @@
+{
+    "algorithm": "Content",
+    "datasetVersion": "1.0.0",
+    "featureVersion": "1.0.0",
+    "trainedAt": "2026-07-08T18:08:35.051926Z",
+    "modelFile": "content_model.pkl",
+    "configuration": {},
+    "k": 10,
+    "precisionAtK": 0.03888888888888889,
+    "recallAtK": 0.18981481481481477,
+    "mapAtK": 0.03875661375661375,
+    "ndcgAtK": 0.09056514792430272,
+    "coverage": 0.82,
+    "diversity": 0.7395061728395063,
+    "novelty": 2.740145684450707,
+    "popularityBias": 3.638888888888889,
+    "timestamp": "2026-07-08T18:08:34.660065Z"
+}

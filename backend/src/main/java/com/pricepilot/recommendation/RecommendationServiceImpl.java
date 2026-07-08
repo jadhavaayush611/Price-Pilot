@@ -25,6 +25,15 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.pricepilot.recommendation.engine.RecommendationEngine;
+import com.pricepilot.recommendation.engine.RuleBasedRecommendationEngine;
+import com.pricepilot.recommendation.engine.PopularityRecommendationEngine;
+import com.pricepilot.recommendation.engine.ContentBasedRecommendationEngine;
+import com.pricepilot.recommendation.engine.CollaborativeFilteringEngine;
+import com.pricepilot.recommendation.engine.HybridRecommendationEngine;
+import com.pricepilot.recommendation.dto.ScoredProduct;
+import org.springframework.beans.factory.annotation.Value;
+
 @Service
 public class RecommendationServiceImpl implements RecommendationService {
 
@@ -34,17 +43,55 @@ public class RecommendationServiceImpl implements RecommendationService {
     private final PriceWatchlistRepository watchlistRepository;
     private final RecommendationProfileService profileService;
 
+    private final RuleBasedRecommendationEngine ruleBasedEngine;
+    private final PopularityRecommendationEngine popularityEngine;
+    private final ContentBasedRecommendationEngine contentEngine;
+    private final CollaborativeFilteringEngine collaborativeEngine;
+    private final HybridRecommendationEngine hybridEngine;
+
+    @Value("${pricepilot.recommendation.strategy:RULE_BASED}")
+    private String strategy;
+
     public RecommendationServiceImpl(
             ProductRepository productRepository,
             ProductPriceRepository productPriceRepository,
             SavedProductRepository savedProductRepository,
             PriceWatchlistRepository watchlistRepository,
-            RecommendationProfileService profileService) {
+            RecommendationProfileService profileService,
+            RuleBasedRecommendationEngine ruleBasedEngine,
+            PopularityRecommendationEngine popularityEngine,
+            ContentBasedRecommendationEngine contentEngine,
+            CollaborativeFilteringEngine collaborativeEngine,
+            HybridRecommendationEngine hybridEngine) {
         this.productRepository = productRepository;
         this.productPriceRepository = productPriceRepository;
         this.savedProductRepository = savedProductRepository;
         this.watchlistRepository = watchlistRepository;
         this.profileService = profileService;
+        this.ruleBasedEngine = ruleBasedEngine;
+        this.popularityEngine = popularityEngine;
+        this.contentEngine = contentEngine;
+        this.collaborativeEngine = collaborativeEngine;
+        this.hybridEngine = hybridEngine;
+    }
+
+    public RecommendationEngine getActiveEngine() {
+        if (strategy == null) {
+            return ruleBasedEngine;
+        }
+        switch (strategy.toUpperCase().trim()) {
+            case "POPULARITY":
+                return popularityEngine;
+            case "CONTENT":
+                return contentEngine;
+            case "COLLABORATIVE":
+                return collaborativeEngine;
+            case "HYBRID":
+                return hybridEngine;
+            case "RULE_BASED":
+            default:
+                return ruleBasedEngine;
+        }
     }
 
     @Override
@@ -109,22 +156,29 @@ public class RecommendationServiceImpl implements RecommendationService {
             }
         }
 
-        // 4. Score candidates
-        List<ScoredProduct> scoredProducts = new ArrayList<>();
-        for (ProductEntity p : candidates) {
-            double score = calculateRecommendationScore(p, profile, saved, watchlists);
-            scoredProducts.add(new ScoredProduct(p, score));
-        }
+        // 4. Delegate to active RecommendationEngine
+        RecommendationEngine engine = getActiveEngine();
+        List<ScoredProduct> scored = engine.recommend(userId, candidates, profile, saved, watchlists, limit);
 
-        // 5. Rank and return top limit
-        List<ProductEntity> recommendedProducts = scoredProducts.stream()
-                .sorted(Comparator.comparingDouble(ScoredProduct::getScore).reversed())
-                .limit(limit)
+        // 5. Map to DTOs in a single batch (no N+1 queries)
+        List<ProductEntity> recommendedProducts = scored.stream()
                 .map(ScoredProduct::getProduct)
                 .collect(Collectors.toList());
+        List<ProductResponseDTO> dtos = mapProductsToResponseDTOs(recommendedProducts);
 
-        // 6. Map to DTOs in a single batch (no N+1 queries)
-        return mapProductsToResponseDTOs(recommendedProducts);
+        // 6. Populate explainability details
+        Map<UUID, ScoredProduct> scoredMap = scored.stream()
+                .collect(Collectors.toMap(s -> s.getProduct().getId(), s -> s));
+        for (ProductResponseDTO dto : dtos) {
+            ScoredProduct sp = scoredMap.get(dto.getId());
+            if (sp != null) {
+                dto.setRecommendationScore(sp.getScore());
+                dto.setRecommendationAlgorithm(engine.getAlgorithmName());
+                dto.setRecommendationReasons(sp.getReasons());
+            }
+        }
+
+        return dtos;
     }
 
     @Override
@@ -452,21 +506,5 @@ public class RecommendationServiceImpl implements RecommendationService {
         }).collect(Collectors.toList());
     }
 
-    private static class ScoredProduct {
-        private final ProductEntity product;
-        private final double score;
 
-        public ScoredProduct(ProductEntity product, double score) {
-            this.product = product;
-            this.score = score;
-        }
-
-        public ProductEntity getProduct() {
-            return product;
-        }
-
-        public double getScore() {
-            return score;
-        }
-    }
 }

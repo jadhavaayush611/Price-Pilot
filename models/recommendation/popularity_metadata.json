@@ -1,0 +1,18 @@
+{
+    "algorithm": "Popularity",
+    "datasetVersion": "1.0.0",
+    "featureVersion": "1.0.0",
+    "trainedAt": "2026-07-08T18:08:35.050689Z",
+    "modelFile": "popularity_model.pkl",
+    "configuration": {},
+    "k": 10,
+    "precisionAtK": 0.03333333333333333,
+    "recallAtK": 0.1527777777777778,
+    "mapAtK": 0.027722663139329806,
+    "ndcgAtK": 0.07000169435602505,
+    "coverage": 0.2,
+    "diversity": 0.8666666666666667,
+    "novelty": 2.280261534893817,
+    "popularityBias": 4.900000000000001,
+    "timestamp": "2026-07-08T18:08:34.486634Z"
+}

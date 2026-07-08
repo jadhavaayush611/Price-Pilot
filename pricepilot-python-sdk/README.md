@@ -13,6 +13,7 @@ A production-quality, type-safe Python SDK for the PricePilot REST API. Suitable
   - `client.watchlists` — Price drop target watchlists and product favorites management
   - `client.dashboard` — Combined summaries and user activities
   - `client.analytics` — Product view counts, save counts, and trending metrics
+  - `client.ml` — Model training, offline evaluation, model metadata, and explainable predictions
 - **Resilient Networking**: Automatic HTTP connection pooling, configurable timeouts, and smart retries with exponential backoff.
 - **Robust Error Handling**: Standardizes backend API HTTP error statuses into a clean, typed Python exception hierarchy.
 - **Fully Type-Hinted**: Clean types, signatures, and static checking compatibilities.
@@ -99,6 +100,23 @@ alert = client.watchlists.create_watchlist_item(
     target_price=299.99
 )
 print(f"Watchlist alert created with ID: {alert.id}")
+```
+
+### 5. Machine Learning Operations (Model Training & Evaluation)
+```python
+# Trigger pipeline training for a dataset version
+report = client.ml.train(dataset_version="1.0.0", k=10)
+print(f"Model trained at: {report['trainedAt']}")
+
+# Fetch model metadata for the Hybrid recommender
+metadata = client.ml.model_metadata(algorithm="Hybrid")
+print(f"Precision@10: {metadata['precisionAtK']:.4f}")
+
+# Generate predictions using the Collaborative filtering recommender
+predictions = client.ml.predict(algorithm="Collaborative", user_id="8b4c5d6e-7f8a-9b0c-1d2e-3f4a5b6c7d8e", limit=5)
+for pred in predictions:
+    print(f"Product: {pred['name']} | Algorithm: {pred['recommendationAlgorithm']}")
+    print(f"Reasons: {', '.join(pred['recommendationReasons'])}")
 ```
 
 ---

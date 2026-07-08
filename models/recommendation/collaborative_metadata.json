@@ -1,0 +1,25 @@
+{
+    "algorithm": "Collaborative",
+    "datasetVersion": "1.0.0",
+    "featureVersion": "1.0.0",
+    "trainedAt": "2026-07-08T18:08:35.052726Z",
+    "modelFile": "collaborative_model.pkl",
+    "configuration": {
+        "weights": {
+            "PRODUCT_VIEW": 1.0,
+            "SELLER_CLICK": 2.0,
+            "PRODUCT_SAVE": 3.0,
+            "WATCHLIST_ADD": 4.0
+        }
+    },
+    "k": 10,
+    "precisionAtK": 0.03888888888888889,
+    "recallAtK": 0.18055555555555555,
+    "mapAtK": 0.04351851851851851,
+    "ndcgAtK": 0.09488670069723198,
+    "coverage": 0.62,
+    "diversity": 0.7839506172839505,
+    "novelty": 1.751077486045932,
+    "popularityBias": 6.272222222222222,
+    "timestamp": "2026-07-08T18:08:34.829141Z"
+}

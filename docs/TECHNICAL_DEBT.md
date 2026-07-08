@@ -232,3 +232,23 @@ This document contains the Technical Debt Review and Production Readiness classi
 *   **Potential trade-offs:** Requires returning explanation tokens alongside recommendation DTOs.
 *   **Estimated complexity:** Low
 *   **When it should be revisited:** During Phase 3 frontend redesign.
+
+## Phase 3
+
+### ML Training Decoupling
+
+Current:
+
+Spring Boot MlController can trigger Python training processes.
+
+Future:
+
+Move all model training to independent scheduled or CLI-driven pipelines.
+
+Spring Boot should only consume predictions through FastAPI.
+
+Priority:
+Medium
+
+Target Phase:
+FastAPI Integration / Phase 4

@@ -27,6 +27,11 @@ public class ProductResponseDTO {
     private LocalDateTime updatedAt;
     private List<com.pricepilot.productprice.dto.ProductPriceResponseDTO> prices;
 
+    // Explainability fields
+    private Double recommendationScore;
+    private String recommendationAlgorithm;
+    private List<String> recommendationReasons;
+
     public static ProductResponseDTO fromEntity(ProductEntity entity) {
         if (entity == null) {
             return null;
