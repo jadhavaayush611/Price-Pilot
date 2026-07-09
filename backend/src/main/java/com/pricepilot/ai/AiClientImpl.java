@@ -88,4 +88,46 @@ public class AiClientImpl implements AiClient {
             return false;
         }
     }
+
+    @Override
+    public java.util.Map<String, Object> chat(java.util.Map<String, Object> request, String authorizationHeader) {
+        String endpoint = aiUrl + "/assistant/chat";
+        return postToAssistant(endpoint, request, authorizationHeader);
+    }
+
+    @Override
+    public java.util.Map<String, Object> compare(java.util.Map<String, Object> request, String authorizationHeader) {
+        String endpoint = aiUrl + "/assistant/compare";
+        return postToAssistant(endpoint, request, authorizationHeader);
+    }
+
+    @Override
+    public java.util.Map<String, Object> ask(java.util.Map<String, Object> request, String authorizationHeader) {
+        String endpoint = aiUrl + "/assistant/ask";
+        return postToAssistant(endpoint, request, authorizationHeader);
+    }
+
+    @Override
+    public java.util.Map<String, Object> clearMemory(java.util.Map<String, Object> request, String authorizationHeader) {
+        String endpoint = aiUrl + "/assistant/clear_memory";
+        return postToAssistant(endpoint, request, authorizationHeader);
+    }
+
+    private java.util.Map<String, Object> postToAssistant(String endpoint, java.util.Map<String, Object> request, String authorizationHeader) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (authorizationHeader != null && !authorizationHeader.isEmpty()) {
+            headers.add("Authorization", authorizationHeader);
+        }
+        
+        log.debug("Forwarding request to FastAPI assistant endpoint: {}", endpoint);
+        HttpEntity<java.util.Map<String, Object>> httpEntity = new HttpEntity<>(request, headers);
+        try {
+            return restTemplate.postForObject(endpoint, httpEntity, java.util.Map.class);
+        } catch (Exception e) {
+            log.error("Failed to forward request to FastAPI at {}: {}", endpoint, e.getMessage());
+            throw new RuntimeException("AI Assistant is temporarily unavailable. Please try again later.", e);
+        }
+    }
 }
+

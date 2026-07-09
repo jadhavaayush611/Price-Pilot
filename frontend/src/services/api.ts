@@ -943,5 +943,27 @@ export const apiService = {
         ]
       };
     }
+  },
+
+  // Assistant APIs
+  async assistantChat(message: string, conversationId?: string): Promise<any> {
+    const response = await apiClient.post('/assistant/chat', { message, conversationId });
+    return response.data;
+  },
+
+  async assistantCompare(productIds: string[], conversationId?: string): Promise<any> {
+    const response = await apiClient.post('/assistant/compare', { productIds, conversationId });
+    return response.data;
+  },
+
+  async assistantAsk(question: string, conversationId?: string): Promise<any> {
+    const response = await apiClient.post('/assistant/ask', { question, conversationId });
+    return response.data;
+  },
+
+  async assistantClearMemory(conversationId: string): Promise<any> {
+    const response = await apiClient.post('/assistant/clear_memory', { conversationId });
+    return response.data;
   }
 };
+

@@ -41,6 +41,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <NavLink to="/search" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Compare</NavLink>
               <NavLink to="/trending" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Trending</NavLink>
               {isAuthenticated && (
+                <NavLink to="/assistant" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>AI Assistant</NavLink>
+              )}
+              {isAuthenticated && (
                 <NavLink to="/dashboard" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Dashboard</NavLink>
               )}
               {isAuthenticated && (

@@ -65,4 +65,7 @@ async def add_observability_headers(request: Request, call_next):
     return response
 
 # Register routers
+from app.assistant.router import router as assistant_router
 app.include_router(api_router)
+app.include_router(assistant_router)
+

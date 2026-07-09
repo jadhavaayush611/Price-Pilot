@@ -14,6 +14,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { SavedProductsPage } from './pages/SavedProductsPage';
 import { WatchlistPage } from './pages/WatchlistPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { AiAssistantPage } from './pages/AiAssistantPage';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -62,6 +63,14 @@ export const App: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/assistant"
+                element={
+                  <ProtectedRoute>
+                    <AiAssistantPage />
                   </ProtectedRoute>
                 }
               />
