@@ -2,6 +2,8 @@
 
 This document details the design, workflows, and implementation details for the conversational AI Shopping Assistant integrated into PricePilot.
 
+ddd
+
 ---
 
 ## 1. System Architecture
