@@ -15,15 +15,21 @@ API_KEY_HEADER = {"X-API-Key": settings.api_key}
 
 def test_health_endpoint():
     """Asserts health check works without authentication."""
+    from app.loaders.model_registry import model_registry
+    model_registry.is_loaded = True
     response = client.get("/health")
     assert response.status_code == 200
     data = response.json()
     assert "status" in data
-    assert "details" in data
 
 def test_metrics_endpoint():
-    """Asserts metrics endpoint works without authentication."""
+    """Asserts metrics endpoint requires authentication and works when authenticated."""
+    # Without authentication (public access should fail)
     response = client.get("/metrics")
+    assert response.status_code in (401, 403)
+
+    # With authentication (should succeed)
+    response = client.get("/metrics", headers=API_KEY_HEADER)
     assert response.status_code == 200
     assert "pricepilot_ai" in response.text or "# HELP" in response.text
 

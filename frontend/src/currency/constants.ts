@@ -1,4 +1,4 @@
-import { CurrencyCode, CurrencyConfig, CurrencyMetadata } from './types';
+import type { CurrencyCode, CurrencyConfig, CurrencyMetadata } from './types';
 
 export const DEFAULT_CURRENCY: CurrencyCode = 'INR';
 

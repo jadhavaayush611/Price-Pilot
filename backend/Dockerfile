@@ -1,5 +1,5 @@
 # Stage 1: Build the Maven application
-FROM eclipse-temurin:25-jdk AS build
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
 # Copy Maven wrapper configuration and dependencies info
@@ -17,18 +17,27 @@ COPY src ./src
 RUN ./mvnw package -DskipTests -B
 
 # Stage 2: Production runtime environment
-FROM eclipse-temurin:25-jre
+FROM eclipse-temurin:21-jre
+
+# Create a non-root group and user
+RUN groupadd -r -g 10001 appgroup && \
+    useradd -r -u 10001 -g appgroup -m -d /home/appuser -s /bin/bash appuser
+
 WORKDIR /app
 
-# Install curl for docker healthcheck
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Install curl for docker healthcheck and clean up package lists
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build --chown=appuser:appgroup /app/target/*.jar app.jar
+
+USER appuser
 
 EXPOSE 8080
 
 # Health check using the custom health endpoint
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:8080/api/v1/health || exit 1
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

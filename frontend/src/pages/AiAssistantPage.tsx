@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Trash2, Bot, User, Sparkles, RefreshCw, AlertCircle, ShoppingCart, ArrowRight, TrendingUp } from 'lucide-react';
+import { Send, Trash2, Bot, User, Sparkles, RefreshCw, AlertCircle, ArrowRight, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiService } from '../services/api';
 import { getSavedCurrency, formatPrice } from '../currency';

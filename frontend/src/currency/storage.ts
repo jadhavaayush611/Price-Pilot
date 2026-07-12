@@ -1,4 +1,4 @@
-import { CurrencyCode } from './types';
+import type { CurrencyCode } from './types';
 import { DEFAULT_CURRENCY } from './constants';
 
 const STORAGE_KEY = 'pricepilot_currency';

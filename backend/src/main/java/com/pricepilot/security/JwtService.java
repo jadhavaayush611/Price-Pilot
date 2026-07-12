@@ -17,7 +17,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${pricepilot.jwt.secret:MzJieXRlc3NlY3JldGtleWZvcnByaWNlcGlsb3RzZWN1cml0eWhhcmRlbmluZzEyMzQ1Njc4OTA=}")
+    @Value("${pricepilot.jwt.secret}")
     private String secretKey;
 
     @Value("${pricepilot.jwt.expiration:86400000}") // 24 hours in milliseconds

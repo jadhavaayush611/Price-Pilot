@@ -30,9 +30,10 @@ class LocalStorageMock {
   }
 }
 
-if (typeof window === 'undefined' || !global.localStorage) {
-  global.localStorage = new LocalStorageMock() as any;
-  global.window = { localStorage: global.localStorage } as any;
+if (typeof window === 'undefined') {
+  const g = globalThis as any;
+  g.localStorage = new LocalStorageMock();
+  g.window = { localStorage: g.localStorage };
 }
 
 describe('Currency Subsystem Tests', () => {

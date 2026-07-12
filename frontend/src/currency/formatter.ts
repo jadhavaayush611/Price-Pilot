@@ -1,5 +1,5 @@
 import { CURRENCY_CONFIGS } from './constants';
-import { CurrencyCode } from './types';
+import type { CurrencyCode } from './types';
 
 export function formatPrice(price: number, currency: CurrencyCode = 'INR'): string {
   const config = CURRENCY_CONFIGS[currency] || CURRENCY_CONFIGS.INR;

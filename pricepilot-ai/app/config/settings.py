@@ -2,7 +2,18 @@ import os
 
 class Settings:
     def __init__(self):
-        self.api_key = os.getenv("PRICEPILOT_AI_API_KEY", "pricepilot-secret-api-key")
+        self.env = os.getenv("ENV", "production")
+        
+        # Validate required secrets in production
+        api_key = os.getenv("PRICEPILOT_AI_API_KEY")
+        if self.env.lower() in ("prod", "production"):
+            if not api_key:
+                raise ValueError("CRITICAL: PRICEPILOT_AI_API_KEY environment variable is required in production mode.")
+            if api_key == "pricepilot-secret-api-key":
+                raise ValueError("CRITICAL: PRICEPILOT_AI_API_KEY cannot use the insecure default fallback in production mode.")
+            self.api_key = api_key
+        else:
+            self.api_key = api_key if api_key else "pricepilot-secret-api-key"
         
         # Paths
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,6 +28,5 @@ class Settings:
         
         self.host = os.getenv("HOST", "0.0.0.0")
         self.port = int(os.getenv("PORT", "8000"))
-        self.env = os.getenv("ENV", "production")
 
 settings = Settings()

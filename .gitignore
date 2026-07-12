@@ -123,6 +123,11 @@ INSTRUCTIONS.md
 # Machine Learning Datasets and Models
 /datasets/
 /models/recommendation/*.pkl
+*.joblib
+*.pb
+*.onnx
+*.h5
+.ipynb_checkpoints/
 
 # FastAPI AI Service Specific Ignores
 /pricepilot-ai/.env

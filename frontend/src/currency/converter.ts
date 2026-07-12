@@ -1,5 +1,5 @@
 import { CONVERSION_RATES } from './constants';
-import { CurrencyCode } from './types';
+import type { CurrencyCode } from './types';
 
 export function convertFromUsd(priceInUsd: number, toCurrency: CurrencyCode): number {
   const rate = CONVERSION_RATES[toCurrency] || 1;

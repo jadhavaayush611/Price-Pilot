@@ -235,7 +235,132 @@ Registers or updates a price point for a product under a specific seller.
 
 ---
 
-## 6. Exception & Error Handling
+## 6. User Authentication
+
+All protected endpoints require an `Authorization` header containing the JWT token: `Authorization: Bearer <token>`.
+
+### Register User
+Creates a new user account and returns a JWT token.
+
+* **Endpoint:** `POST /auth/register`
+* **Authentication:** None
+* **Request Body (JSON):**
+  ```json
+  {
+    "firstName": "Smoke",
+    "lastName": "Tester",
+    "email": "smoketest@example.com",
+    "password": "Password123!"
+  }
+  ```
+* **Success Response (201 Created):**
+  ```json
+  {
+    "token": "eyJhbGciOiJIUzI1NiIsIn...",
+    "user": {
+      "id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+      "firstName": "Smoke",
+      "lastName": "Tester",
+      "email": "smoketest@example.com",
+      "role": "USER",
+      "createdAt": "2026-07-12T07:54:07Z",
+      "updatedAt": "2026-07-12T07:54:07Z"
+    }
+  }
+  ```
+
+### Login User
+Authenticates credentials and returns a JWT token.
+
+* **Endpoint:** `POST /auth/login`
+* **Authentication:** None
+* **Request Body (JSON):**
+  ```json
+  {
+    "email": "smoketest@example.com",
+    "password": "Password123!"
+  }
+  ```
+* **Success Response (200 OK):** Same as Register User.
+
+---
+
+## 7. Personalized Recommendations
+
+### Get Personalized Recommendations
+Retrieves recommendations tailored for the logged-in user based on search patterns, views, and favorites.
+
+* **Endpoint:** `GET /recommendations`
+* **Authentication:** Required (JWT)
+* **Query Parameters:**
+  * `category` (string, optional)
+  * `brand` (string, optional)
+  * `minPrice` (decimal, optional)
+  * `maxPrice` (decimal, optional)
+  * `sort` (string, optional)
+  * `page` (int, default: `0`)
+  * `size` (int, default: `10`)
+* **Success Response (200 OK):** Paginated array of products.
+
+### Get Similar Products
+Retrieves similar products based on a specific product.
+
+* **Endpoint:** `GET /recommendations/similar/{productId}`
+* **Authentication:** None
+* **Query Parameters:**
+  * `limit` (int, default: `10`)
+* **Success Response (200 OK):** List of similar product DTOs.
+
+### Get Trending Products
+Retrieves trending products based on overall view count and price drop analytics.
+
+* **Endpoint:** `GET /recommendations/trending`
+* **Authentication:** None
+* **Query Parameters:**
+  * `limit` (int, default: `10`)
+* **Success Response (200 OK):** List of trending product DTOs.
+
+---
+
+## 8. AI Assistant Chatbot
+
+Interact with the AI shopping assistant chatbot, leveraging LLMs to answer comparison queries, search parameters, or shopping advice.
+
+### Chat with Assistant
+* **Endpoint:** `POST /assistant/chat`
+* **Authentication:** Required (JWT)
+* **Request Body (JSON):**
+  ```json
+  {
+    "message": "Compare Sony XM5 and Bose QuietComfort headphones."
+  }
+  ```
+* **Success Response (200 OK):**
+  ```json
+  {
+    "response": "Here is the comparison between Sony WH-1000XM5 and Bose QuietComfort..."
+  }
+  ```
+
+### Compare Products
+* **Endpoint:** `POST /assistant/compare`
+* **Authentication:** Required (JWT)
+* **Request Body (JSON):** Same as Chat.
+
+### Ask Question
+* **Endpoint:** `POST /assistant/ask`
+* **Authentication:** Required (JWT)
+* **Request Body (JSON):** Same as Chat.
+
+### Clear Chat Memory
+* **Endpoint:** `POST /assistant/clear_memory`
+* **Authentication:** Required (JWT)
+* **Request Body (JSON):** Empty or user data.
+* **Success Response (200 OK):** Memory cleared indicator.
+
+---
+
+## 9. Exception & Error Handling
 PricePilot returns consistent JSON error payloads for client errors or internal issues:
 
 ### Example: Validation Error (400 Bad Request)

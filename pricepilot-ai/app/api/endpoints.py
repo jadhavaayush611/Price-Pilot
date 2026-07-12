@@ -163,25 +163,50 @@ def reload_models():
     return {"status": "success", "message": "Models reloaded successfully"}
 
 @router.get("/health")
-def health_check():
+def health_check(response: Response):
     """Performs self-checks for liveness and readiness."""
-    status_code = status.HTTP_200_OK
-    health_status = "UP"
     details = {
         "models_loaded": model_registry.is_loaded,
         "loaded_algorithms": list(model_registry._models.keys())
     }
     
     if not model_registry.is_loaded:
-        health_status = "DEGRADED"
-        details["warning"] = "No models loaded, system operating on fallback mode."
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {
+            "status": "DOWN",
+            "details": details
+        }
         
     return {
-        "status": health_status,
+        "status": "UP",
         "details": details
     }
 
-@router.get("/metrics")
+@router.get("/health/liveness")
+def liveness_check():
+    """Liveness check to verify the API server is up and responding."""
+    return {"status": "UP"}
+
+@router.get("/health/readiness")
+def readiness_check(response: Response):
+    """Readiness check to verify that models are loaded and ready to serve."""
+    details = {
+        "models_loaded": model_registry.is_loaded,
+        "loaded_algorithms": list(model_registry._models.keys())
+    }
+    if not model_registry.is_loaded:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {
+            "status": "DOWN",
+            "details": details
+        }
+    return {
+        "status": "UP",
+        "details": details
+    }
+
+@router.get("/metrics", dependencies=[Depends(verify_api_key)])
 def get_metrics():
     """Exposes Prometheus compatible scrape metrics."""
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+

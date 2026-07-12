@@ -1,0 +1,12 @@
+services:
+  pricepilot-db:
+    ports:
+      - "127.0.0.1:${DB_PORT}:5432"
+
+  pricepilot-redis:
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:6379"
+
+  pricepilot-ai:
+    ports:
+      - "127.0.0.1:${AI_PORT}:8000"
