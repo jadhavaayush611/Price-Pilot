@@ -177,3 +177,19 @@ If you want to configure Vite to call a different backend API url, create a `.en
 VITE_API_BASE_URL=http://localhost:8080/api/v1
 ```
 Vite will automatically detect this variable on the next launch.
+
+---
+
+## 💡 Pro Tip: Concurrent Local Development
+
+If you prefer to run both the Spring Boot backend and the React frontend concurrently from a single terminal window, you can use the root-level npm scripts:
+
+1. Install root dependencies (requires Node.js):
+   ```bash
+   npm install
+   ```
+2. Launch both services concurrently:
+   ```bash
+   npm run dev
+   ```
+This will launch the backend on port `8080` and the React frontend on Vite's default dev port (typically `http://localhost:5173/`).

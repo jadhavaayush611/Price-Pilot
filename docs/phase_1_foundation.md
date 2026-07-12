@@ -69,7 +69,7 @@ The frontend is built as a single-page application using React, TypeScript, and 
 ## 4. Local Development
 
 ### Prerequisites
-- **Java:** JDK 25
+- **Java:** JDK 21
 - **Node.js:** v18 or newer
 - **Database:** PostgreSQL (running on port `5432` with a database named `pricepilot`)
 

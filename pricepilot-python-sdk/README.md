@@ -13,6 +13,7 @@ A production-quality, type-safe Python SDK for the PricePilot REST API. Suitable
   - `client.watchlists` — Price drop target watchlists and product favorites management
   - `client.dashboard` — Combined summaries and user activities
   - `client.analytics` — Product view counts, save counts, and trending metrics
+  - `client.datasets` — Export datasets (Products, Events, Watchlists, saved products) in JSON/CSV formats
   - `client.ml` — Model training, offline evaluation, model metadata, and explainable predictions
   - `client.ai` — Direct interaction with the FastAPI AI Microservice (inference, similar products, model reload, health, metrics)
 - **Resilient Networking**: Automatic HTTP connection pooling, configurable timeouts, and smart retries with exponential backoff.
@@ -119,8 +120,18 @@ for pred in predictions:
     print(f"Product: {pred['name']} | Algorithm: {pred['recommendationAlgorithm']}")
     print(f"Reasons: {', '.join(pred['recommendationReasons'])}")
 ```
- 
-### 6. FastAPI AI Microservice Operations
+ ### 6. Dataset Retrieval Operations (JSON & CSV Export)
+```python
+# Fetch user interaction events dataset in CSV format
+csv_data = client.datasets.get_interaction_events(format="csv", size=100)
+print(f"Exported CSV Header: {csv_data.splitlines()[0]}")
+
+# Fetch saved products dataset in JSON format
+saved_products = client.datasets.get_saved_products(format="json", size=50)
+print(f"Total entries: {len(saved_products.content)}")
+```
+
+### 7. FastAPI AI Microservice Operations
 ```python
 # Configure client with FastAPI URL and key
 client.config.ai_base_url = "http://localhost:8000"
