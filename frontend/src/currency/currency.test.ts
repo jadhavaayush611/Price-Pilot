@@ -54,14 +54,11 @@ describe('Currency Subsystem Tests', () => {
       expect(convertFromUsd(100, 'JPY')).toBe(15000);
     });
 
-    it('should calculate display price based on legacy heuristic', () => {
-      // For value < 5000: assumed to be USD originally
+    it('should calculate display price correctly', () => {
       // 100 USD converted to EUR (rate 0.9) -> 90 EUR
       expect(getDisplayPrice(100, 'EUR')).toBe(90);
-
-      // For value >= 5000: assumed to be INR originally (conversion rate 80)
-      // 8000 INR / 80 -> 100 USD -> converted to EUR (rate 0.9) -> 90 EUR
-      expect(getDisplayPrice(8000, 'EUR')).toBe(90);
+      // 100 USD converted to INR (rate 80) -> 8000 INR
+      expect(getDisplayPrice(100, 'INR')).toBe(8000);
     });
   });
 

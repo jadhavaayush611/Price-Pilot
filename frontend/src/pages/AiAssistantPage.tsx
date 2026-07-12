@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Send, Trash2, Bot, User, Sparkles, RefreshCw, AlertCircle, ArrowRight, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiService } from '../services/api';
-import { getSavedCurrency, formatPrice } from '../currency';
+import { getSavedCurrency, formatPrice, getDisplayPrice } from '../currency';
 import { useAuth } from '../context/AuthContext';
 
 interface ProductCardDTO {
@@ -318,7 +318,7 @@ export const AiAssistantPage: React.FC = () => {
                               <tr>
                                 <td className="p-3 font-medium text-zinc-400">Price</td>
                                 {msg.comparisons.products.map((p, idx) => (
-                                  <td key={idx} className="p-3 font-semibold text-white">{formatPrice(p.price, userCurrency)}</td>
+                                  <td key={idx} className="p-3 font-semibold text-white">{formatPrice(getDisplayPrice(p.price, userCurrency), userCurrency)}</td>
                                 ))}
                               </tr>
                               <tr>
@@ -372,9 +372,9 @@ export const AiAssistantPage: React.FC = () => {
                               <p className="text-[10px] text-zinc-500 mt-0.5">{p.brand} · {p.category}</p>
                               
                               <div className="flex items-baseline gap-1.5 mt-1.5">
-                                <span className="text-xs font-extrabold text-white">{formatPrice(p.price, userCurrency)}</span>
+                                <span className="text-xs font-extrabold text-white">{formatPrice(getDisplayPrice(p.price, userCurrency), userCurrency)}</span>
                                 {p.originalPrice > p.price && (
-                                  <span className="text-[10px] text-zinc-500 line-through">{formatPrice(p.originalPrice, userCurrency)}</span>
+                                  <span className="text-[10px] text-zinc-500 line-through">{formatPrice(getDisplayPrice(p.originalPrice, userCurrency), userCurrency)}</span>
                                 )}
                               </div>
                             </div>

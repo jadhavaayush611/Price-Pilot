@@ -161,7 +161,7 @@ public class ProductService {
         String customSortField = null;
         Sort.Direction customDirection = Sort.Direction.ASC;
 
-        if (sortStr != null && !sortStr.trim().isEmpty()) {
+        if (sortStr != null && !sortStr.trim().isEmpty() && !sortStr.trim().equalsIgnoreCase("default")) {
             String cleanSort = sortStr.trim().toLowerCase();
             if (cleanSort.equals("price-asc") || cleanSort.equals("price,asc")) {
                 customSortField = "price";
@@ -176,6 +176,24 @@ public class ProductService {
                 // Standard sorting, e.g., name,asc or createdAt,desc
                 String[] parts = sortStr.split(",");
                 String property = parts[0].trim();
+                
+                // Map snake_case to camelCase
+                if ("created_at".equalsIgnoreCase(property)) {
+                    property = "createdAt";
+                } else if ("updated_at".equalsIgnoreCase(property)) {
+                    property = "updatedAt";
+                } else if ("image_url".equalsIgnoreCase(property)) {
+                    property = "imageUrl";
+                }
+
+                // Validate property against allowed ProductEntity fields
+                java.util.Set<String> validProperties = java.util.Set.of(
+                    "id", "name", "brand", "category", "description", "imageUrl", "archived", "createdAt", "updatedAt"
+                );
+                if (!validProperties.contains(property)) {
+                    throw new IllegalArgumentException("Invalid sort property: " + property);
+                }
+
                 Sort.Direction direction = Sort.Direction.ASC;
                 if (parts.length > 1 && "desc".equalsIgnoreCase(parts[1].trim())) {
                     direction = Sort.Direction.DESC;

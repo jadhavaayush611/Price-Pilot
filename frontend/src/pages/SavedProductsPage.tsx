@@ -4,7 +4,7 @@ import { apiService } from '../services/api';
 import type { SavedProduct } from '../types';
 import { Heart, Inbox, ArrowLeft, Trash2, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice } from '../currency';
+import { formatPrice, getDisplayPrice, getSavedCurrency } from '../currency';
 import { useAuth } from '../context/AuthContext';
 
 export const SavedProductsPage: React.FC = () => {
@@ -13,6 +13,7 @@ export const SavedProductsPage: React.FC = () => {
   const [savedProducts, setSavedProducts] = useState<SavedProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const currency = getSavedCurrency();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -191,7 +192,7 @@ export const SavedProductsPage: React.FC = () => {
                         <div className="flex items-baseline gap-1">
                           <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider mr-1">Best Price:</span>
                           <span className="text-sm font-extrabold text-emerald-400">
-                            {formatPrice(product.bestPrice)}
+                            {formatPrice(getDisplayPrice(product.bestPrice, currency), currency)}
                           </span>
                         </div>
                       ) : (

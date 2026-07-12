@@ -8,7 +8,6 @@ import lombok.*;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class UserRequestDTO {
 
@@ -25,4 +24,15 @@ public class UserRequestDTO {
 
     @NotBlank(message = "Last name is required")
     private String lastName;
+
+    public UserRequestDTO(String email, String password, String firstName, String lastName) {
+        this.email = email != null ? email.trim() : null;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    public void setEmail(String email) {
+        this.email = email != null ? email.trim() : null;
+    }
 }

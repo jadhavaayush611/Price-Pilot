@@ -4,7 +4,7 @@ import { apiService } from '../services/api';
 import type { Watchlist } from '../types';
 import { Bell, Trash2, ArrowLeft, Edit2, AlertCircle, ToggleLeft, ToggleRight, Inbox, ShoppingBag, Eye, CheckCircle2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice, getSavedCurrency, type CurrencyCode, CURRENCY_SYMBOLS } from '../currency';
+import { formatPrice, getSavedCurrency, type CurrencyCode, CURRENCY_SYMBOLS, getDisplayPrice, convertToUsd } from '../currency';
 import { useAuth } from '../context/AuthContext';
 
 export const WatchlistPage: React.FC = () => {
@@ -69,7 +69,7 @@ export const WatchlistPage: React.FC = () => {
 
   const handleOpenEditModal = (item: Watchlist) => {
     setEditingItem(item);
-    setEditTargetPrice(item.targetPrice.toString());
+    setEditTargetPrice(getDisplayPrice(item.targetPrice, currency).toString());
     setEditError(null);
   };
 
@@ -77,14 +77,15 @@ export const WatchlistPage: React.FC = () => {
     e.preventDefault();
     if (!editingItem) return;
 
-    const target = parseFloat(editTargetPrice);
-    if (isNaN(target) || target <= 0) {
+    const targetLocal = parseFloat(editTargetPrice);
+    if (isNaN(targetLocal) || targetLocal <= 0) {
       setEditError('Target price must be greater than zero');
       return;
     }
 
-    if (target >= editingItem.currentBestPrice) {
-      setEditError(`Target price must be strictly less than the current best price (${formatPrice(editingItem.currentBestPrice, currency)})`);
+    const bestLocal = getDisplayPrice(editingItem.currentBestPrice, currency);
+    if (targetLocal >= bestLocal) {
+      setEditError(`Target price must be strictly less than the current best price (${formatPrice(bestLocal, currency)})`);
       return;
     }
 
@@ -92,7 +93,8 @@ export const WatchlistPage: React.FC = () => {
     setEditError(null);
 
     try {
-      const updated = await apiService.updateWatchlist(editingItem.id, target, editingItem.active);
+      const targetInUsd = convertToUsd(targetLocal, currency);
+      const updated = await apiService.updateWatchlist(editingItem.id, targetInUsd, editingItem.active);
       setWatchlists(prev => prev.map(w => w.id === editingItem.id ? updated : w));
       setEditingItem(null);
     } catch (err: any) {
@@ -275,14 +277,14 @@ export const WatchlistPage: React.FC = () => {
                     <div className="flex flex-col">
                       <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Best Price</span>
                       <span className={`text-sm font-extrabold ${targetMet && item.active ? 'text-emerald-400' : 'text-zinc-200'}`}>
-                        {formatPrice(item.currentBestPrice, currency)}
+                        {formatPrice(getDisplayPrice(item.currentBestPrice, currency), currency)}
                       </span>
                     </div>
 
                     <div className="flex flex-col">
                       <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Target Price</span>
                       <span className="text-sm font-extrabold text-emerald-400">
-                        {formatPrice(item.targetPrice, currency)}
+                        {formatPrice(getDisplayPrice(item.targetPrice, currency), currency)}
                       </span>
                     </div>
 
@@ -291,7 +293,7 @@ export const WatchlistPage: React.FC = () => {
                       <span className={`text-sm font-extrabold ${item.priceDifference <= 0 ? 'text-emerald-400' : 'text-zinc-400'}`}>
                         {item.priceDifference <= 0 
                           ? 'Triggered' 
-                          : `+${formatPrice(item.priceDifference, currency)}`
+                          : `+${formatPrice(getDisplayPrice(item.priceDifference, currency), currency)}`
                         }
                       </span>
                     </div>
@@ -409,7 +411,7 @@ export const WatchlistPage: React.FC = () => {
                 <div className="flex flex-col text-right shrink-0">
                   <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Best Price</span>
                   <span className="text-sm font-extrabold text-emerald-400 mt-0.5">
-                    {formatPrice(editingItem.currentBestPrice, currency)}
+                    {formatPrice(getDisplayPrice(editingItem.currentBestPrice, currency), currency)}
                   </span>
                 </div>
               </div>
@@ -436,7 +438,8 @@ export const WatchlistPage: React.FC = () => {
                   <span className="text-[10px] font-bold text-zinc-555 uppercase tracking-wider">Quick Select Target</span>
                   <div className="grid grid-cols-3 gap-2">
                     {[0.95, 0.9, 0.85].map((factor) => {
-                      const discounted = Math.floor(editingItem.currentBestPrice * factor);
+                      const bestLocal = getDisplayPrice(editingItem.currentBestPrice, currency);
+                      const discounted = Math.floor(bestLocal * factor);
                       const pct = Math.round((1 - factor) * 100);
                       return (
                         <button

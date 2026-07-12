@@ -6,7 +6,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
-    Optional<UserEntity> findByEmail(String email);
-    boolean existsByEmail(String email);
+    java.util.Optional<UserEntity> findByEmailIgnoreCase(String email);
+    boolean existsByEmailIgnoreCase(String email);
+
+    default java.util.Optional<UserEntity> findByEmail(String email) {
+        return findByEmailIgnoreCase(email != null ? email.trim() : null);
+    }
+    default boolean existsByEmail(String email) {
+        return existsByEmailIgnoreCase(email != null ? email.trim() : null);
+    }
 }
 

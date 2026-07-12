@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import type { PriceHistory } from '../types';
-import { formatPrice, type CurrencyCode } from '../currency';
+import { formatPrice, getDisplayPrice, type CurrencyCode } from '../currency';
 import { 
   History, 
   TrendingDown, 
@@ -110,6 +110,9 @@ export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ produc
                 </thead>
                 <tbody className="divide-y divide-zinc-900/50 text-sm">
                   {history.map((record) => {
+                    const oldPriceLocal = getDisplayPrice(record.oldPrice, currency);
+                    const newPriceLocal = getDisplayPrice(record.newPrice, currency);
+                    const diffLocal = Math.abs(newPriceLocal - oldPriceLocal);
                     const isDrop = record.priceDifference < 0;
                     return (
                       <tr 
@@ -137,12 +140,12 @@ export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ produc
                         {/* Price Change */}
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2 font-semibold">
-                            <span className="text-zinc-550 line-through text-xs">
-                              {formatPrice(record.oldPrice, currency)}
+                            <span className="text-zinc-555 line-through text-xs">
+                              {formatPrice(oldPriceLocal, currency)}
                             </span>
-                            <ArrowRight className="h-3 w-3 text-zinc-650" />
+                            <ArrowRight className="h-3 w-3 text-zinc-655" />
                             <span className="text-white">
-                              {formatPrice(record.newPrice, currency)}
+                              {formatPrice(newPriceLocal, currency)}
                             </span>
                           </div>
                         </td>
@@ -150,7 +153,7 @@ export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ produc
                         {/* Difference */}
                         <td className="px-5 py-4">
                           <span className={`font-bold ${isDrop ? 'text-emerald-450' : 'text-rose-500'}`}>
-                            {isDrop ? '-' : '+'}{formatPrice(Math.abs(record.priceDifference), currency)}
+                            {isDrop ? '-' : '+'}{formatPrice(diffLocal, currency)}
                           </span>
                         </td>
 

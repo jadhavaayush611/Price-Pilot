@@ -404,17 +404,23 @@ public class RecommendationServiceImpl implements RecommendationService {
     private double calculateSimilarityScore(ProductEntity candidate, ProductEntity target, BigDecimal targetBestPrice) {
         double score = 0.0;
 
-        // Category Match
-        if (candidate.getCategory().equals(target.getCategory())) {
-            score += 50.0;
+        // Category Match (Primary priority)
+        boolean sameCategory = candidate.getCategory().equalsIgnoreCase(target.getCategory());
+        if (sameCategory) {
+            score += 150.0; // High base score for same category
         }
 
-        // Brand Match
-        if (target.getBrand() != null && target.getBrand().equals(candidate.getBrand())) {
-            score += 30.0;
+        // Brand Match (Secondary priority)
+        boolean sameBrand = target.getBrand() != null && target.getBrand().equalsIgnoreCase(candidate.getBrand());
+        if (sameBrand) {
+            if (sameCategory) {
+                score += 50.0; // Brand match in same category is highly relevant
+            } else {
+                score += 15.0; // Cross-category brand match gets a small boost
+            }
         }
 
-        // Price Similarity
+        // Price Similarity (Tertiary priority)
         BigDecimal candBestPrice = getBestPrice(candidate);
         if (candBestPrice != null && targetBestPrice != null && targetBestPrice.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal diff = candBestPrice.subtract(targetBestPrice).abs();
@@ -422,12 +428,41 @@ public class RecommendationServiceImpl implements RecommendationService {
             double pctDiff = ratio.doubleValue();
 
             if (pctDiff <= 0.1) {
-                score += 20.0;
+                score += 40.0;
             } else if (pctDiff <= 0.2) {
-                score += 10.0;
+                score += 25.0;
             } else if (pctDiff <= 0.3) {
+                score += 15.0;
+            } else if (pctDiff <= 0.5) {
                 score += 5.0;
             }
+        }
+
+        // Name Word Overlap (Highly relevant for identifying model variants/generations)
+        if (target.getName() != null && candidate.getName() != null) {
+            String[] targetNameWords = target.getName().toLowerCase().split("\\W+");
+            String candidateNameLower = candidate.getName().toLowerCase();
+            int nameOverlap = 0;
+            for (String word : targetNameWords) {
+                // Ignore very short words like 'a', 'in', 'to', etc.
+                if (word.length() > 2 && candidateNameLower.contains(word)) {
+                    nameOverlap++;
+                }
+            }
+            score += nameOverlap * 20.0;
+        }
+
+        // Similar Specifications (Description text overlap)
+        if (target.getDescription() != null && candidate.getDescription() != null) {
+            String[] targetWords = target.getDescription().toLowerCase().split("\\W+");
+            String candDescLower = candidate.getDescription().toLowerCase();
+            int overlap = 0;
+            for (String word : targetWords) {
+                if (word.length() > 3 && candDescLower.contains(word)) {
+                    overlap++;
+                }
+            }
+            score += Math.min(overlap, 6) * 5.0; // Up to +30.0
         }
 
         // Trending Score (Analytics)
@@ -437,7 +472,7 @@ public class RecommendationServiceImpl implements RecommendationService {
                     analytics.getSaveCount() * 5.0 +
                     analytics.getWatchlistCount() * 10.0 +
                     analytics.getPriceChangeCount() * 2.0;
-            score += trendingScore * 0.05;
+            score += Math.min(trendingScore * 0.05, 10.0);
         }
 
         // Discount

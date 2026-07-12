@@ -134,28 +134,11 @@ export const apiService = {
 
   // Search products (hybrid)
   async searchProducts(query: string): Promise<ProductWithPrices[]> {
-    try {
-      const response = await this.getProducts(0, 50, undefined, undefined, query);
-      return response.content.map(p => ({
-        ...p,
-        prices: [],
-      }));
-    } catch (error) {
-      console.warn('Backend search failed, falling back to mock data');
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      
-      if (!query) {
-        return MOCK_PRODUCTS;
-      }
-      
-      const lowerQuery = query.toLowerCase();
-      return MOCK_PRODUCTS.filter(
-        (product) =>
-          product.name.toLowerCase().includes(lowerQuery) ||
-          product.brand.toLowerCase().includes(lowerQuery) ||
-          product.category.toLowerCase().includes(lowerQuery)
-      );
-    }
+    const response = await this.getProducts(0, 50, undefined, undefined, query);
+    return response.content.map(p => ({
+      ...p,
+      prices: [],
+    }));
   },
 
   // Search products with multi-faceted filtering, sorting, and pagination (Real API)
@@ -173,77 +156,14 @@ export const apiService = {
     size: number;
     number: number;
   }> {
-    try {
-      const response = await apiClient.get('/search', { params });
-      return response.data;
-    } catch (error) {
-      console.warn('Backend search API failed, falling back to mock data filtering');
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      
-      const { keyword = '', category = 'All', brand = 'All', page = 0, size = 10, sort = 'default' } = params;
-      let filtered = [...MOCK_PRODUCTS];
-
-      if (keyword.trim()) {
-        const lowerKeyword = keyword.toLowerCase();
-        filtered = filtered.filter(
-          (p) =>
-            p.name.toLowerCase().includes(lowerKeyword) ||
-            p.brand.toLowerCase().includes(lowerKeyword) ||
-            p.category.toLowerCase().includes(lowerKeyword) ||
-            p.description.toLowerCase().includes(lowerKeyword)
-        );
-      }
-
-      if (category !== 'All') {
-        filtered = filtered.filter((p) => p.category.toLowerCase() === category.toLowerCase());
-      }
-
-      if (brand !== 'All') {
-        filtered = filtered.filter((p) => p.brand.toLowerCase() === brand.toLowerCase());
-      }
-
-      // Sort
-      filtered.sort((a, b) => {
-        if (sort === 'price-asc' || sort === 'price,asc') {
-          return (a.lowestPrice || 0) - (b.lowestPrice || 0);
-        }
-        if (sort === 'price-desc' || sort === 'price,desc') {
-          return (b.lowestPrice || 0) - (a.lowestPrice || 0);
-        }
-        if (sort === 'discount-desc' || sort === 'discount,desc') {
-          const maxDiscount = (p: ProductWithPrices) =>
-            p.prices && p.prices.length > 0 ? Math.max(...p.prices.map((pr) => pr.discountPercentage)) : 0;
-          return maxDiscount(b) - maxDiscount(a);
-        }
-        // default by name
-        return a.name.localeCompare(b.name);
-      });
-
-      // Paginate
-      const start = page * size;
-      const paginated = filtered.slice(start, start + size);
-
-      return {
-        content: paginated,
-        totalPages: Math.ceil(filtered.length / size),
-        totalElements: filtered.length,
-        size,
-        number: page,
-      };
-    }
+    const response = await apiClient.get('/search', { params });
+    return response.data;
   },
 
-  // Get single product details (hybrid)
+  // Get single product details (Real API)
   async getProduct(id: string): Promise<ProductWithPrices | null> {
-    try {
-      const response = await apiClient.get(`/products/${id}`);
-      return response.data;
-    } catch (error) {
-      console.warn(`Failed to get product ${id} from API, trying mock data`);
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      const product = MOCK_PRODUCTS.find((p) => p.id === id);
-      return product || null;
-    }
+    const response = await apiClient.get(`/products/${id}`);
+    return response.data;
   },
 
   // Product CRUD Operations (Real API)
@@ -369,90 +289,34 @@ export const apiService = {
     return response.data;
   },
 
-  // Saved Products Operations (Real API with fallback)
+  // Saved Products Operations (Real API)
   async getSavedProducts(): Promise<SavedProduct[]> {
-    try {
-      const response = await apiClient.get('/users/saved-products');
-      return response.data;
-    } catch (error) {
-      console.warn('Backend saved products fetch failed, using fallback mock data');
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      const savedIds = JSON.parse(localStorage.getItem('saved_product_ids') || '[]');
-      return MOCK_PRODUCTS
-        .filter(p => savedIds.includes(p.id))
-        .map(p => ({
-          productId: p.id,
-          name: p.name,
-          brand: p.brand,
-          category: p.category,
-          imageUrl: p.imageUrl,
-          bestPrice: p.lowestPrice || null,
-          savedAt: new Date().toISOString()
-        }));
-    }
+    const response = await apiClient.get('/users/saved-products');
+    return response.data;
   },
 
   async saveProduct(productId: string): Promise<void> {
-    try {
-      await apiClient.post(`/users/saved-products/${productId}`);
-    } catch (error: any) {
-      if (error.response && error.response.status === 409) {
-        throw new Error('Product already saved');
-      }
-      if (error.response && error.response.status === 404) {
-        throw new Error('Product not found');
-      }
-      console.warn('Backend save product failed, simulating locally');
-      const savedIds = JSON.parse(localStorage.getItem('saved_product_ids') || '[]');
-      if (!savedIds.includes(productId)) {
-        savedIds.push(productId);
-        localStorage.setItem('saved_product_ids', JSON.stringify(savedIds));
-      }
-    }
+    await apiClient.post(`/users/saved-products/${productId}`);
   },
 
   async removeProduct(productId: string): Promise<void> {
-    try {
-      await apiClient.delete(`/users/saved-products/${productId}`);
-    } catch (error) {
-      console.warn('Backend remove product failed, simulating locally');
-      let savedIds = JSON.parse(localStorage.getItem('saved_product_ids') || '[]');
-      savedIds = savedIds.filter((id: string) => id !== productId);
-      localStorage.setItem('saved_product_ids', JSON.stringify(savedIds));
-    }
+    await apiClient.delete(`/users/saved-products/${productId}`);
   },
 
   // Watchlist Operations (Real API with fallback)
   async getWatchlists(): Promise<Watchlist[]> {
-    try {
-      const response = await apiClient.get('/watchlists');
-      const userCurrency = getSavedCurrency();
-      return response.data.map((item: any) => {
-        const targetPrice = getDisplayPrice(item.targetPrice, userCurrency);
-        const currentBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
-        return {
-          ...item,
-          targetPrice,
-          currentBestPrice,
-          priceDifference: currentBestPrice - targetPrice
-        };
-      });
-    } catch (error) {
-      console.warn('Backend get watchlists failed, using fallback mock data');
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      const watchlists: Watchlist[] = JSON.parse(localStorage.getItem('price_watchlists') || '[]');
-      const userCurrency = getSavedCurrency();
-      return watchlists.map((item: any) => {
-        const targetPrice = getDisplayPrice(item.targetPrice, userCurrency);
-        const currentBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
-        return {
-          ...item,
-          targetPrice,
-          currentBestPrice,
-          priceDifference: currentBestPrice - targetPrice
-        };
-      });
-    }
+    const response = await apiClient.get('/watchlists');
+    const userCurrency = getSavedCurrency();
+    return response.data.map((item: any) => {
+      const targetPrice = getDisplayPrice(item.targetPrice, userCurrency);
+      const currentBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
+      return {
+        ...item,
+        targetPrice,
+        currentBestPrice,
+        priceDifference: currentBestPrice - targetPrice
+      };
+    });
   },
 
   async createWatchlist(productId: string, targetPrice: number): Promise<Watchlist> {
@@ -484,49 +348,7 @@ export const apiService = {
         }
         throw new Error(data?.message || 'Invalid target price');
       }
-      console.warn('Backend create watchlist failed, simulating locally');
-      
-      const watchlists: Watchlist[] = JSON.parse(localStorage.getItem('price_watchlists') || '[]');
-      if (watchlists.some(w => w.productId === productId)) {
-        throw new Error('You are already watching this product');
-      }
-
-      // Find product name and current price from mock products
-      const product = MOCK_PRODUCTS.find(p => p.id === productId);
-      if (!product) {
-        throw new Error('Product not found');
-      }
-
-      const bestPriceInUsd = product.lowestPrice || 679.99;
-      if (targetPriceInUsd >= bestPriceInUsd) {
-        const localBestPrice = getDisplayPrice(bestPriceInUsd, userCurrency);
-        throw new Error(`Target price must be less than the current best price (${formatPrice(localBestPrice, userCurrency)})`);
-      }
-
-      const newWatchlist: Watchlist = {
-        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
-        productId,
-        productName: product.name,
-        brand: product.brand,
-        imageUrl: product.imageUrl,
-        targetPrice: targetPrice,
-        currentBestPrice: getDisplayPrice(bestPriceInUsd, userCurrency),
-        priceDifference: getDisplayPrice(bestPriceInUsd, userCurrency) - targetPrice,
-        active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      const serializedWatchlist: Watchlist = {
-        ...newWatchlist,
-        targetPrice: targetPriceInUsd,
-        currentBestPrice: bestPriceInUsd,
-        priceDifference: bestPriceInUsd - targetPriceInUsd
-      };
-
-      watchlists.push(serializedWatchlist);
-      localStorage.setItem('price_watchlists', JSON.stringify(watchlists));
-      return newWatchlist;
+      throw error;
     }
   },
 
@@ -556,47 +378,12 @@ export const apiService = {
         }
         throw new Error(data?.message || 'Invalid target price');
       }
-      console.warn('Backend update watchlist failed, simulating locally');
-      const watchlists: Watchlist[] = JSON.parse(localStorage.getItem('price_watchlists') || '[]');
-      const index = watchlists.findIndex(w => w.id === id);
-      if (index === -1) {
-        throw new Error('Watchlist entry not found');
-      }
-
-      const w = watchlists[index];
-      if (targetPriceInUsd >= w.currentBestPrice) {
-        const localBestPrice = getDisplayPrice(w.currentBestPrice, userCurrency);
-        throw new Error(`Target price must be less than the current best price (${formatPrice(localBestPrice, userCurrency)})`);
-      }
-
-      w.targetPrice = targetPriceInUsd;
-      if (active !== undefined) {
-        w.active = active;
-      }
-      w.priceDifference = w.currentBestPrice - targetPriceInUsd;
-      w.updatedAt = new Date().toISOString();
-
-      watchlists[index] = w;
-      localStorage.setItem('price_watchlists', JSON.stringify(watchlists));
-      
-      return {
-        ...w,
-        targetPrice: targetPrice,
-        currentBestPrice: getDisplayPrice(w.currentBestPrice, userCurrency),
-        priceDifference: getDisplayPrice(w.currentBestPrice, userCurrency) - targetPrice
-      };
+      throw error;
     }
   },
 
   async deleteWatchlist(id: string): Promise<void> {
-    try {
-      await apiClient.delete(`/watchlists/${id}`);
-    } catch (error) {
-      console.warn('Backend delete watchlist failed, simulating locally');
-      let watchlists: Watchlist[] = JSON.parse(localStorage.getItem('price_watchlists') || '[]');
-      watchlists = watchlists.filter(w => w.id !== id);
-      localStorage.setItem('price_watchlists', JSON.stringify(watchlists));
-    }
+    await apiClient.delete(`/watchlists/${id}`);
   },
 
   // Get price history for a product
@@ -611,133 +398,36 @@ export const apiService = {
     size: number;
     number: number;
   }> {
-    try {
-      const response = await apiClient.get(`/products/${productId}/price-history`, {
-        params: { page, size, sort: 'changedAt,desc' }
-      });
-      return response.data;
-    } catch (error) {
-      console.warn(`Failed to get price history for product ${productId}, using fallback mock data`);
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      
-      // Let's generate mock history for a realistic chart/table
-      const mockHistory: PriceHistory[] = [
-        {
-          id: 'ph1',
-          productId,
-          productName: 'iPhone 15 Pro Max (256GB, Space Black)',
-          sellerId: 's1',
-          sellerName: 'Amazon',
-          oldPrice: 67999,
-          newPrice: 64999,
-          priceDifference: -3000,
-          changePercentage: -4.41,
-          changedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() // 2 days ago
-        },
-        {
-          id: 'ph2',
-          productId,
-          productName: 'iPhone 15 Pro Max (256GB, Space Black)',
-          sellerId: 's2',
-          sellerName: 'Best Buy',
-          oldPrice: 65999,
-          newPrice: 67999,
-          priceDifference: 2000,
-          changePercentage: 3.03,
-          changedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() // 5 days ago
-        },
-        {
-          id: 'ph3',
-          productId,
-          productName: 'iPhone 15 Pro Max (256GB, Space Black)',
-          sellerId: 's1',
-          sellerName: 'Amazon',
-          oldPrice: 69999,
-          newPrice: 67999,
-          priceDifference: -2000,
-          changePercentage: -2.86,
-          changedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() // 10 days ago
-        }
-      ];
-      
-      return {
-        content: mockHistory,
-        totalPages: 1,
-        totalElements: mockHistory.length,
-        size,
-        number: page
-      };
-    }
+    const response = await apiClient.get(`/products/${productId}/price-history`, {
+      params: { page, size, sort: 'changedAt,desc' }
+    });
+    return response.data;
   },
 
   // Analytics and Trending Endpoints
   async getTrendingProducts(limit: number = 10): Promise<ProductWithPrices[]> {
-    try {
-      const response = await apiClient.get('/products/trending', { params: { limit } });
-      return response.data;
-    } catch (error) {
-      console.warn('Backend trending products fetch failed, using fallback mock data');
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      return MOCK_PRODUCTS.slice(0, Math.min(limit, MOCK_PRODUCTS.length));
-    }
+    const response = await apiClient.get('/products/trending', { params: { limit } });
+    return response.data;
   },
 
   async getBiggestDrops(limit: number = 10): Promise<ProductWithPrices[]> {
-    try {
-      const response = await apiClient.get('/products/biggest-drops', { params: { limit } });
-      return response.data;
-    } catch (error) {
-      console.warn('Backend biggest drops fetch failed, using fallback mock data');
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      return MOCK_PRODUCTS.slice(0, Math.min(limit, MOCK_PRODUCTS.length));
-    }
+    const response = await apiClient.get('/products/biggest-drops', { params: { limit } });
+    return response.data;
   },
 
   async getMostWatchedProducts(limit: number = 10): Promise<ProductWithPrices[]> {
-    try {
-      const response = await apiClient.get('/products/most-watched', { params: { limit } });
-      return response.data;
-    } catch (error) {
-      console.warn('Backend most watched products fetch failed, using fallback mock data');
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      return MOCK_PRODUCTS.slice(0, Math.min(limit, MOCK_PRODUCTS.length));
-    }
+    const response = await apiClient.get('/products/most-watched', { params: { limit } });
+    return response.data;
   },
 
   async getMostSavedProducts(limit: number = 10): Promise<ProductWithPrices[]> {
-    try {
-      const response = await apiClient.get('/products/most-saved', { params: { limit } });
-      return response.data;
-    } catch (error) {
-      console.warn('Backend most saved products fetch failed, using fallback mock data');
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      return MOCK_PRODUCTS.slice(0, Math.min(limit, MOCK_PRODUCTS.length));
-    }
+    const response = await apiClient.get('/products/most-saved', { params: { limit } });
+    return response.data;
   },
 
   async getProductAnalytics(productId: string): Promise<ProductAnalytics> {
-    try {
-      const response = await apiClient.get(`/analytics/products/${productId}`);
-      return response.data;
-    } catch (error) {
-      console.warn(`Backend analytics for product ${productId} failed, returning mock analytics`);
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      // Calculate a deterministic mock score based on productId
-      const seed = productId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const viewCount = (seed * 7) % 150 + 20;
-      const saveCount = (seed * 3) % 25 + 2;
-      const watchlistCount = (seed * 2) % 15 + 1;
-      const priceChangeCount = seed % 8 + 1;
-      const trendingScore = viewCount * 1 + saveCount * 5 + watchlistCount * 10 + priceChangeCount * 2;
-      return {
-        productId,
-        viewCount,
-        saveCount,
-        watchlistCount,
-        priceChangeCount,
-        trendingScore
-      };
-    }
+    const response = await apiClient.get(`/analytics/products/${productId}`);
+    return response.data;
   },
 
   // Get my events (User Interaction Events)
@@ -752,89 +442,18 @@ export const apiService = {
     number: number;
     last: boolean;
   }> {
-    try {
-      const response = await apiClient.get('/events/me', {
-        params: { page, size, sort: 'createdAt,desc' }
-      });
-      return response.data;
-    } catch (error) {
-      console.warn('Backend getMyEvents failed, using mock activity events');
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      const mockEvents = [
-        {
-          id: 'ev1',
-          userId: 'u1',
-          userEmail: 'user@example.com',
-          productId: 'p1',
-          productName: 'iPhone 15 Pro Max (256GB, Space Black)',
-          sellerId: 's1',
-          sellerName: 'Amazon',
-          interactionType: 'PRODUCT_VIEW',
-          metadata: { productName: 'iPhone 15 Pro Max (256GB, Space Black)', brand: 'Apple', category: 'Electronics' },
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 'ev2',
-          userId: 'u1',
-          userEmail: 'user@example.com',
-          productId: 'p1',
-          productName: 'iPhone 15 Pro Max (256GB, Space Black)',
-          sellerId: 's1',
-          sellerName: 'Amazon',
-          interactionType: 'SELLER_CLICK',
-          metadata: { seller: 'Amazon', product: 'iPhone 15 Pro Max (256GB, Space Black)', destinationUrl: 'https://amazon.com', timestamp: new Date().toISOString() },
-          createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString()
-        },
-        {
-          id: 'ev3',
-          userId: 'u1',
-          userEmail: 'user@example.com',
-          productId: 'p2',
-          productName: 'Sony WH-1000XM5 Wireless Headphones',
-          interactionType: 'PRODUCT_SAVE',
-          metadata: { productName: 'Sony WH-1000XM5 Wireless Headphones', brand: 'Sony', category: 'Electronics' },
-          createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString()
-        },
-        {
-          id: 'ev4',
-          userId: 'u1',
-          userEmail: 'user@example.com',
-          productId: 'p2',
-          productName: 'Sony WH-1000XM5 Wireless Headphones',
-          interactionType: 'WATCHLIST_CREATE',
-          metadata: { productName: 'Sony WH-1000XM5 Wireless Headphones', targetPrice: 299.0, currentBestPrice: 328.0 },
-          createdAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString()
-        },
-        {
-          id: 'ev5',
-          userId: 'u1',
-          userEmail: 'user@example.com',
-          interactionType: 'SEARCH',
-          metadata: { keyword: 'laptop', filters: { brand: 'Apple' }, resultCount: 5 },
-          createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString()
-        }
-      ];
-      return {
-        content: mockEvents,
-        totalPages: 1,
-        totalElements: mockEvents.length,
-        size,
-        number: page,
-        last: true
-      };
-    }
+    const response = await apiClient.get('/events/me', {
+      params: { page, size, sort: 'createdAt,desc' }
+    });
+    return response.data;
   },
 
   // Track seller click event
   async trackSellerClick(priceId: string): Promise<void> {
-    try {
-      await apiClient.post(`/events/seller-click/${priceId}`);
-    } catch (error) {
-      console.warn('Backend trackSellerClick failed', error);
-    }
+    await apiClient.post(`/events/seller-click/${priceId}`);
   },
 
-  // Get recommendations (Real API with fallback)
+  // Get recommendations (Real API)
   async getRecommendations(params?: {
     category?: string;
     brand?: string;
@@ -850,99 +469,39 @@ export const apiService = {
     size: number;
     number: number;
   }> {
-    try {
-      const response = await apiClient.get('/recommendations', { params });
-      return response.data;
-    } catch (error) {
-      console.warn('Backend getRecommendations failed, using mock recommendations');
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      return {
-        content: MOCK_PRODUCTS.slice(0, 2),
-        totalPages: 1,
-        totalElements: 2,
-        size: 10,
-        number: 0
-      };
-    }
+    const response = await apiClient.get('/recommendations', { params });
+    return response.data;
   },
 
-  // Get similar products (Real API with fallback)
+  // Get similar products (Real API)
   async getSimilarProducts(productId: string, limit: number = 10): Promise<ProductWithPrices[]> {
-    try {
-      const response = await apiClient.get(`/recommendations/similar/${productId}`, { params: { limit } });
-      return response.data;
-    } catch (error) {
-      console.warn('Backend getSimilarProducts failed, using mock products');
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      return MOCK_PRODUCTS.filter(p => p.id !== productId).slice(0, limit);
-    }
+    const response = await apiClient.get(`/recommendations/similar/${productId}`, { params: { limit } });
+    return response.data;
   },
 
-  // Get dashboard data (Real API with fallback)
+  // Get dashboard data (Real API)
   async getDashboard(): Promise<any> {
-    try {
-      const response = await apiClient.get('/dashboard');
-      const userCurrency = getSavedCurrency();
-      const convertWatchlist = (item: any) => {
-        const targetPrice = getDisplayPrice(item.targetPrice, userCurrency);
-        const currentBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
-        return {
-          ...item,
-          targetPrice,
-          currentBestPrice,
-          priceDifference: currentBestPrice - targetPrice
-        };
-      };
-      
-      const data = response.data;
-      if (data.priceDropAlerts) {
-        data.priceDropAlerts = data.priceDropAlerts.map(convertWatchlist);
-      }
-      if (data.watchlists) {
-        data.watchlists = data.watchlists.map(convertWatchlist);
-      }
-      return data;
-    } catch (error) {
-      console.warn('Backend getDashboard failed, constructing dashboard locally from fallbacks');
-      const [saved, watchlists, events, trending] = await Promise.all([
-        this.getSavedProducts().catch(() => []),
-        this.getWatchlists().catch(() => []),
-        this.getMyEvents(0, 20).catch(() => ({ content: [] })),
-        this.getTrendingProducts(10).catch(() => [])
-      ]);
-
-      const email = 'user@example.com';
-      const recentActivity = events.content;
-      const recentSearches = recentActivity
-        .filter((e: any) => e.interactionType === 'SEARCH')
-        .map((e: any) => e.metadata?.keyword)
-        .filter(Boolean);
-
-      const priceDropAlerts = watchlists.filter((w: any) => w.active && w.currentBestPrice <= w.targetPrice);
-
+    const response = await apiClient.get('/dashboard');
+    const userCurrency = getSavedCurrency();
+    const convertWatchlist = (item: any) => {
+      const targetPrice = getDisplayPrice(item.targetPrice, userCurrency);
+      const currentBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
       return {
-        firstName: 'Demo',
-        lastName: 'User',
-        email,
-        role: 'USER',
-        savedCount: saved.length,
-        watchlistCount: watchlists.length,
-        totalActivitiesCount: recentActivity.length,
-        activePriceAlertsCount: priceDropAlerts.length,
-        recommendations: MOCK_PRODUCTS.slice(0, 2),
-        recentlyViewed: MOCK_PRODUCTS.slice(2, 4),
-        priceDropAlerts,
-        trendingProducts: trending,
-        watchlists,
-        savedProducts: saved,
-        recentActivity,
-        recentSearches,
-        mostClickedSellers: [
-          { name: 'Amazon', count: 3 },
-          { name: 'Best Buy', count: 1 }
-        ]
+        ...item,
+        targetPrice,
+        currentBestPrice,
+        priceDifference: currentBestPrice - targetPrice
       };
+    };
+    
+    const data = response.data;
+    if (data.priceDropAlerts) {
+      data.priceDropAlerts = data.priceDropAlerts.map(convertWatchlist);
     }
+    if (data.watchlists) {
+      data.watchlists = data.watchlists.map(convertWatchlist);
+    }
+    return data;
   },
 
   // Assistant APIs

@@ -2,7 +2,7 @@ import React from 'react';
 import type { ProductPrice } from '../types';
 import { ExternalLink, Sparkles, Tag, Clock, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { formatPrice, type CurrencyCode } from '../currency';
+import { formatPrice, getDisplayPrice, type CurrencyCode } from '../currency';
 import { apiService } from '../services/api';
 
 interface SellerCardProps {
@@ -18,11 +18,15 @@ export const SellerCard: React.FC<SellerCardProps> = ({
   lowestPrice,
   currency = 'INR',
 }) => {
-  const savings = price.originalPrice > price.currentPrice 
-    ? price.originalPrice - price.currentPrice 
+  const currentPriceLocal = getDisplayPrice(price.currentPrice, currency);
+  const originalPriceLocal = getDisplayPrice(price.originalPrice, currency);
+  const lowestPriceLocal = getDisplayPrice(lowestPrice, currency);
+
+  const savings = originalPriceLocal > currentPriceLocal 
+    ? originalPriceLocal - currentPriceLocal 
     : 0;
 
-  const priceDiffFromLowest = price.currentPrice - lowestPrice;
+  const priceDiffFromLowest = currentPriceLocal - lowestPriceLocal;
 
   return (
     <motion.div
@@ -87,11 +91,11 @@ export const SellerCard: React.FC<SellerCardProps> = ({
       <div className="flex flex-col gap-2 py-3.5 border-t border-b border-zinc-900/60 my-2">
         <div className="flex items-baseline justify-between">
           <span className="text-2xl font-black text-white tracking-tight">
-            {formatPrice(price.currentPrice, currency)}
+            {formatPrice(currentPriceLocal, currency)}
           </span>
-          {price.originalPrice > price.currentPrice && (
+          {originalPriceLocal > currentPriceLocal && (
             <span className="text-xs text-zinc-500 line-through font-normal">
-              {formatPrice(price.originalPrice, currency)}
+              {formatPrice(originalPriceLocal, currency)}
             </span>
           )}
         </div>

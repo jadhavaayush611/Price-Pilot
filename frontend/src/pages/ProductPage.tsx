@@ -762,7 +762,8 @@ export const ProductPage: React.FC = () => {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {similarProducts.map((p) => {
-              const lowest = p.lowestPrice || (p.prices && p.prices.length > 0 ? Math.min(...p.prices.map(pr => pr.currentPrice)) : 0);
+              const lowestRaw = p.lowestPrice || (p.prices && p.prices.length > 0 ? Math.min(...p.prices.map(pr => pr.currentPrice)) : 0);
+              const lowest = getDisplayPrice(lowestRaw, currency);
               return (
                 <div key={p.id} className="bg-zinc-955 border border-zinc-900 hover:border-zinc-800 p-3 rounded-2xl flex flex-col gap-3 group relative overflow-hidden transition-all hover:bg-zinc-900/10">
                   <div className="aspect-square w-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-900">

@@ -155,7 +155,7 @@ export const LandingPage: React.FC = () => {
           className="flex flex-wrap justify-center items-center gap-2.5 mt-8 max-w-3xl"
         >
           <span className="text-xs text-zinc-500 mr-1">Trending:</span>
-          {['Electronics', 'Headphones', 'Laptops', 'Gaming Consoles', 'Smartphones'].map((cat) => (
+          {['Smartphone', 'Laptop', 'Tablet', 'Headphones', 'Gaming Console'].map((cat) => (
             <button
               key={cat}
               onClick={() => handleCategoryClick(cat)}

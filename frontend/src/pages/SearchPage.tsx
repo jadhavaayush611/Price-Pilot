@@ -23,6 +23,8 @@ export const SearchPage: React.FC = () => {
 
   const [products, setProducts] = useState<ProductWithPrices[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retryTrigger, setRetryTrigger] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -79,6 +81,7 @@ export const SearchPage: React.FC = () => {
   // 2. Fetch paginated, filtered, sorted results from backend
   useEffect(() => {
     setLoading(true);
+    setError(false);
     
     apiService.searchProductsWithFilters({
       keyword: query,
@@ -93,11 +96,14 @@ export const SearchPage: React.FC = () => {
         setTotalPages(data.totalPages);
         setTotalElements(data.totalElements);
       })
-      .catch(err => console.error("Error loading search results:", err))
+      .catch(err => {
+        console.error("Error loading search results:", err);
+        setError(true);
+      })
       .finally(() => {
         setLoading(false);
       });
-  }, [query, urlCategory, urlBrand, urlPage, urlSort]);
+  }, [query, urlCategory, urlBrand, urlPage, urlSort, retryTrigger]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -237,16 +243,28 @@ export const SearchPage: React.FC = () => {
 
         {/* Search Results Display */}
         <section className="lg:col-span-3">
-          <SearchResults
-            products={products}
-            loading={loading}
-            page={urlPage}
-            totalPages={totalPages}
-            totalElements={totalElements}
-            onPageChange={handlePageChange}
-            savedProductIds={savedProductIds}
-            onToggleSave={handleToggleSave}
-          />
+          {error ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4 rounded-2xl bg-zinc-950/40 border border-zinc-900/80 text-center backdrop-blur-sm">
+              <p className="text-zinc-400 font-medium mb-4">Unable to load products.</p>
+              <button
+                onClick={() => setRetryTrigger(prev => prev + 1)}
+                className="px-6 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-sm font-semibold text-white transition-all cursor-pointer active:scale-95"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <SearchResults
+              products={products}
+              loading={loading}
+              page={urlPage}
+              totalPages={totalPages}
+              totalElements={totalElements}
+              onPageChange={handlePageChange}
+              savedProductIds={savedProductIds}
+              onToggleSave={handleToggleSave}
+            />
+          )}
         </section>
       </div>
     </div>

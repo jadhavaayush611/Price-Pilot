@@ -250,7 +250,7 @@ export const DashboardPage: React.FC = () => {
             <Link to={`/product/${productId}`} className="text-white hover:text-emerald-400 font-semibold hover:underline">
               {productName || 'product'}
             </Link>{' '}
-            at target <span className="text-emerald-400 font-mono font-bold">{formatPrice(metadata.targetPrice, currency)}</span>
+            at target <span className="text-emerald-400 font-mono font-bold">{formatPrice(getDisplayPrice(metadata.targetPrice, currency), currency)}</span>
           </span>
         );
       case 'WATCHLIST_DELETE':
@@ -478,8 +478,8 @@ export const DashboardPage: React.FC = () => {
                             </Link>
                             <span className="text-[10px] text-zinc-500 font-medium truncate">{alert.brand}</span>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-emerald-400 text-xs font-mono font-bold">{formatPrice(alert.currentBestPrice, currency)}</span>
-                              <span className="text-zinc-500 text-[10px] line-through font-mono">{formatPrice(alert.targetPrice, currency)}</span>
+                              <span className="text-emerald-400 text-xs font-mono font-bold">{formatPrice(getDisplayPrice(alert.currentBestPrice, currency), currency)}</span>
+                              <span className="text-zinc-500 text-[10px] line-through font-mono">{formatPrice(getDisplayPrice(alert.targetPrice, currency), currency)}</span>
                             </div>
                           </div>
                         </div>
@@ -754,9 +754,10 @@ export const DashboardPage: React.FC = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {data.priceDropAlerts.map((alert) => {
-                    const diff = alert.priceDifference || 0;
+                    const diffRaw = alert.priceDifference || 0;
+                    const diff = getDisplayPrice(diffRaw, currency);
                     return (
-                      <div key={alert.id} className="bg-zinc-950/20 border border-emerald-500/20 p-5 rounded-2xl flex gap-4 items-start relative overflow-hidden transition-all hover:bg-zinc-950/30">
+                      <div key={alert.id} className="bg-zinc-955/20 border border-emerald-500/20 p-5 rounded-2xl flex gap-4 items-start relative overflow-hidden transition-all hover:bg-zinc-950/30">
                         <div className="absolute right-0 top-0 h-32 w-32 bg-emerald-500/5 rounded-full blur-2xl -z-10" />
                         <img src={alert.imageUrl} alt={alert.productName} className="h-20 w-20 rounded-xl bg-zinc-900 object-cover border border-zinc-900 shrink-0" />
                         <div className="flex flex-col min-w-0 flex-grow text-left">
@@ -768,11 +769,11 @@ export const DashboardPage: React.FC = () => {
                           <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-zinc-900">
                             <div className="flex flex-col">
                               <span className="text-[9px] text-zinc-500 font-bold uppercase">Best Price</span>
-                              <span className="text-xs font-mono font-bold text-emerald-400">{formatPrice(alert.currentBestPrice, currency)}</span>
+                              <span className="text-xs font-mono font-bold text-emerald-400">{formatPrice(getDisplayPrice(alert.currentBestPrice, currency), currency)}</span>
                             </div>
                             <div className="flex flex-col">
                               <span className="text-[9px] text-zinc-500 font-bold uppercase">Target Price</span>
-                              <span className="text-xs font-mono font-bold text-white">{formatPrice(alert.targetPrice, currency)}</span>
+                              <span className="text-xs font-mono font-bold text-white">{formatPrice(getDisplayPrice(alert.targetPrice, currency), currency)}</span>
                             </div>
                             <div className="flex flex-col">
                               <span className="text-[9px] text-zinc-555 font-bold uppercase">Savings</span>

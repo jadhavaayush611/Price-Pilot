@@ -1,7 +1,7 @@
 import time
 from fastapi import APIRouter, Depends, HTTPException, Security, status
 from fastapi.security.api_key import APIKeyHeader
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from app.config.settings import settings
 from app.schemas.recommendation import (
     PredictRequest, PredictResponse, SimilarRequest, SimilarResponse

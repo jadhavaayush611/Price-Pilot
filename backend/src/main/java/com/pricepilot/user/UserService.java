@@ -23,12 +23,24 @@ public class UserService {
 
     @Transactional
     public UserResponseDTO register(UserRequestDTO requestDTO) {
-        if (userRepository.existsByEmail(requestDTO.getEmail())) {
+        if (requestDTO.getEmail() == null || requestDTO.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+
+        String normalizedEmail = requestDTO.getEmail().trim().toLowerCase();
+
+        // Regex for domain syntax verification (reject formats like abc@com, check for valid characters)
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        if (!normalizedEmail.matches(emailRegex)) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
+
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new EmailAlreadyExistsException("Email " + requestDTO.getEmail() + " is already in use");
         }
 
         UserEntity user = UserEntity.builder()
-                .email(requestDTO.getEmail())
+                .email(normalizedEmail)
                 .password(passwordEncoder.encode(requestDTO.getPassword()))
                 .firstName(requestDTO.getFirstName())
                 .lastName(requestDTO.getLastName())
