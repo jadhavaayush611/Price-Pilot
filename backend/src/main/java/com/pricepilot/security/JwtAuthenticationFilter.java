@@ -45,23 +45,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             userEmail = jwtService.extractUsername(jwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                String role = jwtService.extractRole(jwt);
-                java.util.UUID userId = jwtService.extractUserId(jwt);
+                // Load UserDetails from database on every request to check active/enabled/non-locked status
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
-                UserDetails userDetails;
-                if (role != null && userId != null) {
-                    userDetails = new UserPrincipal(
-                            userId,
-                            userEmail,
-                            "", // password is not needed for token validation
-                            com.pricepilot.user.Role.valueOf(role),
-                            true
-                    );
-                } else {
-                    userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-                }
-
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+                if (jwtService.isTokenValid(jwt, userDetails) && userDetails.isEnabled() && userDetails.isAccountNonLocked()) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -69,10 +56,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    org.slf4j.Logger auditLog = org.slf4j.LoggerFactory.getLogger("AuditLogger");
+                    if (!userDetails.isEnabled()) {
+                        auditLog.warn("AUDIT: JWT_REJECTED | user_email={} | reason=disabled_user", userEmail);
+                    } else if (!userDetails.isAccountNonLocked()) {
+                        auditLog.warn("AUDIT: ACCOUNT_LOCK | user_email={} | reason=locked_user", userEmail);
+                    } else {
+                        auditLog.warn("AUDIT: JWT_REJECTED | user_email={} | reason=invalid_or_expired_token", userEmail);
+                    }
                 }
             }
         } catch (Exception e) {
-            // If token parsing/validation fails, we leave the SecurityContext empty to trigger authentication errors down the line.
+            org.slf4j.Logger auditLog = org.slf4j.LoggerFactory.getLogger("AuditLogger");
+            auditLog.warn("AUDIT: JWT_AUTHENTICATION_FAILURE | reason={}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);

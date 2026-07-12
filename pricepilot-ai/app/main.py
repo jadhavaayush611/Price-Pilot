@@ -76,7 +76,69 @@ def startup_event():
 def shutdown_event():
     log_structured(logging.INFO, "application_shutdown")
 
-# Observability middleware for Request IDs & response times
+# Simple in-memory rate limiting for FastAPI
+from collections import defaultdict
+
+class TokenBucket:
+    def __init__(self, capacity: int, refill_rate: float):
+        self.capacity = capacity
+        self.refill_rate = refill_rate
+        self.tokens = float(capacity)
+        self.last_update = time.time()
+
+    def consume(self) -> bool:
+        now = time.time()
+        elapsed = now - self.last_update
+        self.tokens = min(self.capacity, self.tokens + elapsed * self.refill_rate)
+        self.last_update = now
+        if self.tokens >= 1.0:
+            self.tokens -= 1.0
+            return True
+        return False
+
+# Limiters mapping: category -> client_ip -> TokenBucket
+limiters = defaultdict(dict)
+
+@app.middleware("http")
+async def rate_limiting_middleware(request: Request, call_next):
+    if not settings.rate_limit_enabled:
+        return await call_next(request)
+
+    path = request.url.path
+    client_ip = request.client.host if request.client else "unknown"
+
+    limit = None
+    category = None
+
+    if path.startswith("/assistant"):
+        category = "assistant"
+        limit = settings.assistant_limit
+    elif path.startswith("/recommendations") or path.startswith("/api/v1/recommendations"):
+        category = "recommendation"
+        limit = settings.recommendation_limit
+
+    if limit is not None:
+        refill_rate = limit / 60.0
+        bucket = limiters[category].get(client_ip)
+        if not bucket:
+            bucket = TokenBucket(limit, refill_rate)
+            limiters[category][client_ip] = bucket
+
+        if not bucket.consume():
+            log_structured(logging.WARNING, "AUDIT: RATE_LIMIT_EXCEEDED", {
+                "client_ip": client_ip,
+                "category": category,
+                "endpoint": path
+            })
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=429,
+                content={"error": "Too Many Requests", "detail": "Rate limit exceeded. Please try again later."}
+            )
+
+    return await call_next(request)
+
+# Observability middleware for Request IDs, response times & security headers
 @app.middleware("http")
 async def add_observability_headers(request: Request, call_next):
     # Retrieve X-Request-ID from request headers, or generate a new one
@@ -92,6 +154,13 @@ async def add_observability_headers(request: Request, call_next):
     process_time = time.time() - start_time
     response.headers["X-Request-ID"] = request_id
     response.headers["X-Response-Time"] = f"{process_time:.6f}s"
+    
+    # Inject Security Headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none';"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
     
     # Log the request details structured
     log_structured(

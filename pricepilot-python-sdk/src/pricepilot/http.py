@@ -1,5 +1,6 @@
 import logging
 import requests
+import re
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 from typing import Dict, Any, Optional
@@ -13,6 +14,18 @@ from pricepilot.exceptions import (
 )
 
 logger = logging.getLogger("pricepilot.http")
+
+def sanitize_secrets(text: str) -> str:
+    if not text:
+        return text
+    # Redact Bearer tokens
+    text = re.sub(r'Bearer\s+[A-Za-z0-9\-._~+/]+=*', 'Bearer [REDACTED]', text, flags=re.IGNORECASE)
+    # Redact X-API-Key / API keys
+    text = re.sub(r'([a-zA-Z0-9\-_]*api[a-zA-Z0-9\-_]*key[a-zA-Z0-9\-_]*[\s:=]+)[a-zA-Z0-9\-._~+/]+', r'\1[REDACTED]', text, flags=re.IGNORECASE)
+    # Redact password fields in JSON or query params
+    text = re.sub(r'("password"\s*:\s*")[^"]+(")', r'\1[REDACTED]\2', text, flags=re.IGNORECASE)
+    text = re.sub(r'(password=)[a-zA-Z0-9\-._~+/]+', r'\1[REDACTED]', text, flags=re.IGNORECASE)
+    return text
 
 class HttpClientSession:
     """Internal HTTP Client session wrapping requests.Session with resilient retry policies,
@@ -67,19 +80,19 @@ class HttpClientSession:
         is_ai: bool = False
     ) -> Any:
         url = self._build_url(path, is_ai=is_ai)
-        req_headers = headers or {}
         
+        # We pass request-specific headers directly to the requests.request call
+        # so they do NOT leak to the persistent session headers
+        req_headers = {}
         if is_ai:
             req_headers["X-API-Key"] = self.config.ai_api_key
-        
-        # Merge extra headers
-        for k, v in req_headers.items():
-            self.session.headers[k] = v
-
+        if headers:
+            req_headers.update(headers)
             
         use_timeout = timeout if timeout is not None else self.config.timeout
         
-        logger.debug(f"Sending request: {method} {url} | Params: {params}")
+        logged_params = sanitize_secrets(str(params)) if params else None
+        logger.debug(f"Sending request: {method} {url} | Params: {logged_params}")
         
         try:
             response = self.session.request(
@@ -87,15 +100,18 @@ class HttpClientSession:
                 url=url,
                 params=params,
                 json=json,
+                headers=req_headers,
                 timeout=use_timeout,
                 verify=self.config.verify_ssl
             )
         except requests.exceptions.Timeout as e:
             logger.error(f"Request timeout: {method} {url}")
-            raise ApiError(f"Request timed out after {use_timeout}s: {e}", status_code=408) from e
+            sanitized_e = sanitize_secrets(str(e))
+            raise ApiError(f"Request timed out after {use_timeout}s: {sanitized_e}", status_code=408) from e
         except requests.exceptions.RequestException as e:
-            logger.error(f"Request failed: {method} {url} | Error: {e}")
-            raise PricePilotError(f"HTTP request failed: {e}") from e
+            logger.error(f"Request failed: {method} {url}")
+            sanitized_e = sanitize_secrets(str(e))
+            raise PricePilotError(f"HTTP request failed: {sanitized_e}") from e
             
         logger.debug(f"Received response: {response.status_code} from {method} {url}")
         
@@ -124,6 +140,9 @@ class HttpClientSession:
             message = response.text or f"HTTP Error {status_code}"
             validation_errors = []
             
+        message = sanitize_secrets(message)
+        response_text = sanitize_secrets(response.text)
+        
         logger.warning(f"Error response {status_code} from {url} | Message: {message}")
         
         if status_code in (401, 403):
@@ -133,4 +152,4 @@ class HttpClientSession:
         elif status_code in (400, 422):
             raise ValidationError(message, validation_errors=validation_errors)
         else:
-            raise ApiError(f"API Error ({status_code}): {message}", status_code=status_code, response_body=response.text)
+            raise ApiError(f"API Error ({status_code}): {message}", status_code=status_code, response_body=response_text)

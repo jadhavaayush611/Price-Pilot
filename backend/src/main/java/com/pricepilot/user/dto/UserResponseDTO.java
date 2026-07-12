@@ -16,4 +16,5 @@ public class UserResponseDTO {
     private String lastName;
     private Role role;
     private boolean enabled;
+    private boolean locked;
 }

@@ -63,12 +63,25 @@ class AssistantOrchestrator:
         else:
             intent_prompt = SHOPPING_ADVICE_PROMPT
 
+        # Validate system prompt assembly
+        if not SYSTEM_PROMPT:
+            raise ValueError("System prompt is empty or not configured")
+
+        # Construct structured prompt with XML-like boundary tags to isolate instructions from untrusted inputs
         full_prompt = (
-            f"{SYSTEM_PROMPT}\n"
-            f"{intent_prompt}\n"
-            f"### Conversation History:\n{history_str}\n"
-            f"### Retrieved Database Context:\n{context_str}\n"
-            f"User Query: {message}\n"
+            f"<system_instructions>\n"
+            f"{SYSTEM_PROMPT.strip()}\n"
+            f"{intent_prompt.strip()}\n"
+            f"</system_instructions>\n\n"
+            f"<conversation_history>\n"
+            f"{history_str}\n"
+            f"</conversation_history>\n\n"
+            f"<retrieved_context>\n"
+            f"{context_str}\n"
+            f"</retrieved_context>\n\n"
+            f"<user_query>\n"
+            f"{message}\n"
+            f"</user_query>\n\n"
             f"Assistant:"
         )
 

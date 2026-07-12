@@ -19,6 +19,22 @@ Ensure you have the following installed on your machine:
 
 ---
 
+## Security Environment Configuration
+
+For development, default values are set in properties files, but you must configure these variables in production. For local testing with security enabled, you can set the following environment variables:
+
+| Environment Variable | Description | Default (Dev Mode) |
+| --- | --- | --- |
+| `PRICEPILOT_JWT_SECRET` | Base64-encoded secret key for JWT signing (must be at least 256 bits/32 bytes when decoded). | `ZGV2LXNlY3JldC1rZXktbXVzdC1iZS1hdC1sZWFzdC0yNTYtYml0cy1sb25nLW90aGVyd2lzZS1qand0LXRocm93cy1leGNlcHRpb24tMTIzNDU2Nzg5MA==` |
+| `PRICEPILOT_AI_API_KEY` | Shared secret API key between backend and AI service. | `pricepilot-secret-api-key` |
+| `PRICEPILOT_MODEL_RELOAD_TOKEN` | Token required in the `X-Model-Reload-Token` header to hot-reload models. | None (reload checks bypassed if unset) |
+| `PRICEPILOT_RATE_LIMIT_ENABLED` | Set to `true` or `false` to toggle request rate limiting. | `true` |
+| `PRICEPILOT_RATE_LIMIT_AUTH` | Number of allowed authentication requests per minute per IP. | `30` |
+| `PRICEPILOT_RATE_LIMIT_AI` | Number of allowed AI assistant requests per minute per IP. | `60` |
+| `PRICEPILOT_RATE_LIMIT_RECOMMENDATION` | Number of allowed recommendation requests per minute per IP. | `90` |
+
+---
+
 ## 1. Database Setup
 
 1. Open your PostgreSQL terminal (pgAdmin, psql, or similar client).

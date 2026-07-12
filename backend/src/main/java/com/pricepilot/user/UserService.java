@@ -34,6 +34,7 @@ public class UserService {
                 .lastName(requestDTO.getLastName())
                 .role(Role.USER) // Default role
                 .enabled(true)
+                .locked(false)
                 .build();
 
         UserEntity savedUser = userRepository.save(user);
@@ -60,6 +61,7 @@ public class UserService {
                 .lastName(user.getLastName())
                 .role(user.getRole())
                 .enabled(user.isEnabled())
+                .locked(user.isLocked())
                 .build();
     }
 }

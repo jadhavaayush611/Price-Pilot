@@ -15,13 +15,15 @@ public class UserPrincipal implements UserDetails {
     private final String password;
     private final Role role;
     private final boolean enabled;
+    private final boolean locked;
 
-    public UserPrincipal(UUID id, String email, String password, Role role, boolean enabled) {
+    public UserPrincipal(UUID id, String email, String password, Role role, boolean enabled, boolean locked) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.role = role;
         this.enabled = enabled;
+        this.locked = locked;
     }
 
     public UUID getId() {
@@ -54,7 +56,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !locked;
     }
 
     @Override

@@ -30,7 +30,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 user.getEmail(),
                 user.getPassword(),
                 user.getRole(),
-                user.isEnabled()
+                user.isEnabled(),
+                user.isLocked()
         );
     }
 }

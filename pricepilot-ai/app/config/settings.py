@@ -28,5 +28,10 @@ class Settings:
         
         self.host = os.getenv("HOST", "0.0.0.0")
         self.port = int(os.getenv("PORT", "8000"))
+        
+        # Configurable Rate Limiting
+        self.assistant_limit = int(os.getenv("PRICEPILOT_AI_ASSISTANT_LIMIT", "60"))
+        self.recommendation_limit = int(os.getenv("PRICEPILOT_AI_RECOMMENDATION_LIMIT", "60"))
+        self.rate_limit_enabled = os.getenv("PRICEPILOT_AI_RATE_LIMIT_ENABLED", "true").lower() == "true"
 
 settings = Settings()

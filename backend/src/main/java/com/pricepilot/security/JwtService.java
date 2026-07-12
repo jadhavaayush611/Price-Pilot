@@ -23,6 +23,22 @@ public class JwtService {
     @Value("${pricepilot.jwt.expiration:86400000}") // 24 hours in milliseconds
     private long jwtExpiration;
 
+    @jakarta.annotation.PostConstruct
+    public void validateSecret() {
+        if (secretKey == null || secretKey.trim().isEmpty()) {
+            throw new IllegalStateException("JWT Secret key is not configured");
+        }
+        try {
+            byte[] keyBytes = io.jsonwebtoken.io.Decoders.BASE64.decode(secretKey);
+            if (keyBytes.length < 32) {
+                throw new IllegalStateException("JWT Secret key must be at least 256 bits (32 bytes) when Base64 decoded");
+            }
+            io.jsonwebtoken.security.Keys.hmacShaKeyFor(keyBytes);
+        } catch (Exception e) {
+            throw new IllegalStateException("JWT Secret key configuration validation failed: " + e.getMessage(), e);
+        }
+    }
+
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }

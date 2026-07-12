@@ -24,9 +24,20 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         this.objectMapper.registerModule(new JavaTimeModule());
     }
 
+    private static final org.slf4j.Logger auditLog = org.slf4j.LoggerFactory.getLogger("AuditLogger");
+
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException {
+        String email = "anonymous";
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            email = auth.getName();
+        }
+
+        auditLog.warn("AUDIT: AUTHORIZATION_FAILURE | user_email={} | uri={} | reason={}", 
+                email, request.getRequestURI(), accessDeniedException.getMessage());
+
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 

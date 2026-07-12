@@ -30,6 +30,9 @@ INFERENCE_LATENCY = Histogram(
     ["endpoint", "algorithm"]
 )
 
+import os
+from fastapi import Header
+
 def verify_api_key(api_key: str = Security(API_KEY_HEADER)):
     """Validates that the provided X-API-Key matches our configured secret."""
     if not api_key:
@@ -39,11 +42,26 @@ def verify_api_key(api_key: str = Security(API_KEY_HEADER)):
             detail="API Key missing in X-API-Key header"
         )
     if api_key != settings.api_key:
-        log_structured(logging.WARNING, "api_key_invalid", {"provided_key": api_key[:5] + "..." if api_key else ""})
+        log_structured(logging.WARNING, "AUDIT: API_KEY_FAILURE", {"reason": "invalid_api_key"})
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid API Key"
         )
+    return api_key
+
+def verify_reload_token(
+    x_model_reload_token: Optional[str] = Header(None, alias="X-Model-Reload-Token"),
+    api_key: str = Depends(verify_api_key)
+):
+    """Additional verification for model reloads beyond API key validation."""
+    reload_token = os.getenv("PRICEPILOT_MODEL_RELOAD_TOKEN")
+    if reload_token:
+        if not x_model_reload_token or x_model_reload_token != reload_token:
+            log_structured(logging.WARNING, "AUDIT: RELOAD_TOKEN_FAILURE", {"reason": "invalid_or_missing_reload_token"})
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid or missing Model Reload Token"
+            )
     return api_key
 
 @router.post(
@@ -150,7 +168,7 @@ def get_model(algorithm: str):
 
 @router.post(
     "/models/reload",
-    dependencies=[Depends(verify_api_key)]
+    dependencies=[Depends(verify_reload_token)]
 )
 def reload_models():
     """Forces the model registry to reload pickle files from disk."""

@@ -33,4 +33,7 @@ public class UserEntity extends BaseEntity {
 
     @Column(nullable = false)
     private boolean enabled;
+
+    @Column(nullable = false)
+    private boolean locked;
 }

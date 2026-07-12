@@ -95,6 +95,11 @@ A `.env` file manages variables. Required production secrets have **no default f
 | `PRICEPILOT_CORS_ALLOWED_ORIGINS` | Comma-separated list of allowed CORS origins | `http://localhost:5173,http://localhost:3000` | Frontend production domain(s) |
 | `PRICEPILOT_AI_API_KEY` | API Security Key for AI auth | `pricepilot-secret-api-key` | **Mandatory** (startup fails if default or missing) |
 | `PRICEPILOT_JWT_SECRET` | Base64-encoded JWT Token key | `MzJieXRlc3NlY...` | **Mandatory** (startup fails if default or missing) |
+| `PRICEPILOT_MODEL_RELOAD_TOKEN` | Secret reload authorization token | None | Optional (reload checks bypassed if unset) |
+| `PRICEPILOT_RATE_LIMIT_ENABLED` | Toggle request rate limiting | `true` | Optional (defaults to `true`) |
+| `PRICEPILOT_RATE_LIMIT_AUTH` | Authentication rate limit per min | `30` | Optional (defaults to `10` in prod, `30` in dev) |
+| `PRICEPILOT_RATE_LIMIT_AI` | AI assistant rate limit per min | `60` | Optional (defaults to `20` in prod, `60` in dev) |
+| `PRICEPILOT_RATE_LIMIT_RECOMMENDATION` | Recommendation rate limit per min | `90` | Optional (defaults to `30` in prod, `90` in dev) |
 | `SPRING_PROFILES_ACTIVE`| Active Spring profile | `dev` | `prod` (forces fail-fast and JSON logs) |
 | `PRICEPILOT_AI_URL` | AI Service API endpoint URL | `http://pricepilot-ai:8000` | Internally routed URL |
 | `VITE_API_BASE_URL` | React client API URL | `http://localhost:8080/api/v1` | Public API URL |

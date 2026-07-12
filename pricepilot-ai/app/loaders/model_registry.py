@@ -73,7 +73,11 @@ class ModelRegistry:
                         success_count += 1
                         log_structured(logging.INFO, "model_loaded_successfully", {"algorithm": algo})
                     except Exception as e:
-                        log_structured(logging.ERROR, "model_load_failed", {"algorithm": algo, "error": str(e)})
+                        # Clean error message to avoid path leak
+                        err_msg = str(e)
+                        if model_path in err_msg:
+                            err_msg = err_msg.replace(model_path, model_file)
+                        log_structured(logging.ERROR, "model_load_failed", {"algorithm": algo, "error": f"{type(e).__name__}: {err_msg}"})
                 else:
                     log_structured(logging.WARNING, "model_file_missing", {"algorithm": algo, "path": model_path})
 

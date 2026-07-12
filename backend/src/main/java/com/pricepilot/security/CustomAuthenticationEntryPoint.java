@@ -24,9 +24,14 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         this.objectMapper.registerModule(new JavaTimeModule());
     }
 
+    private static final org.slf4j.Logger auditLog = org.slf4j.LoggerFactory.getLogger("AuditLogger");
+
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
+        auditLog.warn("AUDIT: AUTHENTICATION_FAILURE | uri={} | reason={}", 
+                request.getRequestURI(), authException.getMessage());
+
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 

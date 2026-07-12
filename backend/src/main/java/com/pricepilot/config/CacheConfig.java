@@ -94,8 +94,22 @@ public class CacheConfig implements CachingConfigurer {
     private RedisCacheConfiguration createCacheConfig(Duration ttl) {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
+        com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator ptv = 
+                com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator.builder()
+                        .allowIfBaseType("com.pricepilot")
+                        .allowIfBaseType("java.util")
+                        .allowIfBaseType("java.lang")
+                        .allowIfBaseType("java.math")
+                        .allowIfBaseType("java.time")
+                        .allowIfSubType("com.pricepilot")
+                        .allowIfSubType("java.util")
+                        .allowIfSubType("java.lang")
+                        .allowIfSubType("java.math")
+                        .allowIfSubType("java.time")
+                        .allowIfSubType("org.springframework.data.domain")
+                        .build();
         objectMapper.activateDefaultTyping(
-                LaissezFaireSubTypeValidator.instance,
+                ptv,
                 ObjectMapper.DefaultTyping.NON_FINAL,
                 JsonTypeInfo.As.PROPERTY
         );

@@ -44,20 +44,36 @@ public class AuthController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    private static final org.slf4j.Logger auditLog = org.slf4j.LoggerFactory.getLogger("AuditLogger");
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO requestDTO) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(requestDTO.getEmail(), requestDTO.getPassword())
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(requestDTO.getEmail(), requestDTO.getPassword())
+            );
 
-        UserResponseDTO userResponse = userService.getUserByEmail(requestDTO.getEmail());
-        UserDetails userDetails = userDetailsService.loadUserByUsername(requestDTO.getEmail());
-        String token = jwtService.generateToken(userDetails, userResponse.getRole().name());
+            UserResponseDTO userResponse = userService.getUserByEmail(requestDTO.getEmail());
+            UserDetails userDetails = userDetailsService.loadUserByUsername(requestDTO.getEmail());
 
-        AuthResponseDTO response = AuthResponseDTO.builder()
-                .token(token)
-                .user(userResponse)
-                .build();
-        return ResponseEntity.ok(response);
+            // Audit log login success
+            auditLog.info("AUDIT: LOGIN_SUCCESS | user_email={}", requestDTO.getEmail());
+
+            String token = jwtService.generateToken(userDetails, userResponse.getRole().name());
+
+            AuthResponseDTO response = AuthResponseDTO.builder()
+                    .token(token)
+                    .user(userResponse)
+                    .build();
+            return ResponseEntity.ok(response);
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            // Audit log login failure
+            auditLog.warn("AUDIT: LOGIN_FAILURE | user_email={} | reason={}", requestDTO.getEmail(), e.getMessage());
+
+            if (e instanceof org.springframework.security.authentication.LockedException) {
+                auditLog.warn("AUDIT: ACCOUNT_LOCK | user_email={}", requestDTO.getEmail());
+            }
+            throw e;
+        }
     }
 }
