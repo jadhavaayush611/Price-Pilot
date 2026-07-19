@@ -25,7 +25,7 @@ jobs:
         run: |
           cd backend
           chmod +x mvnw
-          ./mvnw org.owasp:dependency-check-maven:10.0.3:check -DfailBuildOnCVSS=7 -Dformat=HTML
+          ./mvnw org.owasp:dependency-check-maven:10.0.3:check -DfailBuildOnCVSS=7 -Dformat=HTML -DsuppressionFile=dependency-check-suppression.xml
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 

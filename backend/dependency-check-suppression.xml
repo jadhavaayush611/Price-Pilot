@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <suppress>
+        <notes><![CDATA[
+        Suppress false positive CVE-2019-3826 on prometheus client libraries.
+        This CVE affects the Prometheus server web UI, not the Java client metrics library.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/io\.prometheus/prometheus-metrics-.*$</packageUrl>
+        <cve>CVE-2019-3826</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        Suppress false positive CVE-2025-7962 on angus-activation.
+        This CVE affects the angus-mail SMTP component, not the angus-activation library.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.eclipse\.angus/angus-activation@.*$</packageUrl>
+        <cve>CVE-2025-7962</cve>
+    </suppress>
+</suppressions>
