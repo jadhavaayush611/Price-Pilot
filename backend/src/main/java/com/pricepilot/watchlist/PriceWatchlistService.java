@@ -218,8 +218,7 @@ public class PriceWatchlistService {
      */
     @Transactional(readOnly = true)
     public List<WatchlistResponseDTO> getTriggeredWatchlists() {
-        return watchlistRepository.findAll().stream()
-                .filter(pw -> pw.isActive() && pw.getCurrentBestPrice().compareTo(pw.getTargetPrice()) <= 0)
+        return watchlistRepository.findAllTriggeredWatchlists().stream()
                 .map(WatchlistResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -229,9 +228,7 @@ public class PriceWatchlistService {
      */
     @Transactional
     public void updateBestPricesForActiveWatchlists() {
-        List<PriceWatchlistEntity> activeWatchlists = watchlistRepository.findAll().stream()
-                .filter(PriceWatchlistEntity::isActive)
-                .collect(Collectors.toList());
+        List<PriceWatchlistEntity> activeWatchlists = watchlistRepository.findAllActiveWatchlists();
 
         List<UUID> productIds = activeWatchlists.stream()
                 .map(pw -> pw.getProduct().getId())

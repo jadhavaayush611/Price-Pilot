@@ -33,5 +33,11 @@ public interface PriceWatchlistRepository extends JpaRepository<PriceWatchlistEn
 
     @Query("SELECT COUNT(pw) FROM PriceWatchlistEntity pw WHERE pw.user.id = :userId AND pw.active = :active")
     long countByUserIdAndActive(@Param("userId") UUID userId, @Param("active") boolean active);
+
+    @Query("SELECT pw FROM PriceWatchlistEntity pw JOIN FETCH pw.product p JOIN FETCH pw.user u WHERE pw.active = true AND pw.currentBestPrice <= pw.targetPrice")
+    List<PriceWatchlistEntity> findAllTriggeredWatchlists();
+
+    @Query("SELECT pw FROM PriceWatchlistEntity pw JOIN FETCH pw.product p WHERE pw.active = true")
+    List<PriceWatchlistEntity> findAllActiveWatchlists();
 }
 

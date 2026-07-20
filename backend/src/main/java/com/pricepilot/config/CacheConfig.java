@@ -53,6 +53,10 @@ public class CacheConfig implements CachingConfigurer {
                             "product-details", createCacheConfig(Duration.ofMinutes(30)),
                             "product-searches", createCacheConfig(Duration.ofMinutes(5)),
                             "popular-products", createCacheConfig(Duration.ofMinutes(60)),
+                            "trending-products", createCacheConfig(Duration.ofMinutes(15)),
+                            "most-watched-products", createCacheConfig(Duration.ofMinutes(15)),
+                            "most-saved-products", createCacheConfig(Duration.ofMinutes(15)),
+                            "biggest-drops", createCacheConfig(Duration.ofMinutes(15)),
                             "recommendations", createCacheConfig(Duration.ofMinutes(10)),
                             "dashboard", createCacheConfig(Duration.ofMinutes(5))
                     ))
@@ -73,7 +77,9 @@ public class CacheConfig implements CachingConfigurer {
         } else {
             // Fallback to simple in-memory ConcurrentMap cache
             ConcurrentMapCacheManager concurrentMapCacheManager = new ConcurrentMapCacheManager(
-                    "product-details", "product-searches", "popular-products", "recommendations", "dashboard"
+                    "product-details", "product-searches", "popular-products",
+                    "trending-products", "most-watched-products", "most-saved-products", "biggest-drops",
+                    "recommendations", "dashboard"
             );
 
             return new CacheManager() {

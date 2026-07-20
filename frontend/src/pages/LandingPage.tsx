@@ -286,6 +286,8 @@ export const LandingPage: React.FC = () => {
                       <img
                         src={product.imageUrl}
                         alt={product.name}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (

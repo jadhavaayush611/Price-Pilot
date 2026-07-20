@@ -328,24 +328,28 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "trending-products", key = "#limit")
     public List<ProductResponseDTO> getTrendingProducts(int limit) {
         List<ProductEntity> entities = productRepository.findTrendingProducts(PageRequest.of(0, limit));
         return mapProductsToResponseDTOs(entities);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "most-watched-products", key = "#limit")
     public List<ProductResponseDTO> getMostWatchedProducts(int limit) {
         List<ProductEntity> entities = productRepository.findMostWatchedProducts(PageRequest.of(0, limit));
         return mapProductsToResponseDTOs(entities);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "most-saved-products", key = "#limit")
     public List<ProductResponseDTO> getMostSavedProducts(int limit) {
         List<ProductEntity> entities = productRepository.findMostSavedProducts(PageRequest.of(0, limit));
         return mapProductsToResponseDTOs(entities);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "biggest-drops", key = "#limit")
     public List<ProductResponseDTO> getProductsWithBiggestDrops(int limit) {
         List<ProductEntity> entities = productRepository.findProductsWithBiggestDrops(PageRequest.of(0, limit));
         return mapProductsToResponseDTOs(entities);

@@ -91,13 +91,15 @@ class PredictionService:
         # Parse interactions for history in explainer
         interaction_history = [i.model_dump() for i in request.interactions] if request.interactions else []
 
+        # Pre-build candidate map for O(1) lookup instead of O(N) DataFrame filtering inside loop
+        candidate_map = {str(c["id"]): c for c in candidate_data}
+
         max_score = 0.0
         for pid, score in predictions:
-            # Find candidate info
-            p_match = df_candidates[df_candidates["id"].astype(str) == str(pid)]
-            if p_match.empty:
+            # Find candidate info O(1)
+            product_info = candidate_map.get(str(pid))
+            if not product_info:
                 continue
-            product_info = p_match.iloc[0].to_dict()
             
             reasons = explainability_service.explain(
                 user_id=user_id,
