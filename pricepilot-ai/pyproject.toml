@@ -5,12 +5,12 @@ description = "FastAPI AI Inference Service for PricePilot"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "fastapi>=0.100.0",
-    "uvicorn>=0.22.0",
-    "pydantic>=2.0.0",
-    "pandas>=2.0.0",
-    "numpy>=1.20.0",
-    "prometheus-client>=0.17.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "pydantic>=2.8.0",
+    "pandas>=2.2.0",
+    "numpy>=1.26.0",
+    "prometheus-client>=0.20.0",
 ]
 
 [tool.pytest.ini_options]

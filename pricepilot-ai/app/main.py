@@ -8,15 +8,10 @@ from app.utils.logger import log_structured
 from app.config.settings import settings
 import logging
 
-app = FastAPI(
-    title="PricePilot AI Microservice",
-    description="Dedicated FastAPI service for machine learning model inference and explanations.",
-    version="1.0.0"
-)
+from contextlib import asynccontextmanager
 
-# Startup event handler
-@app.on_event("startup")
-def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     # 1. API key validation status
     api_key_status = "MISSING"
     raw_key = os.getenv("PRICEPILOT_AI_API_KEY")
@@ -71,10 +66,16 @@ def startup_event():
             "message": "FastAPI started but no models were loaded. Running in fallback mode."
         })
 
-# Shutdown event handler
-@app.on_event("shutdown")
-def shutdown_event():
+    yield
+
     log_structured(logging.INFO, "application_shutdown")
+
+app = FastAPI(
+    title="PricePilot AI Microservice",
+    description="Dedicated FastAPI service for machine learning model inference and explanations.",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 # Simple in-memory rate limiting for FastAPI
 from collections import defaultdict

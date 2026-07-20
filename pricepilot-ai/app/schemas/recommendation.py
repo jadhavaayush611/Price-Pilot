@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Dict, Any, Optional
 
 class ProductFeature(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str = Field(..., alias="productId", description="Unique product identifier")
     category: str
     brand: Optional[str] = "Unknown"
@@ -13,9 +15,6 @@ class ProductFeature(BaseModel):
     watchlistCount: Optional[float] = 0.0
     trendingScore: Optional[float] = 0.0
     discountPercentage: Optional[float] = 0.0
-
-    class Config:
-        populate_by_name = True
 
 class UserProfile(BaseModel):
     preferredCategories: Dict[str, float] = Field(default_factory=dict)
