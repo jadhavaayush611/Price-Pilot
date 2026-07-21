@@ -49,7 +49,11 @@ public class ProductService {
     @Transactional
     @Caching(evict = {
         @CacheEvict(value = "product-searches", allEntries = true),
-        @CacheEvict(value = "popular-products", allEntries = true)
+        @CacheEvict(value = "popular-products", allEntries = true),
+        @CacheEvict(value = "trending-products", allEntries = true),
+        @CacheEvict(value = "most-watched-products", allEntries = true),
+        @CacheEvict(value = "most-saved-products", allEntries = true),
+        @CacheEvict(value = "biggest-drops", allEntries = true)
     })
     public ProductResponseDTO createProduct(ProductRequestDTO requestDTO) {
         ProductEntity entity = ProductEntity.builder()
@@ -117,7 +121,11 @@ public class ProductService {
     @Caching(evict = {
         @CacheEvict(value = "product-details", key = "#id"),
         @CacheEvict(value = "product-searches", allEntries = true),
-        @CacheEvict(value = "popular-products", allEntries = true)
+        @CacheEvict(value = "popular-products", allEntries = true),
+        @CacheEvict(value = "trending-products", allEntries = true),
+        @CacheEvict(value = "most-watched-products", allEntries = true),
+        @CacheEvict(value = "most-saved-products", allEntries = true),
+        @CacheEvict(value = "biggest-drops", allEntries = true)
     })
     public ProductResponseDTO updateProduct(UUID id, ProductRequestDTO requestDTO) {
         ProductEntity entity = productRepository.findById(id)
@@ -138,7 +146,11 @@ public class ProductService {
     @Caching(evict = {
         @CacheEvict(value = "product-details", key = "#id"),
         @CacheEvict(value = "product-searches", allEntries = true),
-        @CacheEvict(value = "popular-products", allEntries = true)
+        @CacheEvict(value = "popular-products", allEntries = true),
+        @CacheEvict(value = "trending-products", allEntries = true),
+        @CacheEvict(value = "most-watched-products", allEntries = true),
+        @CacheEvict(value = "most-saved-products", allEntries = true),
+        @CacheEvict(value = "biggest-drops", allEntries = true)
     })
     public void deleteProduct(UUID id) {
         if (!productRepository.existsById(id)) {
@@ -319,12 +331,10 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "popular-products")
+    @Cacheable(value = "popular-products", key = "#limit")
     public List<ProductResponseDTO> getPopularProducts(int limit) {
         List<ProductEntity> entities = productRepository.findPopularProducts(PageRequest.of(0, limit));
-        return entities.stream()
-                .map(ProductResponseDTO::fromEntity)
-                .collect(Collectors.toList());
+        return mapProductsToResponseDTOs(entities);
     }
 
     @Transactional(readOnly = true)

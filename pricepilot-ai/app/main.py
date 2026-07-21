@@ -100,6 +100,14 @@ class TokenBucket:
 # Limiters mapping: category -> client_ip -> TokenBucket
 limiters = defaultdict(dict)
 
+def _cleanup_stale_limiters(category: str, max_idle_seconds: float = 3600.0):
+    category_map = limiters[category]
+    if len(category_map) > 1000:
+        now = time.time()
+        stale_keys = [ip for ip, b in category_map.items() if now - b.last_update > max_idle_seconds]
+        for ip in stale_keys:
+            del category_map[ip]
+
 @app.middleware("http")
 async def rate_limiting_middleware(request: Request, call_next):
     if not settings.rate_limit_enabled:
@@ -119,6 +127,7 @@ async def rate_limiting_middleware(request: Request, call_next):
         limit = settings.recommendation_limit
 
     if limit is not None:
+        _cleanup_stale_limiters(category)
         refill_rate = limit / 60.0
         bucket = limiters[category].get(client_ip)
         if not bucket:

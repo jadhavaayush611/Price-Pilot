@@ -25,7 +25,7 @@ interface TableProps<T> {
   };
 }
 
-export function Table<T>({
+function TableImpl<T>({
   data,
   columns,
   isLoading = false,
@@ -200,3 +200,5 @@ export function Table<T>({
     </div>
   );
 }
+
+export const Table = React.memo(TableImpl) as <T>(props: TableProps<T>) => React.ReactElement;

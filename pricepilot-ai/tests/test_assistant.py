@@ -55,7 +55,7 @@ class TestAssistantModule(unittest.TestCase):
         self.assertTrue(len(context["products"]) > 0)
         self.assertEqual(context["products"][0]["id"], "p123")
 
-    @patch("requests.get")
+    @patch("app.assistant.tools.http_session.get")
     def test_tool_execution(self, mock_get):
         """Test that service wrappers correctly execute HTTP requests to the backend with authentication."""
         mock_resp = MagicMock()

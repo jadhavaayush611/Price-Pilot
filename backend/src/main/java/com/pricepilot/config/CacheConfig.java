@@ -97,7 +97,11 @@ public class CacheConfig implements CachingConfigurer {
         }
     }
 
-    private RedisCacheConfiguration createCacheConfig(Duration ttl) {
+    private final ObjectMapper sharedObjectMapper = createSharedObjectMapper();
+    private final GenericJackson2JsonRedisSerializer sharedValueSerializer = new GenericJackson2JsonRedisSerializer(sharedObjectMapper);
+    private final StringRedisSerializer sharedKeySerializer = new StringRedisSerializer();
+
+    private static ObjectMapper createSharedObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator ptv = 
@@ -119,12 +123,16 @@ public class CacheConfig implements CachingConfigurer {
                 ObjectMapper.DefaultTyping.NON_FINAL,
                 JsonTypeInfo.As.PROPERTY
         );
+        return objectMapper;
+    }
 
+    private RedisCacheConfiguration createCacheConfig(Duration ttl) {
         return RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(ttl)
                 .disableCachingNullValues()
-                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer(objectMapper)));
+                .prefixCacheNameWith("pricepilot::")
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(sharedKeySerializer))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(sharedValueSerializer));
     }
 
     @Override

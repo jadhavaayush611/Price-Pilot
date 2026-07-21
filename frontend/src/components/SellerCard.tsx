@@ -12,7 +12,7 @@ interface SellerCardProps {
   currency?: CurrencyCode;
 }
 
-export const SellerCard: React.FC<SellerCardProps> = ({
+export const SellerCard: React.FC<SellerCardProps> = React.memo(({
   price,
   isBestDeal,
   lowestPrice,
@@ -146,4 +146,4 @@ export const SellerCard: React.FC<SellerCardProps> = ({
       </div>
     </motion.div>
   );
-};
+});

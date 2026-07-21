@@ -100,7 +100,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "recommendations", key = "T(java.util.Objects).hash(#userId, #limit)")
+    @Cacheable(value = "recommendations", key = "'rec_user_' + #userId + '_' + #limit")
     public List<ProductResponseDTO> getPersonalizedRecommendations(UUID userId, int limit) {
         // 1. Get exclusions (already saved or watchlisted)
         Set<UUID> excludedIds = new HashSet<>();
@@ -186,7 +186,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "recommendations", key = "T(java.util.Objects).hash(#userId, #category, #brand, #minPrice, #maxPrice, #sort, #page, #size)")
+    @Cacheable(value = "recommendations", key = "'rec_filter_' + #userId + '_' + (#category != null ? #category : 'all') + '_' + (#brand != null ? #brand : 'all') + '_' + #minPrice + '_' + #maxPrice + '_' + #sort + '_' + #page + '_' + #size")
     public PageResponse<ProductResponseDTO> getPersonalizedRecommendations(
             UUID userId,
             String category,
@@ -275,7 +275,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "recommendations", key = "'similar_' + T(java.util.Objects).hash(#productId, #limit)")
+    @Cacheable(value = "recommendations", key = "'similar_' + #productId + '_' + #limit")
     public List<ProductResponseDTO> getSimilarProducts(UUID productId, int limit) {
         ProductEntity target = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));

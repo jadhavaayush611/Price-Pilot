@@ -21,7 +21,7 @@ interface SearchFiltersProps {
   onReset: () => void;
 }
 
-export const SearchFilters: React.FC<SearchFiltersProps> = ({
+export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
   categories,
   brands,
   selectedCategory,
@@ -167,4 +167,4 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
       </div>
     </aside>
   );
-};
+});

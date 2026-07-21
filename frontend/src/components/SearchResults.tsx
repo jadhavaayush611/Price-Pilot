@@ -16,7 +16,7 @@ interface SearchResultsProps {
   onToggleSave?: (productId: string) => void;
 }
 
-export const SearchResults: React.FC<SearchResultsProps> = ({
+export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
   products,
   loading,
   page,
@@ -247,5 +247,5 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
       )}
     </div>
   );
-};
+});
 export default SearchResults;

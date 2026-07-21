@@ -1,0 +1,35 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:pricepilottestdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE DOMAIN IF NOT EXISTS TSVECTOR AS VARCHAR
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    open-in-view: false
+  flyway:
+    enabled: false
+  cache:
+    type: simple
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+pricepilot:
+  jwt:
+    secret: ${PRICEPILOT_JWT_SECRET:ZGV2LXNlY3JldC1rZXktbXVzdC1iZS1hdC1sZWFzdC0yNTYtYml0cy1sb25nLW90aGVyd2lzZS1qand0LXRocm93cy1leGNlcHRpb24tMTIzNDU2Nzg5MA==}
+    expiration: 86400000
+  ai:
+    enabled: true
+    url: ${PRICEPILOT_AI_URL:http://localhost:8000}
+    api-key: ${PRICEPILOT_AI_API_KEY:test-api-key}
+    timeout: 5000
+    retry-count: 3
+  cors:
+    allowed-origins: ${PRICEPILOT_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
+  rate-limit:
+    enabled: false

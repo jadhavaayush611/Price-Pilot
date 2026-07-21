@@ -38,17 +38,19 @@ public class RecommendationCacheHelper {
     }
 
     /**
-     * Clears all dashboard and recommendation caches globally (e.g. on price changes).
+     * Clears all catalog, dashboard and recommendation caches globally (e.g. on price or product changes).
      */
     public void evictAllCaches() {
-        Cache dashboardCache = cacheManager.getCache("dashboard");
-        if (dashboardCache != null) {
-            dashboardCache.clear();
-        }
-
-        Cache recommendationsCache = cacheManager.getCache("recommendations");
-        if (recommendationsCache != null) {
-            recommendationsCache.clear();
+        String[] cacheNames = {
+            "product-details", "product-searches", "popular-products",
+            "trending-products", "most-watched-products", "most-saved-products",
+            "biggest-drops", "recommendations", "dashboard"
+        };
+        for (String name : cacheNames) {
+            Cache cache = cacheManager.getCache(name);
+            if (cache != null) {
+                cache.clear();
+            }
         }
     }
 }
