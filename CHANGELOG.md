@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-07-22
+
+### Added
+- **M4 Observability**: Structured JSON logging, W3C Trace Context propagation, Prometheus custom metrics (`http_requests_total`, `http_request_duration_seconds`, `ai_inference_duration_seconds`), Grafana dashboard provisioning, and Actuator health readiness/liveness endpoints.
+- **M5 System Reliability & Resilience**: Circuit breaker patterns for AI integration with seamless local rule-based fallback, rate limiting (Bucket4j/Redis), graceful shutdown hooks across containers, health-check probes, and multi-tier failure recovery.
+- **M6 Maintenance & Stewardship**: Version alignment (v1.0.1) across all microservices, SDKs, and Docker images; cleaned unused imports and obsolete artifacts; standardized static analysis and code quality compliance; updated comprehensive release readiness audit report.
+
+### Changed
+- Unified application versioning across Java Backend (`pom.xml`), React Frontend (`package.json`), Python AI Microservice (`pyproject.toml`), and Python SDK (`pyproject.toml`).
+- Enhanced code quality, type safety, and static analysis compliance across all subprojects.
+
+### Fixed
+- Fixed strict TypeScript and ESLint type warnings across React component layers.
+
 ---
 
 ## [1.0.0-rc1] - 2026-07-12

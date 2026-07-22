@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
-import type { ProductWithPrices } from '../types';
+import type { ProductWithPrices, Watchlist, ProductAnalytics } from '../types';
 import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, getSavedCurrency, saveCurrency, getDisplayPrice, type CurrencyCode, CURRENCY_SYMBOLS } from '../currency';
@@ -26,20 +26,19 @@ export const ProductPage: React.FC = () => {
 
   // Watchlist specific states
   const [isTracking, setIsTracking] = useState(false);
-  const [watchlistEntry, setWatchlistEntry] = useState<any>(null);
+  const [watchlistEntry, setWatchlistEntry] = useState<Watchlist | null>(null);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
   const [targetPriceInput, setTargetPriceInput] = useState('');
   const [trackingError, setTrackingError] = useState<string | null>(null);
   const [isSubmittingTracking, setIsSubmittingTracking] = useState(false);
 
   // Analytics states
-  const [analytics, setAnalytics] = useState<any | null>(null);
+  const [analytics, setAnalytics] = useState<ProductAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [similarProducts, setSimilarProducts] = useState<ProductWithPrices[]>([]);
 
   useEffect(() => {
     if (id) {
-      setLoading(true);
       apiService.getProduct(id)
         .then((data) => {
           setProduct(data);
@@ -61,7 +60,6 @@ export const ProductPage: React.FC = () => {
         });
 
       // Fetch analytics
-      setAnalyticsLoading(true);
       apiService.getProductAnalytics(id)
         .then((data) => {
           setAnalytics(data);
@@ -85,27 +83,24 @@ export const ProductPage: React.FC = () => {
     }
   }, [id, isAuthenticated]);
 
-  const fetchWatchlistState = async () => {
-    if (id && isAuthenticated) {
-      try {
-        const watchlists = await apiService.getWatchlists();
-        const matched = watchlists.find(w => w.productId === id);
-        if (matched) {
-          setIsTracking(true);
-          setWatchlistEntry(matched);
-          setTargetPriceInput(matched.targetPrice.toString());
-        } else {
-          setIsTracking(false);
-          setWatchlistEntry(null);
-        }
-      } catch (err) {
-        console.error("Error checking watchlist state:", err);
-      }
-    }
-  };
-
   useEffect(() => {
-    fetchWatchlistState();
+    if (id && isAuthenticated && product) {
+      apiService.getWatchlists()
+        .then((watchlists) => {
+          const matched = watchlists.find(w => w.productId === id);
+          if (matched) {
+            setIsTracking(true);
+            setWatchlistEntry(matched);
+            setTargetPriceInput(matched.targetPrice.toString());
+          } else {
+            setIsTracking(false);
+            setWatchlistEntry(null);
+          }
+        })
+        .catch((err) => {
+          console.error("Error checking watchlist state:", err);
+        });
+    }
   }, [id, isAuthenticated, product]);
 
   const handleToggleSave = async () => {
@@ -176,8 +171,9 @@ export const ProductPage: React.FC = () => {
         setWatchlistEntry(created);
       }
       setIsTrackingModalOpen(false);
-    } catch (err: any) {
-      setTrackingError(err.message || "Failed to update tracking preference");
+    } catch (err: unknown) {
+      const errorObj = err as { message?: string };
+      setTrackingError(errorObj.message || "Failed to update tracking preference");
     } finally {
       setIsSubmittingTracking(false);
     }
@@ -192,8 +188,9 @@ export const ProductPage: React.FC = () => {
       setIsTracking(false);
       setWatchlistEntry(null);
       setIsTrackingModalOpen(false);
-    } catch (err: any) {
-      setTrackingError(err.message || "Failed to remove watchlist entry");
+    } catch (err: unknown) {
+      const errorObj = err as { message?: string };
+      setTrackingError(errorObj.message || "Failed to remove watchlist entry");
     } finally {
       setIsSubmittingTracking(false);
     }
@@ -378,7 +375,7 @@ export const ProductPage: React.FC = () => {
                   title="Track Price & Get Notified"
                 >
                   <Bell className={`h-4 w-4 ${isTracking ? 'fill-current' : ''}`} />
-                  <span>{isTracking ? `Tracking at ${formatPrice(watchlistEntry?.targetPrice, currency)}` : 'Track Price'}</span>
+                  <span>{isTracking ? `Tracking at ${formatPrice(watchlistEntry?.targetPrice || 0, currency)}` : 'Track Price'}</span>
                 </button>
 
                 <button

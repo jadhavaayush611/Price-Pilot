@@ -1,6 +1,6 @@
 {
   "name": "pricepilot-root",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev:backend": "backend\\mvnw.cmd spring-boot:run -f backend\\pom.xml",

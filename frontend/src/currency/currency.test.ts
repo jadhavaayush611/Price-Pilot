@@ -31,7 +31,7 @@ class LocalStorageMock {
 }
 
 if (typeof window === 'undefined') {
-  const g = globalThis as any;
+  const g = globalThis as unknown as { localStorage: LocalStorageMock; window: unknown };
   g.localStorage = new LocalStorageMock();
   g.window = { localStorage: g.localStorage };
 }

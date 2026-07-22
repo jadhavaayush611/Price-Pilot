@@ -46,8 +46,10 @@ export const AiAssistantPage: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [conversationId, setConversationId] = useState<string>('');
-  
+  const [conversationId, setConversationId] = useState<string>(() => 
+    typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)
+  );
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const userCurrency = getSavedCurrency();
 
@@ -55,10 +57,7 @@ export const AiAssistantPage: React.FC = () => {
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login?from=/assistant');
-      return;
     }
-    // Generate new conversation ID on mount
-    setConversationId(crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2));
   }, [isAuthenticated, navigate]);
 
   // Scroll to bottom on new messages
@@ -73,9 +72,11 @@ export const AiAssistantPage: React.FC = () => {
     const userMessageText = textToSend;
     setInput('');
     
+    const generateId = () => typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
     // Add user message to UI
     const userMessage: Message = {
-      id: Math.random().toString(36).substring(2),
+      id: generateId(),
       role: 'user',
       content: userMessageText,
       timestamp: new Date()
@@ -89,20 +90,21 @@ export const AiAssistantPage: React.FC = () => {
       
       // Parse assistant response
       const assistantMessage: Message = {
-        id: Math.random().toString(36).substring(2),
+        id: generateId(),
         role: 'assistant',
-        content: data.response || "I couldn't process that query.",
-        products: data.products,
-        comparisons: data.comparisons,
-        buyConfidence: data.buyConfidence,
-        suggestedPrompts: data.suggestedPrompts || [],
+        content: (data.response as string) || "I couldn't process that query.",
+        products: data.products as Message['products'],
+        comparisons: data.comparisons as Message['comparisons'],
+        buyConfidence: data.buyConfidence as Message['buyConfidence'],
+        suggestedPrompts: (data.suggestedPrompts as string[]) || [],
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error sending message:', err);
-      setError(err?.response?.data?.detail || err.message || 'Failed to connect to the PricePilot AI Assistant.');
+      const errorObj = err as { response?: { data?: { detail?: string } }; message?: string };
+      setError(errorObj?.response?.data?.detail || errorObj.message || 'Failed to connect to the PricePilot AI Assistant.');
     } finally {
       setLoading(false);
     }

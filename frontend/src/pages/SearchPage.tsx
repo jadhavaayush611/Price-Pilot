@@ -80,9 +80,6 @@ export const SearchPage: React.FC = () => {
 
   // 2. Fetch paginated, filtered, sorted results from backend
   useEffect(() => {
-    setLoading(true);
-    setError(false);
-    
     apiService.searchProductsWithFilters({
       keyword: query,
       category: urlCategory,
@@ -112,8 +109,6 @@ export const SearchPage: React.FC = () => {
           setSavedProductIds(saved.map(sp => sp.productId));
         })
         .catch(err => console.error("Error loading saved products:", err));
-    } else {
-      setSavedProductIds([]);
     }
   }, [isAuthenticated]);
 

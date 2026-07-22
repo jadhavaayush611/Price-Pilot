@@ -21,7 +21,6 @@ export const SavedProductsPage: React.FC = () => {
       return;
     }
 
-    setLoading(true);
     apiService.getSavedProducts()
       .then((data) => {
         setSavedProducts(data);

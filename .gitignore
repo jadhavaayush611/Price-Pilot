@@ -9,6 +9,7 @@ skills-lock.json
 # IDEs, Editors & System Files
 .idea/
 .vscode/
+.kilo/
 !.vscode/extensions.json
 *.iml
 *.ipr
@@ -120,6 +121,7 @@ INSTRUCTIONS.md
 *.onnx
 *.h5
 .ipynb_checkpoints/
+public_repository_cleanup.md
 
 # FastAPI AI Service Specific Ignores
 /pricepilot-ai/.env

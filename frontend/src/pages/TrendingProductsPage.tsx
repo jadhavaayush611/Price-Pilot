@@ -16,31 +16,34 @@ export const TrendingProductsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const fetchRankings = async (tab: ActiveTab) => {
-    setLoading(true);
-    setError(false);
-    try {
-      let data: ProductWithPrices[] = [];
-      if (tab === 'trending') {
-        data = await apiService.getTrendingProducts(12);
-      } else if (tab === 'watched') {
-        data = await apiService.getMostWatchedProducts(12);
-      } else if (tab === 'saved') {
-        data = await apiService.getMostSavedProducts(12);
-      } else if (tab === 'drops') {
-        data = await apiService.getBiggestDrops(12);
-      }
-      setProducts(data);
-    } catch (err) {
-      console.error(`Failed to load rankings for ${tab}:`, err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchRankings(activeTab);
+    let isCancelled = false;
+    const loadData = async () => {
+      setError(false);
+      try {
+        let data: ProductWithPrices[] = [];
+        if (activeTab === 'trending') {
+          data = await apiService.getTrendingProducts(12);
+        } else if (activeTab === 'watched') {
+          data = await apiService.getMostWatchedProducts(12);
+        } else if (activeTab === 'saved') {
+          data = await apiService.getMostSavedProducts(12);
+        } else if (activeTab === 'drops') {
+          data = await apiService.getBiggestDrops(12);
+        }
+        if (!isCancelled) setProducts(data);
+      } catch (err) {
+        console.error(`Failed to load rankings for ${activeTab}:`, err);
+        if (!isCancelled) setError(true);
+      } finally {
+        if (!isCancelled) setLoading(false);
+      }
+    };
+
+    loadData();
+    return () => {
+      isCancelled = true;
+    };
   }, [activeTab]);
 
   // Framer Motion Animation Variants
@@ -155,7 +158,7 @@ export const TrendingProductsPage: React.FC = () => {
               We encountered a network error while retrieving catalog stats. Please try again.
             </p>
             <button
-              onClick={() => fetchRankings(activeTab)}
+              onClick={() => window.location.reload()}
               className="px-4 py-2 bg-white hover:bg-zinc-200 text-black text-xs font-bold rounded-lg shadow transition-all active:scale-95 cursor-pointer"
             >
               Retry Connection

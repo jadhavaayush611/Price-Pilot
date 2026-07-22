@@ -48,7 +48,7 @@ public class StartupDiagnostics implements CommandLineRunner {
         log.info("Active Profile       : {}", activeProfiles.length > 0 ? Arrays.toString(activeProfiles) : "default");
 
         // 2. Build Version
-        String buildVersion = buildProperties != null ? buildProperties.getVersion() : "0.0.1-SNAPSHOT (Dev)";
+        String buildVersion = buildProperties != null ? buildProperties.getVersion() : "1.0.1 (Dev)";
         log.info("Build Version        : {}", buildVersion);
 
         // 3. Database Connectivity

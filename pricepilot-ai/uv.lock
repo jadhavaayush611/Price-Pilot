@@ -459,7 +459,7 @@ wheels = [
 
 [[package]]
 name = "pricepilot-ai"
-version = "1.0.0"
+version = "1.0.1"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },

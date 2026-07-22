@@ -21,26 +21,30 @@ export const WatchlistPage: React.FC = () => {
   const [editError, setEditError] = useState<string | null>(null);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
-  const fetchWatchlist = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await apiService.getWatchlists();
-      setWatchlists(data);
-    } catch (err: any) {
-      console.error('Error fetching watchlist:', err);
-      setError('Could not retrieve watchlist entries. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login?from=/watchlist');
       return;
     }
-    fetchWatchlist();
+
+    let isCancelled = false;
+    const loadData = async () => {
+      try {
+        setError(null);
+        const data = await apiService.getWatchlists();
+        if (!isCancelled) setWatchlists(data);
+      } catch (err: unknown) {
+        console.error('Error fetching watchlist:', err);
+        if (!isCancelled) setError('Could not retrieve watchlist entries. Please try again.');
+      } finally {
+        if (!isCancelled) setLoading(false);
+      }
+    };
+
+    loadData();
+    return () => {
+      isCancelled = true;
+    };
   }, [isAuthenticated, navigate]);
 
   const handleDelete = async (id: string) => {
@@ -61,9 +65,10 @@ export const WatchlistPage: React.FC = () => {
     try {
       const updated = await apiService.updateWatchlist(item.id, item.targetPrice, !item.active);
       setWatchlists(prev => prev.map(w => w.id === item.id ? updated : w));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to toggle active status:', err);
-      alert(err.message || 'Failed to toggle status.');
+      const errorObj = err as { message?: string };
+      alert(errorObj.message || 'Failed to toggle status.');
     }
   };
 
@@ -97,8 +102,9 @@ export const WatchlistPage: React.FC = () => {
       const updated = await apiService.updateWatchlist(editingItem.id, targetInUsd, editingItem.active);
       setWatchlists(prev => prev.map(w => w.id === editingItem.id ? updated : w));
       setEditingItem(null);
-    } catch (err: any) {
-      setEditError(err.message || 'Failed to update target price.');
+    } catch (err: unknown) {
+      const errorObj = err as { message?: string };
+      setEditError(errorObj.message || 'Failed to update target price.');
     } finally {
       setIsSubmittingEdit(false);
     }
@@ -161,7 +167,7 @@ export const WatchlistPage: React.FC = () => {
         <h2 className="text-xl font-bold text-white tracking-tight">Watchlist Retrieval Failed</h2>
         <p className="text-zinc-500 text-xs leading-relaxed">{error}</p>
         <button
-          onClick={fetchWatchlist}
+          onClick={() => window.location.reload()}
           className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-100 hover:text-black border border-zinc-800 hover:border-white text-xs font-semibold rounded-xl text-zinc-300 transition-all cursor-pointer shadow-md active:scale-95"
         >
           Retry Connection

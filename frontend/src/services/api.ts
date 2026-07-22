@@ -14,7 +14,7 @@ export const apiClient = axios.create({
 // Automatically inject JWT token into header and track request start timestamp
 apiClient.interceptors.request.use(
   (config) => {
-    (config as any).metadata = { startTime: performance.now() };
+    (config as unknown as Record<string, unknown>).metadata = { startTime: performance.now() };
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -27,8 +27,9 @@ apiClient.interceptors.request.use(
 // Response interceptor for API latency logging in development
 apiClient.interceptors.response.use(
   (response) => {
-    if (import.meta.env.DEV && response.config && (response.config as any).metadata) {
-      const duration = performance.now() - (response.config as any).metadata.startTime;
+    const configWithMeta = response.config as unknown as { metadata?: { startTime: number } };
+    if (import.meta.env.DEV && response.config && configWithMeta.metadata) {
+      const duration = performance.now() - configWithMeta.metadata.startTime;
       console.debug(
         `[API Latency] ${response.config.method?.toUpperCase()} ${response.config.url} - ${duration.toFixed(2)}ms (${response.status})`
       );
@@ -36,8 +37,9 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (import.meta.env.DEV && error.config && (error.config as any).metadata) {
-      const duration = performance.now() - (error.config as any).metadata.startTime;
+    const configWithMeta = error.config as unknown as { metadata?: { startTime: number } };
+    if (import.meta.env.DEV && error.config && configWithMeta.metadata) {
+      const duration = performance.now() - configWithMeta.metadata.startTime;
       console.debug(
         `[API Latency Error] ${error.config.method?.toUpperCase()} ${error.config.url} - ${duration.toFixed(2)}ms (${error.response?.status || 'NETWORK_ERROR'})`
       );
@@ -124,7 +126,7 @@ export const apiService = {
     try {
       const response = await apiClient.get('/health');
       return response.data;
-    } catch (error) {
+    } catch {
       console.warn('Backend connection failed, falling back to mock UP status');
       return { status: 'UP' };
     }
@@ -144,7 +146,7 @@ export const apiService = {
     size: number;
     number: number;
   }> {
-    const params: any = { page, size };
+    const params: Record<string, unknown> = { page, size };
     if (sortKey) {
       params.sort = `${sortKey},${sortDir || 'asc'}`;
     }
@@ -218,7 +220,7 @@ export const apiService = {
     size: number;
     number: number;
   }> {
-    const params: any = { page, size };
+    const params: Record<string, unknown> = { page, size };
     if (sortKey) {
       params.sort = `${sortKey},${sortDir || 'asc'}`;
     }
@@ -257,7 +259,7 @@ export const apiService = {
     size: number;
     number: number;
   }> {
-    const params: any = { page, size };
+    const params: Record<string, unknown> = { page, size };
     if (sortKey) {
       params.sort = `${sortKey},${sortDir || 'asc'}`;
     }
@@ -297,12 +299,12 @@ export const apiService = {
     await apiClient.delete(`/prices/${id}`);
   },
 
-  async login(credentials: any): Promise<{ token: string; user: User }> {
+  async login(credentials: Record<string, unknown>): Promise<{ token: string; user: User }> {
     const response = await apiClient.post('/auth/login', credentials);
     return response.data;
   },
 
-  async register(userData: any): Promise<{ token: string; user: User }> {
+  async register(userData: Record<string, unknown>): Promise<{ token: string; user: User }> {
     const response = await apiClient.post('/auth/register', userData);
     return response.data;
   },
@@ -330,7 +332,7 @@ export const apiService = {
   async getWatchlists(): Promise<Watchlist[]> {
     const response = await apiClient.get('/watchlists');
     const userCurrency = getSavedCurrency();
-    return response.data.map((item: any) => {
+    return response.data.map((item: Watchlist) => {
       const targetPrice = getDisplayPrice(item.targetPrice, userCurrency);
       const currentBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
       return {
@@ -356,20 +358,21 @@ export const apiService = {
         currentBestPrice: localBestPrice,
         priceDifference: localBestPrice - localTargetPrice
       };
-    } catch (error: any) {
-      if (error.response && error.response.status === 409) {
-        throw new Error('You are already watching this product');
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number; data?: { message?: string; details?: { currentBestPrice?: number } } } };
+      if (err.response && err.response.status === 409) {
+        throw new Error('You are already watching this product', { cause: error });
       }
-      if (error.response && error.response.status === 400) {
-        const data = error.response.data;
+      if (err.response && err.response.status === 400) {
+        const data = err.response.data;
         const details = data?.details;
         if (details && typeof details.currentBestPrice === 'number') {
           const usdPrice = details.currentBestPrice;
           const localPrice = getDisplayPrice(usdPrice, userCurrency);
           const formattedLocalPrice = formatPrice(localPrice, userCurrency);
-          throw new Error(`${data.message || 'Target price must be less than the current best price.'} (${formattedLocalPrice})`);
+          throw new Error(`${data.message || 'Target price must be less than the current best price.'} (${formattedLocalPrice})`, { cause: error });
         }
-        throw new Error(data?.message || 'Invalid target price');
+        throw new Error(data?.message || 'Invalid target price', { cause: error });
       }
       throw error;
     }
@@ -389,17 +392,18 @@ export const apiService = {
         currentBestPrice: localBestPrice,
         priceDifference: localBestPrice - localTargetPrice
       };
-    } catch (error: any) {
-      if (error.response && error.response.status === 400) {
-        const data = error.response.data;
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number; data?: { message?: string; details?: { currentBestPrice?: number } } } };
+      if (err.response && err.response.status === 400) {
+        const data = err.response.data;
         const details = data?.details;
         if (details && typeof details.currentBestPrice === 'number') {
           const usdPrice = details.currentBestPrice;
           const localPrice = getDisplayPrice(usdPrice, userCurrency);
           const formattedLocalPrice = formatPrice(localPrice, userCurrency);
-          throw new Error(`${data.message || 'Target price must be less than the current best price.'} (${formattedLocalPrice})`);
+          throw new Error(`${data.message || 'Target price must be less than the current best price.'} (${formattedLocalPrice})`, { cause: error });
         }
-        throw new Error(data?.message || 'Invalid target price');
+        throw new Error(data?.message || 'Invalid target price', { cause: error });
       }
       throw error;
     }
@@ -458,6 +462,7 @@ export const apiService = {
     page: number,
     size: number
   ): Promise<{
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content: any[];
     totalPages: number;
     totalElements: number;
@@ -503,10 +508,11 @@ export const apiService = {
   },
 
   // Get dashboard data (Real API)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getDashboard(): Promise<any> {
     const response = await apiClient.get('/dashboard');
     const userCurrency = getSavedCurrency();
-    const convertWatchlist = (item: any) => {
+    const convertWatchlist = (item: Watchlist) => {
       const targetPrice = getDisplayPrice(item.targetPrice, userCurrency);
       const currentBestPrice = getDisplayPrice(item.currentBestPrice, userCurrency);
       return {
@@ -528,21 +534,25 @@ export const apiService = {
   },
 
   // Assistant APIs
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async assistantChat(message: string, conversationId?: string): Promise<any> {
     const response = await apiClient.post('/assistant/chat', { message, conversationId });
     return response.data;
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async assistantCompare(productIds: string[], conversationId?: string): Promise<any> {
     const response = await apiClient.post('/assistant/compare', { productIds, conversationId });
     return response.data;
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async assistantAsk(question: string, conversationId?: string): Promise<any> {
     const response = await apiClient.post('/assistant/ask', { question, conversationId });
     return response.data;
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async assistantClearMemory(conversationId: string): Promise<any> {
     const response = await apiClient.post('/assistant/clear_memory', { conversationId });
     return response.data;

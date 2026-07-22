@@ -8,8 +8,8 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: any) => Promise<void>;
-  register: (userData: any) => Promise<void>;
+  login: (credentials: Record<string, unknown>) => Promise<void>;
+  register: (userData: Record<string, unknown>) => Promise<void>;
   logout: () => void;
   isAdmin: () => boolean;
 }
@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     initializeAuth();
   }, []);
 
-  const login = async (credentials: any) => {
+  const login = async (credentials: Record<string, unknown>) => {
     setIsLoading(true);
     try {
       const data = await apiService.login(credentials);
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const register = async (userData: any) => {
+  const register = async (userData: Record<string, unknown>) => {
     setIsLoading(true);
     try {
       const data = await apiService.register(userData);
@@ -100,6 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {

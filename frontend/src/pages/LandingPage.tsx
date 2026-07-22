@@ -26,7 +26,6 @@ export const LandingPage: React.FC = () => {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
     apiService.getTrendingProducts(3)
       .then((data) => {
         setTrendingProducts(data);

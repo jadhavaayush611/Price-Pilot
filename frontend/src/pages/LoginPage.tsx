@@ -16,7 +16,8 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   // Determine redirect path
-  const from = (location.state as any)?.from?.pathname || '/';
+  const locationState = location.state as { from?: { pathname?: string } } | null;
+  const from = locationState?.from?.pathname || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,10 +27,11 @@ export const LoginPage: React.FC = () => {
     try {
       await login({ email, password });
       navigate(from, { replace: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
+      const axiosErr = err as { response?: { data?: { message?: string } } };
       setError(
-        err.response?.data?.message || 
+        axiosErr.response?.data?.message || 
         'Invalid email or password. Please try again.'
       );
     } finally {

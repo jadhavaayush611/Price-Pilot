@@ -112,7 +112,7 @@ export interface UserInteractionEvent {
     | 'SELLER_CLICK'
     | 'SEARCH'
     | 'TRENDING_VIEW';
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: string;
 }
 

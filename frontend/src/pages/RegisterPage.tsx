@@ -30,10 +30,11 @@ export const RegisterPage: React.FC = () => {
     try {
       await register({ email, password, firstName, lastName });
       navigate('/', { replace: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
+      const axiosErr = err as { response?: { data?: { message?: string } } };
       setError(
-        err.response?.data?.message || 
+        axiosErr.response?.data?.message || 
         'Registration failed. Please verify your details and try again.'
       );
     } finally {

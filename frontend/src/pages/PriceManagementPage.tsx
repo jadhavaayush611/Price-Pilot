@@ -88,26 +88,29 @@ export const PriceManagementPage: React.FC = () => {
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: (newPrice: any) => apiService.createProductPrice(newPrice),
+    mutationFn: (newPrice: { productId: string; sellerId: string; currentPrice: number; originalPrice: number; productUrl?: string }) =>
+      apiService.createProductPrice(newPrice),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prices'] });
       handleCloseModal();
     },
-    onError: (error: any) => {
-      const msg = error?.response?.data?.message || 'Failed to register price. Do not store invalid discounts (e.g. current price > original price).';
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      const msg = err?.response?.data?.message || 'Failed to register price. Do not store invalid discounts (e.g. current price > original price).';
       setApiError(msg);
     }
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, price }: { id: string; price: any }) =>
+    mutationFn: ({ id, price }: { id: string; price: { productId: string; sellerId: string; currentPrice: number; originalPrice: number; productUrl?: string } }) =>
       apiService.updateProductPrice(id, price),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['prices'] });
       handleCloseModal();
     },
-    onError: (error: any) => {
-      const msg = error?.response?.data?.message || 'Failed to update price. Please verify values.';
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      const msg = err?.response?.data?.message || 'Failed to update price. Please verify values.';
       setApiError(msg);
     }
   });
@@ -119,8 +122,9 @@ export const PriceManagementPage: React.FC = () => {
       setIsDeleteConfirmOpen(false);
       setSelectedPrice(null);
     },
-    onError: (error: any) => {
-      alert(error?.response?.data?.message || 'Failed to delete price.');
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err?.response?.data?.message || 'Failed to delete price.');
     }
   });
 

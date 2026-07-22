@@ -72,7 +72,6 @@ export const DashboardPage: React.FC = () => {
       return;
     }
 
-    setLoading(true);
     apiService.getDashboard()
       .then((res) => {
         setData(res);
@@ -250,7 +249,7 @@ export const DashboardPage: React.FC = () => {
             <Link to={`/product/${productId}`} className="text-white hover:text-emerald-400 font-semibold hover:underline">
               {productName || 'product'}
             </Link>{' '}
-            at target <span className="text-emerald-400 font-mono font-bold">{formatPrice(getDisplayPrice(metadata.targetPrice, currency), currency)}</span>
+            at target <span className="text-emerald-400 font-mono font-bold">{formatPrice(getDisplayPrice((metadata.targetPrice as number) || 0, currency), currency)}</span>
           </span>
         );
       case 'WATCHLIST_DELETE':
@@ -271,7 +270,7 @@ export const DashboardPage: React.FC = () => {
       case 'SELLER_CLICK':
         return (
           <span className="text-zinc-300 text-xs">
-            Redirected to <span className="text-white font-semibold">{sellerName || metadata.seller}</span> for{' '}
+            Redirected to <span className="text-white font-semibold">{sellerName || (metadata.seller as string) || 'seller'}</span> for{' '}
             <Link to={`/product/${productId}`} className="text-white hover:text-cyan-400 font-semibold hover:underline">
               {productName || 'product'}
             </Link>
@@ -280,7 +279,7 @@ export const DashboardPage: React.FC = () => {
       case 'SEARCH':
         return (
           <span className="text-zinc-300 text-xs">
-            Searched for <span className="text-zinc-100 font-semibold font-mono">"{metadata.keyword || '*'}"</span>
+            Searched for <span className="text-zinc-100 font-semibold font-mono">"{(metadata.keyword as string) || '*'}"</span>
           </span>
         );
       default:
@@ -423,7 +422,7 @@ export const DashboardPage: React.FC = () => {
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as 'overview' | 'recommendations' | 'alerts' | 'trending')}
             className={`flex items-center gap-2 py-3 px-1 border-b-2 text-sm font-semibold transition-all relative whitespace-nowrap cursor-pointer ${
               activeTab === tab.id
                 ? 'border-white text-white font-bold'

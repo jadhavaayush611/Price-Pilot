@@ -80,8 +80,9 @@ export const ProductManagementPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       handleCloseModal();
     },
-    onError: (error: any) => {
-      const msg = error?.response?.data?.message || 'Failed to create product. Please check validation requirements.';
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      const msg = err?.response?.data?.message || 'Failed to create product. Please check validation requirements.';
       setApiError(msg);
     }
   });
@@ -93,8 +94,9 @@ export const ProductManagementPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       handleCloseModal();
     },
-    onError: (error: any) => {
-      const msg = error?.response?.data?.message || 'Failed to update product.';
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      const msg = err?.response?.data?.message || 'Failed to update product.';
       setApiError(msg);
     }
   });
@@ -106,8 +108,9 @@ export const ProductManagementPage: React.FC = () => {
       setIsDeleteConfirmOpen(false);
       setSelectedProduct(null);
     },
-    onError: (error: any) => {
-      alert(error?.response?.data?.message || 'Failed to delete product.');
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err?.response?.data?.message || 'Failed to delete product.');
     }
   });
 

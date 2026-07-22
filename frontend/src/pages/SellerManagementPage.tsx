@@ -77,8 +77,9 @@ export const SellerManagementPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['sellers'] });
       handleCloseModal();
     },
-    onError: (error: any) => {
-      const msg = error?.response?.data?.message || 'Failed to create seller. Please check validation requirements.';
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      const msg = err?.response?.data?.message || 'Failed to create seller. Please check validation requirements.';
       setApiError(msg);
     }
   });
@@ -90,8 +91,9 @@ export const SellerManagementPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['sellers'] });
       handleCloseModal();
     },
-    onError: (error: any) => {
-      const msg = error?.response?.data?.message || 'Failed to update seller.';
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      const msg = err?.response?.data?.message || 'Failed to update seller.';
       setApiError(msg);
     }
   });
@@ -103,8 +105,9 @@ export const SellerManagementPage: React.FC = () => {
       setIsDeleteConfirmOpen(false);
       setSelectedSeller(null);
     },
-    onError: (error: any) => {
-      alert(error?.response?.data?.message || 'Failed to delete seller.');
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err?.response?.data?.message || 'Failed to delete seller.');
     }
   });
 

@@ -13,11 +13,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   placeholder = "Search products, brands, or categories..."
 }) => {
   const [localInput, setLocalInput] = useState(value);
+  const [prevValue, setPrevValue] = useState(value);
 
   // Sync state if parent value changes (e.g. from URL parameters)
-  useEffect(() => {
+  if (value !== prevValue) {
+    setPrevValue(value);
     setLocalInput(value);
-  }, [value]);
+  }
 
   // Debounced notification to parent
   useEffect(() => {

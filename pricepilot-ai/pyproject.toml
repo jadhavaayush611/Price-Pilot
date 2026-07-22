@@ -1,6 +1,6 @@
 [project]
 name = "pricepilot-ai"
-version = "1.0.0"
+version = "1.0.1"
 description = "FastAPI AI Inference Service for PricePilot"
 readme = "README.md"
 requires-python = ">=3.10"
