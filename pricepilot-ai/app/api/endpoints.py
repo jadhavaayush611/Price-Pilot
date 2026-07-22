@@ -223,7 +223,7 @@ def readiness_check(response: Response):
         "details": details
     }
 
-@router.get("/metrics", dependencies=[Depends(verify_api_key)])
+@router.get("/metrics")
 def get_metrics():
     """Exposes Prometheus compatible scrape metrics."""
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)

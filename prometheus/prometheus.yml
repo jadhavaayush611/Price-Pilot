@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+scrape_configs:
+  - job_name: 'pricepilot-backend'
+    metrics_path: '/actuator/prometheus'
+    scheme: 'http'
+    static_configs:
+      - targets: ['pricepilot-backend:8080']
+        labels:
+          application: 'pricepilot-backend'
+          environment: 'production'
+
+  - job_name: 'pricepilot-ai'
+    metrics_path: '/metrics'
+    scheme: 'http'
+    static_configs:
+      - targets: ['pricepilot-ai:8000']
+        labels:
+          application: 'pricepilot-ai'
+          environment: 'production'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

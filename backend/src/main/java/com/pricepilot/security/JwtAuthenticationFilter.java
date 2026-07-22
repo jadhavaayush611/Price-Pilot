@@ -56,6 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    org.slf4j.MDC.put(CorrelationIdFilter.MDC_USER_KEY, userEmail);
                 } else {
                     org.slf4j.Logger auditLog = org.slf4j.LoggerFactory.getLogger("AuditLogger");
                     if (!userDetails.isEnabled()) {

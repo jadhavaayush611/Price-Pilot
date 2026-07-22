@@ -23,13 +23,8 @@ def test_health_endpoint():
     assert "status" in data
 
 def test_metrics_endpoint():
-    """Asserts metrics endpoint requires authentication and works when authenticated."""
-    # Without authentication (public access should fail)
+    """Asserts metrics endpoint works for Prometheus scrapers."""
     response = client.get("/metrics")
-    assert response.status_code in (401, 403)
-
-    # With authentication (should succeed)
-    response = client.get("/metrics", headers=API_KEY_HEADER)
     assert response.status_code == 200
     assert "pricepilot_ai" in response.text or "# HELP" in response.text
 

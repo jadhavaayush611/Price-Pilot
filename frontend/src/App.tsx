@@ -4,6 +4,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/Layout';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { initWebVitals } from './lib/webVitals';
+
+// Initialize Web Vitals listener
+initWebVitals();
 
 // Lazy-load page components for optimal code splitting & bundle size reduction
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -43,9 +48,10 @@ export const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
-          <Layout>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
+          <ErrorBoundary>
+            <Layout>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/search" element={<SearchPage />} />
@@ -114,10 +120,11 @@ export const App: React.FC = () => {
               </Routes>
             </Suspense>
           </Layout>
-        </Router>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
+        </ErrorBoundary>
+      </Router>
+    </AuthProvider>
+  </QueryClientProvider>
+);
 };
 
 export default App;

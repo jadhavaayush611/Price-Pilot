@@ -26,6 +26,8 @@ class ModelRegistry:
         Returns True if successful, False otherwise.
         """
         with self._lock:
+            import time
+            start_time = time.time()
             temp_models = {}
             temp_metadata = {}
             model_dir = settings.model_dir
@@ -90,11 +92,12 @@ class ModelRegistry:
                 except Exception as e:
                     log_structured(logging.WARNING, "training_report_load_failed", {"error": str(e)})
 
+            load_duration = time.time() - start_time
             if success_count > 0:
                 self._models = temp_models
                 self._metadata = temp_metadata
                 self.is_loaded = True
-                log_structured(logging.INFO, "all_models_loaded", {"loaded_count": success_count})
+                log_structured(logging.INFO, "all_models_loaded", {"loaded_count": success_count, "load_duration_seconds": load_duration})
                 return True
             else:
                 log_structured(logging.ERROR, "no_models_loaded")

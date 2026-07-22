@@ -43,9 +43,15 @@ public class AiClientImpl implements AiClient {
         
         this.restTemplate = new RestTemplate(requestFactory);
         
-        // Add header interceptor for API security key
+        // Add header interceptor for API security key & correlation/request ID propagation
         this.restTemplate.getInterceptors().add((request, body, execution) -> {
             request.getHeaders().add("X-API-Key", apiKey);
+            
+            String requestId = org.slf4j.MDC.get("requestId");
+            if (requestId != null && !requestId.isBlank()) {
+                request.getHeaders().add("X-Request-ID", requestId);
+                request.getHeaders().add("X-Correlation-ID", requestId);
+            }
             return execution.execute(request, body);
         });
     }

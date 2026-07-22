@@ -11,9 +11,10 @@ export const apiClient = axios.create({
   },
 });
 
-// Automatically inject JWT token into header of every API request
+// Automatically inject JWT token into header and track request start timestamp
 apiClient.interceptors.request.use(
   (config) => {
+    (config as any).metadata = { startTime: performance.now() };
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -21,6 +22,28 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Response interceptor for API latency logging in development
+apiClient.interceptors.response.use(
+  (response) => {
+    if (import.meta.env.DEV && response.config && (response.config as any).metadata) {
+      const duration = performance.now() - (response.config as any).metadata.startTime;
+      console.debug(
+        `[API Latency] ${response.config.method?.toUpperCase()} ${response.config.url} - ${duration.toFixed(2)}ms (${response.status})`
+      );
+    }
+    return response;
+  },
+  (error) => {
+    if (import.meta.env.DEV && error.config && (error.config as any).metadata) {
+      const duration = performance.now() - (error.config as any).metadata.startTime;
+      console.debug(
+        `[API Latency Error] ${error.config.method?.toUpperCase()} ${error.config.url} - ${duration.toFixed(2)}ms (${error.response?.status || 'NETWORK_ERROR'})`
+      );
+    }
+    return Promise.reject(error);
+  }
 );
 
 // Mock Data

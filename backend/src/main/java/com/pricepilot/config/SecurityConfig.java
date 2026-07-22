@@ -36,17 +36,20 @@ public class SecurityConfig {
     private List<String> allowedOrigins;
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final com.pricepilot.security.CorrelationIdFilter correlationIdFilter;
     private final CustomUserDetailsService userDetailsService;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthFilter,
+            com.pricepilot.security.CorrelationIdFilter correlationIdFilter,
             CustomUserDetailsService userDetailsService,
             CustomAuthenticationEntryPoint authenticationEntryPoint,
             CustomAccessDeniedHandler accessDeniedHandler
     ) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.correlationIdFilter = correlationIdFilter;
         this.userDetailsService = userDetailsService;
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.accessDeniedHandler = accessDeniedHandler;
@@ -74,7 +77,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/events/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/events/seller-click/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/events/**").hasRole("ADMIN")
-                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/prometheus", "/actuator/info").permitAll()
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
                 
                 // Protected Endpoints
@@ -95,6 +98,7 @@ public class SecurityConfig {
                 .accessDeniedHandler(accessDeniedHandler)
             )
             .authenticationProvider(authenticationProvider())
+            .addFilterBefore(correlationIdFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -122,8 +126,8 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin"));
-        configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin", "X-Request-ID", "X-Correlation-ID"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "X-Request-ID", "X-Correlation-ID"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
