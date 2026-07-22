@@ -8,16 +8,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.1] - 2026-07-22
 
 ### Added
-- **M4 Observability**: Structured JSON logging, W3C Trace Context propagation, Prometheus custom metrics (`http_requests_total`, `http_request_duration_seconds`, `ai_inference_duration_seconds`), Grafana dashboard provisioning, and Actuator health readiness/liveness endpoints.
-- **M5 System Reliability & Resilience**: Circuit breaker patterns for AI integration with seamless local rule-based fallback, rate limiting (Bucket4j/Redis), graceful shutdown hooks across containers, health-check probes, and multi-tier failure recovery.
-- **M6 Maintenance & Stewardship**: Version alignment (v1.0.1) across all microservices, SDKs, and Docker images; cleaned unused imports and obsolete artifacts; standardized static analysis and code quality compliance; updated comprehensive release readiness audit report.
+- Structured JSON logging format and W3C Trace Context (`traceparent`) propagation across API microservice boundaries.
+- Prometheus metrics (`http_requests_total`, `http_request_duration_seconds`, `ai_inference_duration_seconds`) and pre-configured Grafana dashboards.
+- Spring Boot Actuator `/actuator/health/liveness` and `/actuator/health/readiness` health probe endpoints for orchestrator integration.
+- Circuit breaker resilience pattern for AI microservice integration with automatic, zero-downtime local rule-based fallback.
+- Distributed rate-limiting protections using Bucket4j and Redis integrations.
 
 ### Changed
-- Unified application versioning across Java Backend (`pom.xml`), React Frontend (`package.json`), Python AI Microservice (`pyproject.toml`), and Python SDK (`pyproject.toml`).
-- Enhanced code quality, type safety, and static analysis compliance across all subprojects.
+- Unified release version `v1.0.1` across Java Backend, React Frontend, FastAPI AI Microservice, and Python SDK.
+- Optimized Redis caching configurations with explicit class serialization allowlists for enhanced security.
+- Streamlined container shutdown sequences with graceful termination hooks across all microservices.
 
 ### Fixed
-- Fixed strict TypeScript and ESLint type warnings across React component layers.
+- Resolved strict TypeScript and ESLint warnings across React frontend component layers.
+- Corrected development dependency declarations in Python AI microservice and SDK package configurations.
+
+### Security
+- Hardened Redis deserialization security controls with strict package allowlists.
+- Reinforced HTTP security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy`).
+
+### Performance
+- Optimized Redis cache key strategy and payload size reduction for product search queries.
+- Reduced database query overhead during watchlist creation and user authentication claim validation.
+
+### Documentation
+- Published comprehensive v1.0.1 release notes, GitHub release guide, and deployment instructions.
+- Updated API integration specs and Python SDK code examples.
+
+### Maintenance
+- Cleaned unused imports, obsolete configuration artifacts, and dead code paths across microservices.
+- Standardized static analysis compliance and code formatting standards across all codebases.
+
+### Developer Experience
+- Enhanced local environment setup with unified `uv` package management for Python microservice and SDK.
+- Standardized `.gitattributes` to enforce consistent LF line endings across operating systems.
+
+### Technical Debt
+- Consolidated duplicate error handling logic and exception responses across microservices.
 
 ---
 

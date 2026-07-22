@@ -122,6 +122,7 @@ INSTRUCTIONS.md
 *.h5
 .ipynb_checkpoints/
 public_repository_cleanup.md
+final_regression_verification.md
 
 # FastAPI AI Service Specific Ignores
 /pricepilot-ai/.env
