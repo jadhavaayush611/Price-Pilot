@@ -101,12 +101,23 @@ Audit events are written for:
 
 ---
 
-## 8. Dependency Scanning
+## 8. Dependency Scanning & NVD API Configuration
 
 A GitHub Actions workflow (`security-scan.yml`) automatically runs dependency vulnerability scans on every push and pull request to `main` or `master`:
 - **Backend (Maven)**: Runs OWASP Dependency Check, failing the build if a vulnerability exceeds CVSS score `7.0` (High/Critical).
 - **Frontend (npm)**: Runs `npm audit --audit-level=high`.
 - **Python (AI Service & SDK)**: Runs `pip-audit` on dependencies.
+
+### NVD API Key Setup for OWASP Dependency Check
+
+- **Why an NVD API Key is Recommended**: Unauthenticated requests to the NIST National Vulnerability Database (NVD) API are strictly rate-limited (5 requests per 30 seconds), causing automated CI workflow failures with HTTP 429 errors. Authenticated requests using an API key increase the rate limit to 50 requests per 30 seconds, ensuring fast and reliable builds.
+- **Requesting an API Key**: Obtain a free API key from the NIST NVD Portal: [https://nvd.nist.gov/developers/request-an-api-key](https://nvd.nist.gov/developers/request-an-api-key).
+- **Adding to GitHub Secrets**:
+  1. Go to your GitHub repository: **Settings** -> **Secrets and variables** -> **Actions**.
+  2. Click **New repository secret**.
+  3. Set **Name**: `NVD_API_KEY`.
+  4. Paste the API key value into **Secret** and save.
+- **Secret Safety**: API keys must **never** be hardcoded or committed to source control. The workflow accesses the secret dynamically via `${{ secrets.NVD_API_KEY }}`.
 
 ---
 

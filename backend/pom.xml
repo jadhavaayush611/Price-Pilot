@@ -179,6 +179,19 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>12.2.2</version>
+				<configuration>
+					<failBuildOnCVSS>7</failBuildOnCVSS>
+					<format>HTML</format>
+					<suppressionFile>dependency-check-suppression.xml</suppressionFile>
+					<nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+					<nvdMaxRetryCount>10</nvdMaxRetryCount>
+					<nvdApiDelay>5000</nvdApiDelay>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

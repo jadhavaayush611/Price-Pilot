@@ -123,6 +123,11 @@ INSTRUCTIONS.md
 .ipynb_checkpoints/
 public_repository_cleanup.md
 final_regression_verification.md
+github_release_v1.0.1.md
+repository_cleanup_report.md
+owasp_nvd_api_configuration.md
+internal_archive/smoke_test_results.json
+SHA256SUMS.txt
 
 # FastAPI AI Service Specific Ignores
 /pricepilot-ai/.env
