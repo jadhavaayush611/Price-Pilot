@@ -1,0 +1,4 @@
+c4613aabd3e421bf676f7e44e93d13a86218b79a64ec0fe67c4b402ee3142C8d  pricepilot-1.0.1.jar
+3ae525f1373b5e39d0c028b2d0cf22ae2b24989cd9bb425289c7ae0e676ef236  pricepilot_sdk-1.0.1-py3-none-any.whl
+53d65863a659fcf8fada96e29d6258d1a62207fd7b08789151f77e2bed1aee49  pricepilot_sdk-1.0.1.tar.gz
+e36b3207b9213a7618c8c82c426d0ecd0dfa46593bb852bd0791b8c1408cb354  release_artifacts.md
