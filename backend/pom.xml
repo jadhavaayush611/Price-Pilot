@@ -30,6 +30,7 @@
 		<java.version>21</java.version>
 		<tomcat.version>11.0.24</tomcat.version>
 		<postgresql.version>42.7.12</postgresql.version>
+		<netty.version>4.2.16.Final</netty.version>
 		<nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
 	</properties>
 	<dependencies>
