@@ -2,9 +2,9 @@ name: Security Hardening & Dependency Scan
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, maintenance ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, maintenance ]
 
 jobs:
   security-scan:
@@ -21,11 +21,38 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Print Diagnostic Commit and Branch Info
+        run: |
+          echo "Current Commit SHA: $(git rev-parse HEAD)"
+          echo "Current Branch: $(git rev-parse --abbrev-ref HEAD)"
+
+      - name: Generate and Output Dependency Tree
+        run: |
+          cd backend
+          chmod +x mvnw
+          ./mvnw dependency:tree -Dverbose > dependency-tree.txt
+          echo "=== Netty Dependencies ==="
+          grep -i "netty" dependency-tree.txt || true
+          echo "=== PostgreSQL Dependencies ==="
+          grep -i "postgresql" dependency-tree.txt || true
+
+      - name: Upload Dependency Tree Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-tree
+          path: backend/dependency-tree.txt
+
       - name: Run OWASP Dependency Check (Backend)
         run: |
           cd backend
           chmod +x mvnw
-          ./mvnw org.owasp:dependency-check-maven:12.2.2:check -DfailBuildOnCVSS=7 -Dformat=HTML -DsuppressionFile=dependency-check-suppression.xml -DnvdApiKey=${NVD_API_KEY}
+          ./mvnw -U clean verify \
+            org.owasp:dependency-check-maven:12.2.2:check \
+            -DfailBuildOnCVSS=7 \
+            -Dformat=HTML \
+            -DsuppressionFile=dependency-check-suppression.xml \
+            -DnvdApiKey=${NVD_API_KEY}
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
