@@ -127,6 +127,7 @@ github_release_v1.0.1.md
 repository_cleanup_report.md
 owasp_nvd_api_configuration.md
 internal_archive/smoke_test_results.json
+dependency-tree.txt
 
 # FastAPI AI Service Specific Ignores
 /pricepilot-ai/.env
