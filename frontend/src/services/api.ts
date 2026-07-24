@@ -576,6 +576,39 @@ export const apiService = {
     return response.data;
   },
 
+  async saveComparison(request: ComparisonRequest): Promise<import('../types').SavedComparison> {
+    const response = await apiClient.post('/compare/save', request);
+    return response.data;
+  },
+
+  async getSavedComparisons(
+    page: number = 0,
+    size: number = 10,
+    sortKey?: string,
+    sortDir?: 'asc' | 'desc',
+    search?: string
+  ): Promise<{
+    content: import('../types').SavedComparison[];
+    totalPages: number;
+    totalElements: number;
+  }> {
+    const params: Record<string, unknown> = { page, size };
+    if (sortKey) params.sortKey = sortKey;
+    if (sortDir) params.sortDir = sortDir;
+    if (search) params.search = search;
+    const response = await apiClient.get('/compare/saved', { params });
+    return response.data;
+  },
+
+  async getComparisonSession(sessionId: string): Promise<ComparisonResponse> {
+    const response = await apiClient.get(`/compare/${sessionId}`);
+    return response.data;
+  },
+
+  async deleteSavedComparison(sessionId: string): Promise<void> {
+    await apiClient.delete(`/compare/${sessionId}`);
+  },
+
   async getIntelligenceRecommendations(productId: string, limit: number = 10): Promise<RecommendationResponse> {
     const response = await apiClient.get(`/recommendations/${productId}`, { params: { limit } });
     return response.data;

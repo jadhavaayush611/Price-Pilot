@@ -249,7 +249,7 @@ export const DashboardPage: React.FC = () => {
             <Link to={`/product/${productId}`} className="text-white hover:text-emerald-400 font-semibold hover:underline">
               {productName || 'product'}
             </Link>{' '}
-            at target <span className="text-emerald-400 font-mono font-bold">{formatPrice(getDisplayPrice((metadata.targetPrice as number) || 0, currency), currency)}</span>
+            at target <span className="text-emerald-400 font-mono font-bold">{formatPrice(getDisplayPrice((metadata?.targetPrice as number) || 0, currency), currency)}</span>
           </span>
         );
       case 'WATCHLIST_DELETE':
@@ -270,7 +270,7 @@ export const DashboardPage: React.FC = () => {
       case 'SELLER_CLICK':
         return (
           <span className="text-zinc-300 text-xs">
-            Redirected to <span className="text-white font-semibold">{sellerName || (metadata.seller as string) || 'seller'}</span> for{' '}
+            Redirected to <span className="text-white font-semibold">{sellerName || (metadata?.seller as string) || 'seller'}</span> for{' '}
             <Link to={`/product/${productId}`} className="text-white hover:text-cyan-400 font-semibold hover:underline">
               {productName || 'product'}
             </Link>
@@ -279,7 +279,7 @@ export const DashboardPage: React.FC = () => {
       case 'SEARCH':
         return (
           <span className="text-zinc-300 text-xs">
-            Searched for <span className="text-zinc-100 font-semibold font-mono">"{(metadata.keyword as string) || '*'}"</span>
+            Searched for <span className="text-zinc-100 font-semibold font-mono">"{(metadata?.keyword as string) || '*'}"</span>
           </span>
         );
       default:
@@ -638,7 +638,7 @@ export const DashboardPage: React.FC = () => {
                             {style.icon}
                           </div>
                           <span className="text-[9px] text-zinc-550 font-bold uppercase font-mono tracking-wider">
-                            {style.label} • {formatEventTime(event.createdAt)}
+                            {style.label} • {formatEventTime(event.createdAt || '')}
                           </span>
                           {renderEventDetails(event)}
                         </div>

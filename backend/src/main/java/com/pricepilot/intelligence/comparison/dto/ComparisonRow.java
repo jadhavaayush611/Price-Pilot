@@ -1,5 +1,7 @@
 package com.pricepilot.intelligence.comparison.dto;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -12,8 +14,11 @@ public class ComparisonRow {
     private String category;
     private Map<UUID, String> valuesByProductId;
     private boolean isHighlight;
+    private List<UUID> highlightedProductIds;
+    private String rowType;
 
     public ComparisonRow() {
+        this.highlightedProductIds = Collections.emptyList();
     }
 
     public ComparisonRow(String featureName, String category, Map<UUID, String> valuesByProductId, boolean isHighlight) {
@@ -21,6 +26,17 @@ public class ComparisonRow {
         this.category = category;
         this.valuesByProductId = valuesByProductId;
         this.isHighlight = isHighlight;
+        this.highlightedProductIds = Collections.emptyList();
+        this.rowType = "GENERAL";
+    }
+
+    public ComparisonRow(String featureName, String category, Map<UUID, String> valuesByProductId, boolean isHighlight, List<UUID> highlightedProductIds, String rowType) {
+        this.featureName = featureName;
+        this.category = category;
+        this.valuesByProductId = valuesByProductId;
+        this.isHighlight = isHighlight;
+        this.highlightedProductIds = highlightedProductIds != null ? highlightedProductIds : Collections.emptyList();
+        this.rowType = rowType != null ? rowType : "GENERAL";
     }
 
     public String getFeatureName() {
@@ -53,5 +69,21 @@ public class ComparisonRow {
 
     public void setHighlight(boolean highlight) {
         isHighlight = highlight;
+    }
+
+    public List<UUID> getHighlightedProductIds() {
+        return highlightedProductIds;
+    }
+
+    public void setHighlightedProductIds(List<UUID> highlightedProductIds) {
+        this.highlightedProductIds = highlightedProductIds;
+    }
+
+    public String getRowType() {
+        return rowType;
+    }
+
+    public void setRowType(String rowType) {
+        this.rowType = rowType;
     }
 }

@@ -100,6 +100,12 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, J
             @org.springframework.data.repository.query.Param("brand") String brand,
             org.springframework.data.domain.Pageable pageable);
 
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT p FROM ProductEntity p " +
+            "LEFT JOIN FETCH p.productPrices pp " +
+            "LEFT JOIN FETCH pp.seller " +
+            "WHERE p.id IN :ids")
+    java.util.List<ProductEntity> findAllByIdInWithPricesAndSellers(@org.springframework.data.repository.query.Param("ids") java.util.Collection<java.util.UUID> ids);
+
     @org.springframework.data.jpa.repository.Query("SELECT p, (SELECT MIN(pp.currentPrice) FROM ProductPriceEntity pp WHERE pp.product.id = p.id) " +
             "FROM ProductEntity p " +
             "WHERE p.id = :productId")

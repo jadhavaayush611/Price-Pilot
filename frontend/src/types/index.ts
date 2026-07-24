@@ -112,6 +112,10 @@ export interface UserInteractionEvent {
     | 'SELLER_CLICK'
     | 'SEARCH'
     | 'TRENDING_VIEW';
+  createdAt?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata?: Record<string, any>;
+}
 
 export interface ComparisonRequest {
   productIds: string[];
@@ -119,6 +123,8 @@ export interface ComparisonRequest {
   criteria?: string[];
   userId?: string;
   sessionToken?: string;
+  name?: string;
+  notes?: string;
 }
 
 export interface ComparisonRow {
@@ -126,6 +132,8 @@ export interface ComparisonRow {
   category: string;
   valuesByProductId: Record<string, string>;
   isHighlight: boolean;
+  highlightedProductIds?: string[];
+  rowType?: string;
 }
 
 export interface ProductScore {
@@ -148,6 +156,17 @@ export interface ComparisonResponse {
   createdAt: string;
 }
 
+export interface SavedComparison {
+  id: string;
+  userId: string;
+  sessionId?: string;
+  name: string;
+  productIds: string[];
+  notes?: string;
+  createdAt: string;
+  products?: ProductWithPrices[];
+}
+
 export interface RecommendationResponse {
   targetProductId?: string;
   userId?: string;
@@ -157,7 +176,3 @@ export interface RecommendationResponse {
   strategyUsed: string;
   generatedAt: string;
 }
-
-
-
-
