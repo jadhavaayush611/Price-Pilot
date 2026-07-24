@@ -74,6 +74,13 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/health").permitAll()
                 .requestMatchers("/api/v1/search/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                .requestMatchers("/api/v1/compare").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/recommendations/**", "/api/v1/intelligence/recommendations/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/analytics/**", "/api/v1/intelligence/analytics/**").permitAll()
+                
+                // Protected User Endpoints (Saved comparisons, personalized recommendations, session history)
+                .requestMatchers("/api/v1/compare/save", "/api/v1/intelligence/saved-comparisons/**").authenticated()
+                .requestMatchers("/api/v1/recommendations/personalized").authenticated()
                 .requestMatchers("/api/v1/events/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/events/seller-click/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/events/**").hasRole("ADMIN")

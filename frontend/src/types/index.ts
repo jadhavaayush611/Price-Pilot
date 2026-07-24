@@ -112,9 +112,52 @@ export interface UserInteractionEvent {
     | 'SELLER_CLICK'
     | 'SEARCH'
     | 'TRENDING_VIEW';
-  metadata: Record<string, unknown>;
+
+export interface ComparisonRequest {
+  productIds: string[];
+  category?: string;
+  criteria?: string[];
+  userId?: string;
+  sessionToken?: string;
+}
+
+export interface ComparisonRow {
+  featureName: string;
+  category: string;
+  valuesByProductId: Record<string, string>;
+  isHighlight: boolean;
+}
+
+export interface ProductScore {
+  productId: string;
+  productName: string;
+  overallScore: number;
+  priceValueScore: number;
+  featureScore: number;
+  popularityScore: number;
+  breakdown: Record<string, number>;
+  recommendationBadge: string;
+}
+
+export interface ComparisonResponse {
+  comparisonId: string;
+  products: ProductWithPrices[];
+  rows: ComparisonRow[];
+  scores: Record<string, ProductScore>;
+  summary: string;
   createdAt: string;
 }
+
+export interface RecommendationResponse {
+  targetProductId?: string;
+  userId?: string;
+  recommendedProducts: ProductWithPrices[];
+  scores: ProductScore[];
+  explanation: string;
+  strategyUsed: string;
+  generatedAt: string;
+}
+
 
 
 

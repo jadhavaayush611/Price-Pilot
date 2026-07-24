@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse } from '../types';
 import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../currency';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -555,6 +555,35 @@ export const apiService = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async assistantClearMemory(conversationId: string): Promise<any> {
     const response = await apiClient.post('/assistant/clear_memory', { conversationId });
+    return response.data;
+  },
+
+  // Shopping Intelligence Module APIs (v1.1)
+  async getComparison(productIds: string[], sessionId?: string): Promise<ComparisonResponse> {
+    const params: Record<string, string> = {};
+    if (productIds && productIds.length > 0) {
+      params.ids = productIds.join(',');
+    }
+    if (sessionId) {
+      params.sessionId = sessionId;
+    }
+    const response = await apiClient.get('/compare', { params });
+    return response.data;
+  },
+
+  async postComparison(request: ComparisonRequest): Promise<ComparisonResponse> {
+    const response = await apiClient.post('/compare', request);
+    return response.data;
+  },
+
+  async getIntelligenceRecommendations(productId: string, limit: number = 10): Promise<RecommendationResponse> {
+    const response = await apiClient.get(`/recommendations/${productId}`, { params: { limit } });
+    return response.data;
+  },
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getIntelligenceAnalytics(productId: string): Promise<any> {
+    const response = await apiClient.get(`/analytics/${productId}`);
     return response.data;
   }
 };

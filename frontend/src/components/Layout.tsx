@@ -38,13 +38,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Link>
             <nav className="hidden md:flex items-center gap-6 text-sm">
               <NavLink to="/" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Discover</NavLink>
-              <NavLink to="/search" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Compare</NavLink>
+              <NavLink to="/compare" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Compare Matrix</NavLink>
+              <NavLink to="/analytics" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Analytics</NavLink>
               <NavLink to="/trending" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Trending</NavLink>
               {isAuthenticated && (
                 <NavLink to="/assistant" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>AI Assistant</NavLink>
               )}
               {isAuthenticated && (
-                <NavLink to="/dashboard" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Dashboard</NavLink>
+                <NavLink to="/dashboard/v2" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Dashboard v2</NavLink>
               )}
               {isAuthenticated && (
                 <NavLink to="/saved-products" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Saved Products</NavLink>
