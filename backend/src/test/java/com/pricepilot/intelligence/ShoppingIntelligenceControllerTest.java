@@ -227,4 +227,27 @@ class ShoppingIntelligenceControllerTest {
     void testPersonalizedRecommendationsUnauthenticated() {
         assertThrows(AccessDeniedException.class, () -> recommendationController.getPersonalizedRecommendations(null, 10));
     }
+
+    @Test
+    @DisplayName("GET /api/v1/analytics/{productId} returns ProductAnalyticsResponseDTO with Phase 4 metrics")
+    void testGetProductAnalyticsContract() {
+        UUID prodId = UUID.randomUUID();
+        ProductAnalyticsResponseDTO mockDTO = ProductAnalyticsResponseDTO.builder()
+                .productId(prodId)
+                .viewCount(50)
+                .currentPrice(java.math.BigDecimal.valueOf(99.99))
+                .historicalMin(java.math.BigDecimal.valueOf(89.99))
+                .dealQuality(com.pricepilot.intelligence.analytics.model.DealQuality.GOOD_DEAL)
+                .purchaseSignal(com.pricepilot.intelligence.analytics.model.PurchaseSignal.GOOD_TIME)
+                .build();
+
+        when(priceAnalyticsService.getProductAnalytics(eq(prodId))).thenReturn(mockDTO);
+
+        ResponseEntity<ProductAnalyticsResponseDTO> response = analyticsController.getProductAnalytics(prodId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(prodId, response.getBody().getProductId());
+        assertEquals(com.pricepilot.intelligence.analytics.model.PurchaseSignal.GOOD_TIME, response.getBody().getPurchaseSignal());
+    }
 }

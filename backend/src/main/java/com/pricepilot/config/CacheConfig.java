@@ -58,6 +58,7 @@ public class CacheConfig implements CachingConfigurer {
                             "most-saved-products", createCacheConfig(Duration.ofMinutes(15)),
                             "biggest-drops", createCacheConfig(Duration.ofMinutes(15)),
                             "recommendations", createCacheConfig(Duration.ofMinutes(10)),
+                            "price-analytics", createCacheConfig(Duration.ofMinutes(10)),
                             "dashboard", createCacheConfig(Duration.ofMinutes(5))
                     ))
                     .build();
@@ -79,7 +80,7 @@ public class CacheConfig implements CachingConfigurer {
             ConcurrentMapCacheManager concurrentMapCacheManager = new ConcurrentMapCacheManager(
                     "product-details", "product-searches", "popular-products",
                     "trending-products", "most-watched-products", "most-saved-products", "biggest-drops",
-                    "recommendations", "dashboard"
+                    "recommendations", "price-analytics", "dashboard"
             );
 
             return new CacheManager() {

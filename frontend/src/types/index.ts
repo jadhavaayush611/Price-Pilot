@@ -85,6 +85,27 @@ export interface PriceHistory {
   changedAt: string;
 }
 
+export type PriceTrend = 'RISING' | 'FALLING' | 'STABLE' | 'INSUFFICIENT_DATA';
+export type PriceVolatility = 'LOW' | 'MEDIUM' | 'HIGH' | 'INSUFFICIENT_DATA';
+export type DealQuality = 'EXCELLENT_DEAL' | 'GOOD_DEAL' | 'FAIR_PRICE' | 'ABOVE_AVERAGE' | 'HIGH_PRICE' | 'INSUFFICIENT_DATA';
+export type PurchaseSignal = 'BUY_NOW' | 'GOOD_TIME' | 'WAIT' | 'NEUTRAL' | 'INSUFFICIENT_DATA';
+
+export interface HistoricalPricePoint {
+  timestamp: string;
+  price: number;
+  sellerId?: string;
+  sellerName?: string;
+}
+
+export interface PriceDropRecoveryEvent {
+  eventType: 'MAJOR_DROP' | 'PRICE_INCREASE' | 'RECOVERY_AFTER_DROP' | 'NEW_HISTORICAL_LOW' | 'NEW_HISTORICAL_HIGH';
+  percentageChange: number;
+  amountChange: number;
+  resultingPrice: number;
+  occurredAt: string;
+  description: string;
+}
+
 export interface ProductAnalytics {
   productId: string;
   viewCount: number;
@@ -92,6 +113,29 @@ export interface ProductAnalytics {
   watchlistCount: number;
   priceChangeCount: number;
   trendingScore: number;
+
+  // Phase 4 fields
+  currentPrice?: number;
+  historicalMin?: number;
+  historicalMax?: number;
+  historicalAvg?: number;
+  historicalMedian?: number;
+  priceRange?: number;
+  volatilityValue?: number;
+  volatility?: PriceVolatility;
+  trend?: PriceTrend;
+  trendPercentage?: number;
+  pricePositionScore?: number;
+  dealQuality?: DealQuality;
+  purchaseSignal?: PurchaseSignal;
+  purchaseSignalReason?: string;
+  supportingEvidence?: string[];
+  observationCount?: number;
+  historicalLowDistance?: number;
+  historicalAverageDistance?: number;
+  historicalEvents?: PriceDropRecoveryEvent[];
+  priceSeries?: HistoricalPricePoint[];
+  analyzedAt?: string;
 }
 
 export interface UserInteractionEvent {

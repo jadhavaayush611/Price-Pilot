@@ -27,6 +27,12 @@ public interface PriceHistoryRepository extends JpaRepository<PriceHistoryEntity
             countQuery = "SELECT COUNT(ph) FROM PriceHistoryEntity ph WHERE ph.product.id = :productId")
     Page<PriceHistoryEntity> findByProductIdWithRelations(@Param("productId") UUID productId, Pageable pageable);
 
+    @Query("SELECT ph FROM PriceHistoryEntity ph " +
+            "JOIN FETCH ph.seller s " +
+            "WHERE ph.product.id = :productId " +
+            "ORDER BY ph.changedAt ASC")
+    List<PriceHistoryEntity> findByProductIdChronological(@Param("productId") UUID productId);
+
     @Query(value = "SELECT ph FROM PriceHistoryEntity ph " +
             "JOIN FETCH ph.product p " +
             "JOIN FETCH ph.seller s " +

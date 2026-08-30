@@ -44,7 +44,7 @@ public class RecommendationCacheHelper {
         String[] cacheNames = {
             "product-details", "product-searches", "popular-products",
             "trending-products", "most-watched-products", "most-saved-products",
-            "biggest-drops", "recommendations", "dashboard"
+            "biggest-drops", "recommendations", "price-analytics", "dashboard"
         };
         for (String name : cacheNames) {
             Cache cache = cacheManager.getCache(name);

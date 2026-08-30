@@ -621,8 +621,7 @@ export const apiService = {
     return response.data;
   },
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getIntelligenceAnalytics(productId: string): Promise<any> {
+  async getIntelligenceAnalytics(productId: string): Promise<ProductAnalytics> {
     const response = await apiClient.get(`/analytics/${productId}`);
     return response.data;
   }

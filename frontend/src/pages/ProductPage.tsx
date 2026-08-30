@@ -59,13 +59,13 @@ export const ProductPage: React.FC = () => {
           console.error("Error loading similar products:", err);
         });
 
-      // Fetch analytics
-      apiService.getProductAnalytics(id)
+      // Fetch intelligence analytics (with price intelligence and engagement metrics)
+      apiService.getIntelligenceAnalytics(id)
         .then((data) => {
           setAnalytics(data);
         })
-        .catch((err) => {
-          console.error("Error loading analytics:", err);
+        .catch(() => {
+          return apiService.getProductAnalytics(id).then(setAnalytics).catch(() => {});
         })
         .finally(() => {
           setAnalyticsLoading(false);
@@ -743,6 +743,82 @@ export const ProductPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          )}
+        </motion.div>
+      )}
+
+      {product && analytics && (analytics.historicalMin !== undefined || analytics.purchaseSignal) && (
+        <motion.div
+          variants={childVariants}
+          className="w-full rounded-3xl border border-zinc-900 bg-zinc-950/40 p-6 shadow-xl backdrop-blur-xl mt-8 space-y-4 text-left"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-900/60 pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-xl bg-emerald-950/60 border border-emerald-800/40 flex items-center justify-center text-emerald-400">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white tracking-tight">Price Intelligence</h3>
+                <p className="text-xs text-zinc-400">Real-time market valuation and purchase timing</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {analytics.purchaseSignal && (
+                <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border flex items-center gap-1.5 ${
+                  analytics.purchaseSignal === 'BUY_NOW'
+                    ? 'bg-emerald-950 border-emerald-700/60 text-emerald-300'
+                    : analytics.purchaseSignal === 'GOOD_TIME'
+                    ? 'bg-teal-950 border-teal-700/60 text-teal-300'
+                    : analytics.purchaseSignal === 'WAIT'
+                    ? 'bg-amber-950 border-amber-700/60 text-amber-300'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+                }`}>
+                  {analytics.purchaseSignal.replace(/_/g, ' ')}
+                </span>
+              )}
+              <Link
+                to={`/analytics/${product.id}`}
+                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 px-3 py-1 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors"
+              >
+                Full Analytics &rarr;
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-3">
+              <span className="text-[11px] text-zinc-500 font-medium block">Current Best Price</span>
+              <span className="text-lg font-bold font-mono text-zinc-100">
+                {analytics.currentPrice
+                  ? formatPrice(getDisplayPrice(analytics.currentPrice, currency), currency)
+                  : lowestPrice
+                  ? formatPrice(lowestPrice, currency)
+                  : 'N/A'}
+              </span>
+            </div>
+            <div className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-3">
+              <span className="text-[11px] text-zinc-500 font-medium block">Historical Average</span>
+              <span className="text-lg font-bold font-mono text-indigo-400">
+                {analytics.historicalAvg
+                  ? formatPrice(getDisplayPrice(analytics.historicalAvg, currency), currency)
+                  : 'N/A'}
+              </span>
+            </div>
+            <div className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-3">
+              <span className="text-[11px] text-zinc-500 font-medium block">Historical Low</span>
+              <span className="text-lg font-bold font-mono text-emerald-400">
+                {analytics.historicalMin
+                  ? formatPrice(getDisplayPrice(analytics.historicalMin, currency), currency)
+                  : 'N/A'}
+              </span>
+            </div>
+          </div>
+
+          {analytics.purchaseSignalReason && (
+            <p className="text-xs text-zinc-300 leading-relaxed italic bg-zinc-900/30 p-3 rounded-lg border border-zinc-900">
+              "{analytics.purchaseSignalReason}"
+            </p>
           )}
         </motion.div>
       )}
