@@ -7,6 +7,7 @@ import com.pricepilot.product.ProductEntity;
 import com.pricepilot.product.ProductRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -28,7 +29,7 @@ public class ProductAnalyticsService {
     /**
      * Helper to initialize the analytics record if it does not exist (backward compatibility).
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void initializeAnalyticsIfAbsent(UUID productId) {
         if (productAnalyticsRepository.findByProductId(productId).isEmpty()) {
             ProductEntity product = productRepository.findById(productId)

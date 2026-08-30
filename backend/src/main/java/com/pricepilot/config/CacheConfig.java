@@ -49,17 +49,18 @@ public class CacheConfig implements CachingConfigurer {
         if ("redis".equalsIgnoreCase(cacheType) && connectionFactory != null) {
             RedisCacheManager redisCacheManager = RedisCacheManager.builder(connectionFactory)
                     .cacheDefaults(cacheConfiguration())
-                    .withInitialCacheConfigurations(Map.of(
-                            "product-details", createCacheConfig(Duration.ofMinutes(30)),
-                            "product-searches", createCacheConfig(Duration.ofMinutes(5)),
-                            "popular-products", createCacheConfig(Duration.ofMinutes(60)),
-                            "trending-products", createCacheConfig(Duration.ofMinutes(15)),
-                            "most-watched-products", createCacheConfig(Duration.ofMinutes(15)),
-                            "most-saved-products", createCacheConfig(Duration.ofMinutes(15)),
-                            "biggest-drops", createCacheConfig(Duration.ofMinutes(15)),
-                            "recommendations", createCacheConfig(Duration.ofMinutes(10)),
-                            "price-analytics", createCacheConfig(Duration.ofMinutes(10)),
-                            "dashboard", createCacheConfig(Duration.ofMinutes(5))
+                    .withInitialCacheConfigurations(Map.ofEntries(
+                            Map.entry("product-details", createCacheConfig(Duration.ofMinutes(30))),
+                            Map.entry("product-searches", createCacheConfig(Duration.ofMinutes(5))),
+                            Map.entry("popular-products", createCacheConfig(Duration.ofMinutes(60))),
+                            Map.entry("trending-products", createCacheConfig(Duration.ofMinutes(15))),
+                            Map.entry("most-watched-products", createCacheConfig(Duration.ofMinutes(15))),
+                            Map.entry("most-saved-products", createCacheConfig(Duration.ofMinutes(15))),
+                            Map.entry("biggest-drops", createCacheConfig(Duration.ofMinutes(15))),
+                            Map.entry("recommendations", createCacheConfig(Duration.ofMinutes(10))),
+                            Map.entry("price-analytics", createCacheConfig(Duration.ofMinutes(10))),
+                            Map.entry("dashboard", createCacheConfig(Duration.ofMinutes(5))),
+                            Map.entry("dashboard-v2", createCacheConfig(Duration.ofMinutes(3)))
                     ))
                     .build();
 
@@ -80,7 +81,7 @@ public class CacheConfig implements CachingConfigurer {
             ConcurrentMapCacheManager concurrentMapCacheManager = new ConcurrentMapCacheManager(
                     "product-details", "product-searches", "popular-products",
                     "trending-products", "most-watched-products", "most-saved-products", "biggest-drops",
-                    "recommendations", "price-analytics", "dashboard"
+                    "recommendations", "price-analytics", "dashboard", "dashboard-v2"
             );
 
             return new CacheManager() {

@@ -29,6 +29,11 @@ public class RecommendationCacheHelper {
             dashboardCache.evict(userId);
         }
 
+        Cache dashboardV2Cache = cacheManager.getCache("dashboard-v2");
+        if (dashboardV2Cache != null) {
+            dashboardV2Cache.evict(userId);
+        }
+
         // Recommendations cache has dynamic compound keys based on limits/filters.
         // We clear the recommendations cache to ensure fresh suggestions.
         Cache recommendationsCache = cacheManager.getCache("recommendations");
@@ -44,7 +49,7 @@ public class RecommendationCacheHelper {
         String[] cacheNames = {
             "product-details", "product-searches", "popular-products",
             "trending-products", "most-watched-products", "most-saved-products",
-            "biggest-drops", "recommendations", "price-analytics", "dashboard"
+            "biggest-drops", "recommendations", "price-analytics", "dashboard", "dashboard-v2"
         };
         for (String name : cacheNames) {
             Cache cache = cacheManager.getCache(name);

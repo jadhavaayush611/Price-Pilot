@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest, PriceAlert, WatchlistAlertPreference, UpdateWatchlistAlertPreferenceRequest } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest, PriceAlert, WatchlistAlertPreference, UpdateWatchlistAlertPreferenceRequest, DashboardV2Response } from '../types';
 import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../currency';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -668,6 +668,11 @@ export const apiService = {
     data: UpdateWatchlistAlertPreferenceRequest
   ): Promise<WatchlistAlertPreference> {
     const response = await apiClient.put(`/watchlists/${watchlistId}/alerts`, data);
+    return response.data;
+  },
+
+  async getDashboardV2(): Promise<DashboardV2Response> {
+    const response = await apiClient.get('/dashboard/v2');
     return response.data;
   }
 };

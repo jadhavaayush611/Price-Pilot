@@ -31,4 +31,6 @@ public interface SavedComparisonRepository extends JpaRepository<SavedComparison
             Pageable pageable);
 
     Optional<SavedComparisonEntity> findByIdAndUserId(UUID id, UUID userId);
+
+    long countByUserId(UUID userId);
 }

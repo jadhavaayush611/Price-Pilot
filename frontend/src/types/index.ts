@@ -296,3 +296,107 @@ export interface UpdateWatchlistAlertPreferenceRequest {
   backInStockEnabled?: boolean;
   priceIncreaseEnabled?: boolean;
 }
+
+// Phase 6: Dashboard V2 Types
+export interface DashboardOverview {
+  activeWatchlistsCount: number;
+  unreadAlertsCount: number;
+  historicalLowCount: number;
+  goodOrExcellentDealCount: number;
+  recentPriceDropCount: number;
+  savedComparisonsCount: number;
+  savedProductsCount: number;
+}
+
+export interface AttentionItem {
+  productId: string;
+  productName: string;
+  productImageUrl?: string;
+  brand?: string;
+  urgencyScore: number;
+  urgencyLevel: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'INFO';
+  primaryReason: string;
+  supportingEvidence?: string[];
+  currentPrice: number;
+  targetPrice?: number;
+  dealQuality?: string;
+  purchaseSignal?: string;
+  navigationUrl: string;
+}
+
+export interface PriceOpportunity {
+  productId: string;
+  productName: string;
+  productImageUrl?: string;
+  brand?: string;
+  currentPrice: number;
+  historicalMin?: number;
+  historicalAvg?: number;
+  dealQuality?: string;
+  purchaseSignal?: string;
+  keyEvidence?: string;
+  navigationUrl: string;
+}
+
+export interface WatchedProductCard {
+  productId: string;
+  watchlistId: string;
+  productName: string;
+  brand?: string;
+  category?: string;
+  imageUrl?: string;
+  currentPrice: number;
+  targetPrice?: number;
+  historicalMin?: number;
+  historicalAvg?: number;
+  volatility?: string;
+  trend?: string;
+  trendPercentage?: number;
+  dealQuality?: string;
+  purchaseSignal?: string;
+  targetMet: boolean;
+  active: boolean;
+}
+
+export interface DashboardRecommendations {
+  items: Array<{
+    productId: string;
+    productName: string;
+    productImageUrl?: string;
+    brand?: string;
+    currentPrice?: number;
+    recommendationType?: string;
+    score?: number;
+    confidence?: number;
+    keyReason?: string;
+    explanation?: string;
+  }>;
+  strategyUsed?: string;
+  generatedAt?: string;
+  available: boolean;
+}
+
+export interface RecentActivity {
+  id: string;
+  productId: string;
+  productName: string;
+  productImageUrl?: string;
+  eventType: string;
+  title: string;
+  description: string;
+  observedPrice?: number;
+  amountChange?: number;
+  percentageChange?: number;
+  timestamp: string;
+}
+
+export interface DashboardV2Response {
+  overview: DashboardOverview;
+  attentionItems: AttentionItem[];
+  priceOpportunities: PriceOpportunity[];
+  watchedProducts: WatchedProductCard[];
+  recentAlerts: PriceAlert[];
+  recommendations: DashboardRecommendations;
+  recentActivity: RecentActivity[];
+  generatedAt: string;
+}
