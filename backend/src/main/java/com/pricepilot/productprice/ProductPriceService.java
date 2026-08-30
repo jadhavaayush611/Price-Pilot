@@ -24,17 +24,20 @@ public class ProductPriceService {
     private final SellerRepository sellerRepository;
     private final PriceHistoryService priceHistoryService;
     private final com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     public ProductPriceService(ProductPriceRepository productPriceRepository,
                                ProductRepository productRepository,
                                SellerRepository sellerRepository,
                                PriceHistoryService priceHistoryService,
-                               com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper) {
+                               com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper,
+                               org.springframework.context.ApplicationEventPublisher eventPublisher) {
         this.productPriceRepository = productPriceRepository;
         this.productRepository = productRepository;
         this.sellerRepository = sellerRepository;
         this.priceHistoryService = priceHistoryService;
         this.cacheHelper = cacheHelper;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -58,6 +61,18 @@ public class ProductPriceService {
 
         ProductPriceEntity savedEntity = productPriceRepository.save(entity);
         cacheHelper.evictAllCaches();
+
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new com.pricepilot.intelligence.alert.event.ProductPriceChangedEvent(
+                    product.getId(),
+                    seller.getId(),
+                    null,
+                    requestDTO.getCurrentPrice(),
+                    false,
+                    java.time.LocalDateTime.now()
+            ));
+        }
+
         return ProductPriceResponseDTO.fromEntity(savedEntity);
     }
 
@@ -102,6 +117,17 @@ public class ProductPriceService {
 
         if (oldPrice.compareTo(newPrice) != 0) {
             priceHistoryService.recordPriceHistory(product, seller, oldPrice, newPrice);
+        }
+
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new com.pricepilot.intelligence.alert.event.ProductPriceChangedEvent(
+                    product.getId(),
+                    seller.getId(),
+                    oldPrice,
+                    newPrice,
+                    false,
+                    java.time.LocalDateTime.now()
+            ));
         }
 
         return ProductPriceResponseDTO.fromEntity(updatedEntity);

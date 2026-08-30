@@ -39,5 +39,11 @@ public interface PriceWatchlistRepository extends JpaRepository<PriceWatchlistEn
 
     @Query("SELECT pw FROM PriceWatchlistEntity pw JOIN FETCH pw.product p WHERE pw.active = true")
     List<PriceWatchlistEntity> findAllActiveWatchlists();
+
+    @Query("SELECT pw FROM PriceWatchlistEntity pw " +
+           "JOIN FETCH pw.product p " +
+           "JOIN FETCH pw.user u " +
+           "WHERE pw.product.id = :productId AND pw.active = true")
+    List<PriceWatchlistEntity> findAllActiveByProductIdWithRelations(@Param("productId") UUID productId);
 }
 

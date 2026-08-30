@@ -3,6 +3,8 @@ import { Link, NavLink } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
+import { NotificationCenter } from './notifications/NotificationCenter';
+
 interface LayoutProps {
   children: React.ReactNode;
 }
@@ -78,6 +80,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
+                <NotificationCenter />
                 <span className="text-xs text-zinc-400 hidden sm:inline">
                   Welcome, <span className="text-white font-semibold">{user.firstName}</span> <span className="text-[10px] uppercase tracking-wider bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded text-zinc-500 font-mono font-bold ml-1">{user.role}</span>
                 </span>

@@ -20,9 +20,16 @@ import java.util.UUID;
 public class PriceWatchlistController {
 
     private final PriceWatchlistService watchlistService;
+    private final com.pricepilot.intelligence.alert.service.PriceAlertService priceAlertService;
+    private final com.pricepilot.user.UserRepository userRepository;
 
-    public PriceWatchlistController(PriceWatchlistService watchlistService) {
+    public PriceWatchlistController(
+            PriceWatchlistService watchlistService,
+            com.pricepilot.intelligence.alert.service.PriceAlertService priceAlertService,
+            com.pricepilot.user.UserRepository userRepository) {
         this.watchlistService = watchlistService;
+        this.priceAlertService = priceAlertService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
@@ -62,6 +69,21 @@ public class PriceWatchlistController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}/alerts")
+    public ResponseEntity<com.pricepilot.intelligence.alert.dto.WatchlistAlertPreferenceDTO> getWatchlistAlertPreferences(
+            @PathVariable UUID id) {
+        UUID userId = getAuthenticatedUserId();
+        return ResponseEntity.ok(priceAlertService.getAlertPreferences(id, userId));
+    }
+
+    @PutMapping("/{id}/alerts")
+    public ResponseEntity<com.pricepilot.intelligence.alert.dto.WatchlistAlertPreferenceDTO> updateWatchlistAlertPreferences(
+            @PathVariable UUID id,
+            @Valid @RequestBody com.pricepilot.intelligence.alert.dto.UpdateWatchlistAlertPreferenceRequestDTO requestDTO) {
+        UUID userId = getAuthenticatedUserId();
+        return ResponseEntity.ok(priceAlertService.updateAlertPreferences(id, userId, requestDTO));
+    }
+
     private String getAuthenticatedUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -74,5 +96,22 @@ public class PriceWatchlistController {
         } else {
             return principal.toString();
         }
+    }
+
+    private UUID getAuthenticatedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new org.springframework.security.authentication.BadCredentialsException("User not authenticated");
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof com.pricepilot.security.UserPrincipal) {
+            return ((com.pricepilot.security.UserPrincipal) principal).getId();
+        }
+
+        String email = getAuthenticatedUserEmail();
+        return userRepository.findByEmail(email)
+                .map(com.pricepilot.user.UserEntity::getId)
+                .orElseThrow(() -> new com.pricepilot.exception.ResourceNotFoundException("User not found with email: " + email));
     }
 }

@@ -41,6 +41,9 @@ public class ProductPriceServiceTest {
     @Mock
     private com.pricepilot.recommendation.RecommendationCacheHelper cacheHelper;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private ProductPriceService productPriceService;
 

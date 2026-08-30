@@ -246,3 +246,53 @@ export interface RecommendationResponse {
   strategyUsed: string;
   generatedAt: string;
 }
+
+export type AlertType =
+  | 'PRICE_DROP'
+  | 'PRICE_TARGET_REACHED'
+  | 'HISTORICAL_LOW_REACHED'
+  | 'GOOD_DEAL_DETECTED'
+  | 'PRICE_INCREASE'
+  | 'PRICE_RECOVERY'
+  | 'BACK_IN_STOCK';
+
+export interface PriceAlert {
+  id: string;
+  userId: string;
+  productId: string;
+  productName: string;
+  productImageUrl?: string;
+  watchlistId?: string;
+  alertType: AlertType;
+  title: string;
+  message: string;
+  triggerValue?: number;
+  observedValue?: number;
+  read: boolean;
+  readAt?: string;
+  createdAt: string;
+}
+
+export interface WatchlistAlertPreference {
+  id: string;
+  watchlistId: string;
+  enabled: boolean;
+  priceDropEnabled: boolean;
+  priceDropPercentage: number;
+  targetPriceEnabled: boolean;
+  historicalLowEnabled: boolean;
+  goodDealEnabled: boolean;
+  backInStockEnabled: boolean;
+  priceIncreaseEnabled: boolean;
+}
+
+export interface UpdateWatchlistAlertPreferenceRequest {
+  enabled?: boolean;
+  priceDropEnabled?: boolean;
+  priceDropPercentage?: number;
+  targetPriceEnabled?: boolean;
+  historicalLowEnabled?: boolean;
+  goodDealEnabled?: boolean;
+  backInStockEnabled?: boolean;
+  priceIncreaseEnabled?: boolean;
+}

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest, PriceAlert, WatchlistAlertPreference, UpdateWatchlistAlertPreferenceRequest } from '../types';
 import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../currency';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -623,6 +623,51 @@ export const apiService = {
 
   async getIntelligenceAnalytics(productId: string): Promise<ProductAnalytics> {
     const response = await apiClient.get(`/analytics/${productId}`);
+    return response.data;
+  },
+
+  // Phase 5: Smart Watchlists & Price Alerts API
+  async getAlerts(page: number = 0, size: number = 20): Promise<{
+    content: PriceAlert[];
+    totalPages: number;
+    totalElements: number;
+    size: number;
+    number: number;
+  }> {
+    const response = await apiClient.get('/alerts', { params: { page, size } });
+    return response.data;
+  },
+
+  async getUnreadAlerts(): Promise<PriceAlert[]> {
+    const response = await apiClient.get('/alerts/unread');
+    return response.data;
+  },
+
+  async getUnreadAlertCount(): Promise<number> {
+    const response = await apiClient.get('/alerts/unread/count');
+    return response.data.unreadCount ?? 0;
+  },
+
+  async markAlertRead(alertId: string): Promise<PriceAlert> {
+    const response = await apiClient.patch(`/alerts/${alertId}/read`);
+    return response.data;
+  },
+
+  async markAllAlertsRead(): Promise<number> {
+    const response = await apiClient.patch('/alerts/read-all');
+    return response.data.markedCount ?? 0;
+  },
+
+  async getWatchlistAlertPreferences(watchlistId: string): Promise<WatchlistAlertPreference> {
+    const response = await apiClient.get(`/watchlists/${watchlistId}/alerts`);
+    return response.data;
+  },
+
+  async updateWatchlistAlertPreferences(
+    watchlistId: string,
+    data: UpdateWatchlistAlertPreferenceRequest
+  ): Promise<WatchlistAlertPreference> {
+    const response = await apiClient.put(`/watchlists/${watchlistId}/alerts`, data);
     return response.data;
   }
 };

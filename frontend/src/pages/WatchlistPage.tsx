@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
-import type { Watchlist } from '../types';
-import { Bell, Trash2, ArrowLeft, Edit2, AlertCircle, ToggleLeft, ToggleRight, Inbox, ShoppingBag, Eye, CheckCircle2, X } from 'lucide-react';
+import type { Watchlist, WatchlistAlertPreference } from '../types';
+import { Bell, Trash2, ArrowLeft, Edit2, AlertCircle, ToggleLeft, ToggleRight, Inbox, ShoppingBag, Eye, CheckCircle2, X, Sliders, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, getSavedCurrency, type CurrencyCode, CURRENCY_SYMBOLS, getDisplayPrice, convertToUsd } from '../currency';
 import { useAuth } from '../context/AuthContext';
@@ -20,6 +20,13 @@ export const WatchlistPage: React.FC = () => {
   const [editTargetPrice, setEditTargetPrice] = useState('');
   const [editError, setEditError] = useState<string | null>(null);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+
+  // Alert Configuration Modal States
+  const [configuringAlertItem, setConfiguringAlertItem] = useState<Watchlist | null>(null);
+  const [alertPrefs, setAlertPrefs] = useState<WatchlistAlertPreference | null>(null);
+  const [loadingPrefs, setLoadingPrefs] = useState(false);
+  const [savingPrefs, setSavingPrefs] = useState(false);
+  const [prefError, setPrefError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -107,6 +114,47 @@ export const WatchlistPage: React.FC = () => {
       setEditError(errorObj.message || 'Failed to update target price.');
     } finally {
       setIsSubmittingEdit(false);
+    }
+  };
+
+  const handleOpenAlertModal = async (item: Watchlist) => {
+    setConfiguringAlertItem(item);
+    setLoadingPrefs(true);
+    setPrefError(null);
+    try {
+      const prefs = await apiService.getWatchlistAlertPreferences(item.id);
+      setAlertPrefs(prefs);
+    } catch (err) {
+      console.error('Failed to load alert preferences:', err);
+      setPrefError('Failed to load preferences.');
+    } finally {
+      setLoadingPrefs(false);
+    }
+  };
+
+  const handleSaveAlertPrefs = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!configuringAlertItem || !alertPrefs) return;
+    setSavingPrefs(true);
+    setPrefError(null);
+    try {
+      const updated = await apiService.updateWatchlistAlertPreferences(configuringAlertItem.id, {
+        enabled: alertPrefs.enabled,
+        priceDropEnabled: alertPrefs.priceDropEnabled,
+        priceDropPercentage: alertPrefs.priceDropPercentage,
+        targetPriceEnabled: alertPrefs.targetPriceEnabled,
+        historicalLowEnabled: alertPrefs.historicalLowEnabled,
+        goodDealEnabled: alertPrefs.goodDealEnabled,
+        backInStockEnabled: alertPrefs.backInStockEnabled,
+        priceIncreaseEnabled: alertPrefs.priceIncreaseEnabled,
+      });
+      setAlertPrefs(updated);
+      setConfiguringAlertItem(null);
+    } catch (err: unknown) {
+      console.error('Failed to save alert preferences:', err);
+      setPrefError('Failed to save preferences.');
+    } finally {
+      setSavingPrefs(false);
     }
   };
 
@@ -272,9 +320,29 @@ export const WatchlistPage: React.FC = () => {
                       >
                         {item.productName}
                       </h3>
-                      <span className="text-[10px] text-zinc-600 font-mono">
+                      <span className="text-[10px] text-zinc-600 font-mono block">
                         Tracked since {new Date(item.createdAt).toLocaleDateString()}
                       </span>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/analytics/${item.productId}`)}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-emerald-400 hover:border-emerald-800/40 transition-colors"
+                          title="View Price Intelligence Analytics"
+                        >
+                          <Activity className="w-3 h-3 text-emerald-400" />
+                          Analytics &rarr;
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenAlertModal(item)}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-950/40 border border-emerald-800/40 text-emerald-300 hover:bg-emerald-900/40 transition-colors"
+                          title="Configure Smart Price Alerts"
+                        >
+                          <Sliders className="w-3 h-3" />
+                          Alert Rules
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -346,6 +414,14 @@ export const WatchlistPage: React.FC = () => {
                         title="View Product Page"
                       >
                         <Eye className="h-4.5 w-4.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAlertModal(item)}
+                        className="p-2 rounded-xl text-zinc-500 hover:text-emerald-400 hover:bg-zinc-900 transition-colors cursor-pointer active:scale-95"
+                        title="Configure Price Alerts"
+                      >
+                        <Bell className="h-4.5 w-4.5" />
                       </button>
                       <button
                         type="button"
@@ -486,6 +562,208 @@ export const WatchlistPage: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Smart Alert Configuration Modal */}
+      <AnimatePresence>
+        {configuringAlertItem && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setConfiguringAlertItem(null)}
+              className="absolute inset-0 cursor-default"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-lg p-6 bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl z-10 overflow-hidden text-left"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between gap-4 mb-5">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 font-mono">
+                    Smart Price Alerts
+                  </span>
+                  <h3 className="text-base font-bold text-white truncate max-w-sm mt-0.5">
+                    {configuringAlertItem.productName}
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-1">
+                    Receive deterministic notifications only when qualifying price milestones occur.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setConfiguringAlertItem(null)}
+                  className="p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-900 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {loadingPrefs && (
+                <div className="py-12 text-center text-xs text-zinc-500">
+                  Loading alert preferences...
+                </div>
+              )}
+
+              {!loadingPrefs && alertPrefs && (
+                <form onSubmit={handleSaveAlertPrefs} className="space-y-4">
+                  {/* Master Switch */}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-900/50 border border-zinc-850">
+                    <div>
+                      <span className="text-xs font-bold text-zinc-100 block">Monitoring Alerts</span>
+                      <span className="text-[11px] text-zinc-400">Master toggle for all alerts on this product</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAlertPrefs({ ...alertPrefs, enabled: !alertPrefs.enabled })}
+                      className={`p-1 rounded-lg transition-colors ${alertPrefs.enabled ? 'text-emerald-400' : 'text-zinc-600'}`}
+                    >
+                      {alertPrefs.enabled ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
+                    </button>
+                  </div>
+
+                  {/* Rules Container */}
+                  <div className={`space-y-3 transition-opacity ${alertPrefs.enabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                    {/* Target Price Reached */}
+                    <label className="flex items-center justify-between p-3 rounded-xl bg-zinc-900/30 border border-zinc-850 cursor-pointer hover:bg-zinc-900/50 transition-colors">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-semibold text-zinc-200 block">Target Price Reached</span>
+                        <span className="text-[10px] text-zinc-400">Alert when current price hits or drops below your target</span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={alertPrefs.targetPriceEnabled}
+                        onChange={(e) => setAlertPrefs({ ...alertPrefs, targetPriceEnabled: e.target.checked })}
+                        className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500/40 bg-zinc-900 border-zinc-700"
+                      />
+                    </label>
+
+                    {/* Price Drop Threshold */}
+                    <div className="p-3 rounded-xl bg-zinc-900/30 border border-zinc-850 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-semibold text-zinc-200 block">Price Drop Threshold</span>
+                          <span className="text-[10px] text-zinc-400">Alert when price drops by a meaningful percentage</span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={alertPrefs.priceDropEnabled}
+                          onChange={(e) => setAlertPrefs({ ...alertPrefs, priceDropEnabled: e.target.checked })}
+                          className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500/40 bg-zinc-900 border-zinc-700"
+                        />
+                      </div>
+
+                      {alertPrefs.priceDropEnabled && (
+                        <div className="flex items-center gap-2 pt-1">
+                          {[5, 10, 15, 20].map((pct) => (
+                            <button
+                              key={pct}
+                              type="button"
+                              onClick={() => setAlertPrefs({ ...alertPrefs, priceDropPercentage: pct })}
+                              className={`flex-1 py-1.5 rounded-lg text-xs font-bold font-mono transition-all ${
+                                alertPrefs.priceDropPercentage === pct
+                                  ? 'bg-emerald-950 border border-emerald-700 text-emerald-300'
+                                  : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white'
+                              }`}
+                            >
+                              {pct}%
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Historical Low Reached */}
+                    <label className="flex items-center justify-between p-3 rounded-xl bg-zinc-900/30 border border-zinc-850 cursor-pointer hover:bg-zinc-900/50 transition-colors">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-semibold text-zinc-200 block">All-Time Historical Low</span>
+                        <span className="text-[10px] text-zinc-400">Alert when a newly observed price establishes a record low</span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={alertPrefs.historicalLowEnabled}
+                        onChange={(e) => setAlertPrefs({ ...alertPrefs, historicalLowEnabled: e.target.checked })}
+                        className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500/40 bg-zinc-900 border-zinc-700"
+                      />
+                    </label>
+
+                    {/* Good Deal Detected */}
+                    <label className="flex items-center justify-between p-3 rounded-xl bg-zinc-900/30 border border-zinc-850 cursor-pointer hover:bg-zinc-900/50 transition-colors">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-semibold text-zinc-200 block">Good Deal Detection</span>
+                        <span className="text-[10px] text-zinc-400">Alert when Phase 4 analytics classifies as Good or Excellent Deal</span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={alertPrefs.goodDealEnabled}
+                        onChange={(e) => setAlertPrefs({ ...alertPrefs, goodDealEnabled: e.target.checked })}
+                        className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500/40 bg-zinc-900 border-zinc-700"
+                      />
+                    </label>
+
+                    {/* Back in Stock */}
+                    <label className="flex items-center justify-between p-3 rounded-xl bg-zinc-900/30 border border-zinc-850 cursor-pointer hover:bg-zinc-900/50 transition-colors">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-semibold text-zinc-200 block">Back In Stock</span>
+                        <span className="text-[10px] text-zinc-400">Alert when product transitions from out-of-stock to in stock</span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={alertPrefs.backInStockEnabled}
+                        onChange={(e) => setAlertPrefs({ ...alertPrefs, backInStockEnabled: e.target.checked })}
+                        className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500/40 bg-zinc-900 border-zinc-700"
+                      />
+                    </label>
+
+                    {/* Price Increase */}
+                    <label className="flex items-center justify-between p-3 rounded-xl bg-zinc-900/30 border border-zinc-850 cursor-pointer hover:bg-zinc-900/50 transition-colors">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-semibold text-zinc-200 block">Price Increase Notice</span>
+                        <span className="text-[10px] text-zinc-400">Alert if price rises significantly (+10% or more)</span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={alertPrefs.priceIncreaseEnabled}
+                        onChange={(e) => setAlertPrefs({ ...alertPrefs, priceIncreaseEnabled: e.target.checked })}
+                        className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500/40 bg-zinc-900 border-zinc-700"
+                      />
+                    </label>
+                  </div>
+
+                  {prefError && (
+                    <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {prefError}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-900">
+                    <button
+                      type="button"
+                      onClick={() => setConfiguringAlertItem(null)}
+                      disabled={savingPrefs}
+                      className="px-4 py-2.5 text-xs font-bold text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingPrefs}
+                      className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-extrabold transition-all shadow-md cursor-pointer active:scale-95 disabled:opacity-50"
+                    >
+                      {savingPrefs ? 'Saving...' : 'Save Alert Rules'}
+                    </button>
+                  </div>
+                </form>
+              )}
             </motion.div>
           </div>
         )}
