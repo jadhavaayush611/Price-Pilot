@@ -35,6 +35,17 @@ public class ProductSearchResultDTO {
     private BigDecimal lowestPrice;
     private BigDecimal highestPrice;
 
+    // Discovery & Shopping Intelligence fields
+    private Double relevanceScore;
+    private com.pricepilot.intelligence.analytics.model.DealQuality dealQuality;
+    private com.pricepilot.intelligence.analytics.model.PriceTrend priceTrend;
+    private com.pricepilot.intelligence.analytics.model.PurchaseSignal purchaseSignal;
+    private Boolean isHistoricalLow;
+    @Builder.Default
+    private List<String> discoveryBadges = new ArrayList<>();
+    @Builder.Default
+    private List<String> discoveryReasons = new ArrayList<>();
+
     public static ProductSearchResultDTO fromEntity(ProductEntity entity) {
         if (entity == null) {
             return null;

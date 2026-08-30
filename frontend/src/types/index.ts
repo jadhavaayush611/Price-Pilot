@@ -37,6 +37,50 @@ export interface ProductWithPrices extends Product {
   prices: ProductPrice[];
   lowestPrice?: number;
   highestPrice?: number;
+  currentBestPrice?: number;
+  relevanceScore?: number;
+  dealQuality?: 'EXCELLENT_DEAL' | 'GOOD_DEAL' | 'FAIR_PRICE' | 'ABOVE_AVERAGE' | 'HIGH_PRICE' | 'INSUFFICIENT_DATA' | 'FAIR_DEAL' | 'OVERPRICED';
+  priceTrend?: 'FALLING' | 'RISING' | 'STABLE';
+  purchaseSignal?: 'BUY_NOW' | 'GOOD_TIME' | 'WAIT';
+  isHistoricalLow?: boolean;
+  discoveryBadges?: string[];
+  discoveryReasons?: string[];
+}
+
+export interface InterpretedQuery {
+  originalQuery: string;
+  normalizedQuery: string;
+  cleanSearchTerms: string;
+  detectedBrand?: string;
+  detectedCategory?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minRating?: number;
+  inStockOnly?: boolean;
+  dealIntent?: boolean;
+  interpretationNotes?: string[];
+}
+
+export interface DiscoverySearchResponse {
+  content: ProductWithPrices[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  interpretedQuery?: InterpretedQuery;
+  appliedSort?: string;
+  executionTimeMs?: number;
+  availableCategories: string[];
+  availableBrands: string[];
+}
+
+export interface SearchSuggestion {
+  text: string;
+  type: 'PRODUCT' | 'BRAND' | 'CATEGORY';
+  productId?: string;
+  category?: string;
+  brand?: string;
+  bestPrice?: number;
 }
 
 export interface User {

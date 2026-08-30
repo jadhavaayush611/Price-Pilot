@@ -110,6 +110,15 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, J
             "FROM ProductEntity p " +
             "WHERE p.id = :productId")
     java.util.Optional<Object[]> findProductAndBestPrice(@org.springframework.data.repository.query.Param("productId") java.util.UUID productId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT p.category FROM ProductEntity p WHERE p.archived = false ORDER BY p.category ASC")
+    java.util.List<String> findDistinctCategories();
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT p.brand FROM ProductEntity p WHERE p.archived = false AND p.brand IS NOT NULL ORDER BY p.brand ASC")
+    java.util.List<String> findDistinctBrands();
+
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM ProductEntity p WHERE p.archived = false AND LOWER(p.name) LIKE LOWER(CONCAT(:prefix, '%')) ORDER BY p.name ASC")
+    java.util.List<ProductEntity> findByNameStartingWithIgnoreCase(@org.springframework.data.repository.query.Param("prefix") String prefix, org.springframework.data.domain.Pageable pageable);
 }
 
 

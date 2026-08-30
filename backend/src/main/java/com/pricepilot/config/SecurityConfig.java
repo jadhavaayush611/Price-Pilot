@@ -80,6 +80,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/health").permitAll()
                 .requestMatchers("/api/v1/search/**").permitAll()
+                .requestMatchers("/api/v1/discovery/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/compare", "/api/v1/compare/*").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/compare").permitAll()

@@ -287,6 +287,15 @@ public class ProductService {
             dto.setPrices(priceDTOs);
             dto.setLowestPrice(lowest);
             dto.setHighestPrice(highest);
+
+            List<String> badges = new ArrayList<>();
+            List<String> reasons = new ArrayList<>();
+            if (lowest != null) {
+                badges.add("In Stock");
+            }
+            dto.setDiscoveryBadges(badges);
+            dto.setDiscoveryReasons(reasons);
+
             return dto;
         }).collect(Collectors.toList());
 

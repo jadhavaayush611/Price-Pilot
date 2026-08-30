@@ -67,7 +67,7 @@ public class PriceAnalyticsServiceImpl implements PriceAnalyticsService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "price-analytics", key = "#productId")
+    @Cacheable(value = "price-analytics", key = "#productId", condition = "#productId != null")
     public ProductAnalyticsResponseDTO getProductAnalytics(UUID productId) {
         if (productId == null) {
             throw new IllegalArgumentException("Product ID cannot be null for price analytics");

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest, PriceAlert, WatchlistAlertPreference, UpdateWatchlistAlertPreferenceRequest, DashboardV2Response } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest, PriceAlert, WatchlistAlertPreference, UpdateWatchlistAlertPreferenceRequest, DashboardV2Response, DiscoverySearchResponse, SearchSuggestion } from '../types';
 import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../currency';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -169,8 +169,14 @@ export const apiService = {
   // Search products with multi-faceted filtering, sorting, and pagination (Real API)
   async searchProductsWithFilters(params: {
     keyword?: string;
+    q?: string;
     category?: string;
     brand?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    minDiscount?: number;
+    inStock?: boolean;
+    dealQuality?: string;
     page?: number;
     size?: number;
     sort?: string;
@@ -182,6 +188,35 @@ export const apiService = {
     number: number;
   }> {
     const response = await apiClient.get('/search', { params });
+    return response.data;
+  },
+
+  // Intelligent Discovery Search with structured evidence and facets (Real API)
+  async discoverProducts(params: {
+    query?: string;
+    category?: string;
+    brand?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    minRating?: number;
+    minDiscount?: number;
+    inStock?: boolean;
+    dealQuality?: string;
+    sellerId?: string;
+    sort?: string;
+    page?: number;
+    size?: number;
+  }): Promise<DiscoverySearchResponse> {
+    const response = await apiClient.get<DiscoverySearchResponse>('/discovery/products', { params });
+    return response.data;
+  },
+
+  // Search autocomplete suggestions (Real API)
+  async getSearchSuggestions(query: string, limit: number = 6): Promise<SearchSuggestion[]> {
+    if (!query || !query.trim()) return [];
+    const response = await apiClient.get<SearchSuggestion[]>('/discovery/suggestions', {
+      params: { query, limit }
+    });
     return response.data;
   },
 
