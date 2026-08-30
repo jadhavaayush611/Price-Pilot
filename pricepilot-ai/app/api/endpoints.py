@@ -4,9 +4,11 @@ from fastapi.security.api_key import APIKeyHeader
 from typing import Dict, Any, List, Optional
 from app.config.settings import settings
 from app.schemas.recommendation import (
-    PredictRequest, PredictResponse, SimilarRequest, SimilarResponse
+    PredictRequest, PredictResponse, SimilarRequest, SimilarResponse,
+    ExplainRecommendationRequest, ExplainRecommendationResponse
 )
 from app.services.prediction import prediction_service
+from app.explainability.explainer import explainability_service
 from app.loaders.model_registry import model_registry
 from app.utils.logger import log_structured
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
@@ -142,6 +144,48 @@ def similar(request: SimilarRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Similarity matching failed: {str(e)}"
+        )
+
+@router.post(
+    "/recommendations/explain",
+    response_model=ExplainRecommendationResponse,
+    dependencies=[Depends(verify_api_key)]
+)
+def explain(request: ExplainRecommendationRequest):
+    """Generates a structured, evidence-grounded natural language explanation for a recommendation."""
+    start_time = time.time()
+    rec_type = request.recommendationType
+    log_structured(logging.INFO, "explain_request_received", {
+        "recommendedProductId": request.recommendedProductId,
+        "recommendationType": rec_type,
+        "evidenceCount": len(request.evidence),
+        "tradeOffCount": len(request.tradeOffEvidence or [])
+    })
+
+    try:
+        response = explainability_service.explain_recommendation(request)
+        latency = time.time() - start_time
+
+        REQUEST_COUNT.labels(endpoint="explain", algorithm=rec_type, status="success").inc()
+        INFERENCE_LATENCY.labels(endpoint="explain", algorithm=rec_type).observe(latency)
+
+        log_structured(logging.INFO, "explain_request_success", {
+            "recommendedProductId": request.recommendedProductId,
+            "latency_seconds": latency,
+            "model": response.model
+        })
+        return response
+    except Exception as e:
+        latency = time.time() - start_time
+        REQUEST_COUNT.labels(endpoint="explain", algorithm=rec_type, status="error").inc()
+        log_structured(logging.ERROR, "explain_request_failed", {
+            "recommendedProductId": request.recommendedProductId,
+            "error": str(e),
+            "latency_seconds": latency
+        })
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Explanation generation failed: {str(e)}"
         )
 
 @router.get(

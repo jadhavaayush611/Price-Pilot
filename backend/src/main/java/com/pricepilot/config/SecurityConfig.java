@@ -69,6 +69,12 @@ public class SecurityConfig {
                 .addHeaderWriter(new org.springframework.security.web.header.writers.StaticHeadersWriter("Permissions-Policy", "geolocation=(), microphone=(), camera=()"))
             )
             .authorizeHttpRequests(auth -> auth
+                // Protected User Endpoints (Saved comparisons, personalized recommendations, session history)
+                .requestMatchers("/api/v1/compare/save", "/api/v1/compare/saved", "/api/v1/intelligence/saved-comparisons/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/compare/*").authenticated()
+                .requestMatchers("/api/v1/recommendations/personalized", "/api/v1/intelligence/recommendations/personalized").authenticated()
+                .requestMatchers("/api/v1/events/me").authenticated()
+
                 // Public Endpoints
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/health").permitAll()
@@ -76,14 +82,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/compare", "/api/v1/compare/*").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/compare").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/recommendations/compare", "/api/v1/intelligence/recommendations/compare").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/recommendations/**", "/api/v1/intelligence/recommendations/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/analytics/**", "/api/v1/intelligence/analytics/**").permitAll()
-                
-                // Protected User Endpoints (Saved comparisons, personalized recommendations, session history)
-                .requestMatchers("/api/v1/compare/save", "/api/v1/compare/saved", "/api/v1/intelligence/saved-comparisons/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/compare/*").authenticated()
-                .requestMatchers("/api/v1/recommendations/personalized").authenticated()
-                .requestMatchers("/api/v1/events/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/events/seller-click/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/events/**").hasRole("ADMIN")
                 .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/prometheus", "/actuator/info").permitAll()

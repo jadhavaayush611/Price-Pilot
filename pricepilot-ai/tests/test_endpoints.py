@@ -139,3 +139,92 @@ def test_similar_endpoint_success():
     # prod_2 should have higher similarity score than prod_3
     assert data["similarProducts"][0]["productId"] == "prod_2"
     assert data["similarProducts"][0]["score"] > data["similarProducts"][1]["score"]
+
+def test_explain_endpoint_success():
+    """Asserts that /recommendations/explain generates grounded explanations with supporting factors and trade-offs."""
+    payload = {
+        "recommendedProductId": "prod_1",
+        "recommendedProductName": "iPhone 15 Pro",
+        "recommendationType": "BEST_OVERALL",
+        "score": 91.5,
+        "confidence": 0.88,
+        "evidence": [
+            {
+                "productId": "prod_1",
+                "productName": "iPhone 15 Pro",
+                "type": "LOWEST_PRICE",
+                "description": "Lowest current price among compared products at $999.00",
+                "metricName": "PRICE",
+                "metricValue": 999.0,
+                "comparisonValue": 999.0,
+                "isPositive": True,
+                "importance": 0.95
+            },
+            {
+                "productId": "prod_1",
+                "productName": "iPhone 15 Pro",
+                "type": "HIGHEST_RATING",
+                "description": "Highest customer satisfaction rating of 4.8/5.0",
+                "metricName": "RATING",
+                "metricValue": 4.8,
+                "comparisonValue": 4.8,
+                "isPositive": True,
+                "importance": 0.90
+            }
+        ],
+        "tradeOffEvidence": [
+            {
+                "productId": "prod_2",
+                "productName": "Galaxy S24 Ultra",
+                "type": "BETTER_SPECIFICATION",
+                "description": "Galaxy S24 Ultra has a higher rating (4.9 vs 4.8), but costs $200.00 more",
+                "metricName": "RATING",
+                "metricValue": 4.9,
+                "comparisonValue": 4.8,
+                "isPositive": False,
+                "importance": 0.80
+            }
+        ]
+    }
+    res = client.post("/recommendations/explain", json=payload, headers=API_KEY_HEADER)
+    assert res.status_code == 200
+    data = res.json()
+    assert "explanation" in data
+    assert "iPhone 15 Pro" in data["explanation"]
+    assert len(data["supportingFactors"]) == 2
+    assert "Lowest current price" in data["supportingFactors"][0]
+    assert len(data["tradeOffs"]) == 1
+    assert "Galaxy S24 Ultra" in data["tradeOffs"][0]
+    assert data["model"] == "PricePilot-Explainability-v1"
+
+def test_explain_endpoint_schema_validation():
+    """Asserts that invalid/malformed payloads return HTTP 422 Unprocessable Entity."""
+    # Missing required fields
+    res = client.post("/recommendations/explain", json={}, headers=API_KEY_HEADER)
+    assert res.status_code == 422
+
+    # Malformed score/confidence types
+    bad_payload = {
+        "recommendedProductId": "prod_1",
+        "recommendedProductName": "Phone",
+        "score": "not-a-number",
+        "confidence": "invalid"
+    }
+    res2 = client.post("/recommendations/explain", json=bad_payload, headers=API_KEY_HEADER)
+    assert res2.status_code == 422
+
+def test_explain_endpoint_authentication():
+    """Asserts authentication is enforced on /recommendations/explain."""
+    payload = {
+        "recommendedProductId": "prod_1",
+        "recommendedProductName": "Phone",
+        "score": 90.0,
+        "confidence": 0.85
+    }
+    # No header
+    res_no_auth = client.post("/recommendations/explain", json=payload)
+    assert res_no_auth.status_code == 401
+
+    # Invalid header
+    res_bad_auth = client.post("/recommendations/explain", json=payload, headers={"X-API-Key": "wrong"})
+    assert res_bad_auth.status_code == 403

@@ -11,7 +11,7 @@ export const DashboardV2Page: React.FC = () => {
 
   useEffect(() => {
     if (activeTab === 'recommendations' && !recommendations) {
-      setLoading(true);
+      queueMicrotask(() => setLoading(true));
       const sampleId = MOCK_PRODUCTS[0]?.id || 'p1';
       apiService.getIntelligenceRecommendations(sampleId)
         .then((res) => setRecommendations(res))

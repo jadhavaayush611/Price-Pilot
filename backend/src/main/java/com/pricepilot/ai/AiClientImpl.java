@@ -135,5 +135,24 @@ public class AiClientImpl implements AiClient {
             throw new RuntimeException("AI Assistant is temporarily unavailable. Please try again later.", e);
         }
     }
+
+    @Override
+    public com.pricepilot.ai.dto.AiExplainResponse explain(com.pricepilot.ai.dto.AiExplainRequest request) {
+        String endpoint = aiUrl + "/recommendations/explain";
+        RestClientException lastException = null;
+        for (int attempt = 1; attempt <= retryCount; attempt++) {
+            try {
+                log.debug("Sending explain request to FastAPI, attempt {}/{}", attempt, retryCount);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                HttpEntity<com.pricepilot.ai.dto.AiExplainRequest> httpEntity = new HttpEntity<>(request, headers);
+                return restTemplate.postForObject(endpoint, httpEntity, com.pricepilot.ai.dto.AiExplainResponse.class);
+            } catch (RestClientException e) {
+                lastException = e;
+                log.warn("Attempt {} to explain failed: {}", attempt, e.getMessage());
+            }
+        }
+        throw new RuntimeException("FastAPI explain request failed after " + retryCount + " attempts", lastException);
+    }
 }
 

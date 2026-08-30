@@ -55,3 +55,29 @@ class SimilarRequest(BaseModel):
 class SimilarResponse(BaseModel):
     targetProductId: str
     similarProducts: List[ScoredRecommendation]
+
+class EvidenceItemSchema(BaseModel):
+    productId: str
+    productName: str
+    type: str
+    description: str
+    metricName: Optional[str] = None
+    metricValue: Optional[Any] = None
+    comparisonValue: Optional[Any] = None
+    isPositive: bool = True
+    importance: float = 1.0
+
+class ExplainRecommendationRequest(BaseModel):
+    recommendedProductId: str
+    recommendedProductName: str
+    recommendationType: str = "BEST_OVERALL"
+    score: float
+    confidence: float
+    evidence: List[EvidenceItemSchema] = Field(default_factory=list)
+    tradeOffEvidence: Optional[List[EvidenceItemSchema]] = Field(default_factory=list)
+
+class ExplainRecommendationResponse(BaseModel):
+    explanation: str
+    supportingFactors: List[str] = Field(default_factory=list)
+    tradeOffs: List[str] = Field(default_factory=list)
+    model: str = "PricePilot-Explainability-v1"

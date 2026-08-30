@@ -117,6 +117,33 @@ public class ProductService {
         return dto;
     }
 
+    @Transactional(readOnly = true)
+    public List<ProductResponseDTO> getProductsBatch(java.util.Collection<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        List<ProductEntity> entities = productRepository.findAllByIdInWithPricesAndSellers(ids);
+        Map<UUID, ProductEntity> entityMap = entities.stream()
+                .collect(Collectors.toMap(ProductEntity::getId, e -> e, (e1, e2) -> e1));
+
+        List<ProductResponseDTO> result = new ArrayList<>();
+        for (UUID id : ids) {
+            ProductEntity entity = entityMap.get(id);
+            if (entity != null && !entity.isArchived()) {
+                ProductResponseDTO dto = ProductResponseDTO.fromEntity(entity);
+                if (entity.getProductPrices() != null && !entity.getProductPrices().isEmpty()) {
+                    dto.setPrices(entity.getProductPrices().stream()
+                            .map(com.pricepilot.productprice.dto.ProductPriceResponseDTO::fromEntity)
+                            .collect(Collectors.toList()));
+                } else {
+                    dto.setPrices(java.util.Collections.emptyList());
+                }
+                result.add(dto);
+            }
+        }
+        return result;
+    }
+
     @Transactional
     @Caching(evict = {
         @CacheEvict(value = "product-details", key = "#id"),

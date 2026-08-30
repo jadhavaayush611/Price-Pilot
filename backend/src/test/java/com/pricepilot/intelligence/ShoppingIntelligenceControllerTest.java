@@ -157,4 +157,74 @@ class ShoppingIntelligenceControllerTest {
 
         assertThrows(AccessDeniedException.class, () -> comparisonController.saveComparison(request));
     }
+
+    @Test
+    @DisplayName("GET /api/v1/recommendations/{productId} returns RecommendationResponse with explainable fields")
+    void testGetProductRecommendations() {
+        UUID prodId = UUID.randomUUID();
+        RecommendationResponse mockResponse = new RecommendationResponse(
+                prodId, null, List.of(), null, "BEST_OVERALL", 91.0, 0.88,
+                "Product A is recommended because...", List.of("Lowest price"), List.of(),
+                List.of(), List.of(), "DEFAULT_COMPARISON_SCORER", "DETERMINISTIC_RULE_BASED", LocalDateTime.now()
+        );
+
+        when(recommendationService.getRecommendationsForProduct(eq(prodId), eq(5), any())).thenReturn(mockResponse);
+
+        ResponseEntity<RecommendationResponse> response = recommendationController.getRecommendationsForProduct(prodId, 5, "BEST_OVERALL");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("BEST_OVERALL", response.getBody().getRecommendationType());
+        assertEquals(0.88, response.getBody().getConfidence());
+        assertFalse(response.getBody().getSupportingFactors().isEmpty());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/recommendations/compare processes 2-5 products and returns explainable response")
+    void testCompareRecommendationsContract() {
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        com.pricepilot.intelligence.recommendation.dto.RecommendationCompareRequest req =
+                new com.pricepilot.intelligence.recommendation.dto.RecommendationCompareRequest(List.of(id1, id2), "BEST_VALUE");
+
+        RecommendationResponse mockResponse = new RecommendationResponse(
+                null, testUserId, List.of(), null, "BEST_VALUE", 89.0, 0.84,
+                "Best value choice...", List.of("Lower price"), List.of(),
+                List.of(), List.of(), "DEFAULT_COMPARISON_SCORER", "DETERMINISTIC_RULE_BASED", LocalDateTime.now()
+        );
+
+        when(recommendationService.compareAndRecommend(any(), eq(testUserId))).thenReturn(mockResponse);
+
+        UserPrincipal principal = new UserPrincipal(testUserId, "test@example.com", "pass", Role.USER, true, false);
+        ResponseEntity<RecommendationResponse> response = recommendationController.compareAndRecommend(req, principal);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("BEST_VALUE", response.getBody().getRecommendationType());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/recommendations/personalized succeeds when authenticated")
+    void testPersonalizedRecommendationsAuthenticated() {
+        RecommendationResponse mockResponse = new RecommendationResponse(
+                null, testUserId, List.of(), null, "BEST_OVERALL", 93.0, 0.86,
+                "Personalized recommendation...", List.of(), List.of(),
+                List.of(), List.of(), "DEFAULT_COMPARISON_SCORER", "DETERMINISTIC_RULE_BASED", LocalDateTime.now()
+        );
+
+        when(recommendationService.getPersonalizedRecommendations(eq(testUserId), eq(10))).thenReturn(mockResponse);
+
+        UserPrincipal principal = new UserPrincipal(testUserId, "test@example.com", "pass", Role.USER, true, false);
+        ResponseEntity<RecommendationResponse> response = recommendationController.getPersonalizedRecommendations(principal, 10);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(testUserId, response.getBody().getUserId());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/recommendations/personalized throws AccessDeniedException when unauthenticated")
+    void testPersonalizedRecommendationsUnauthenticated() {
+        assertThrows(AccessDeniedException.class, () -> recommendationController.getPersonalizedRecommendations(null, 10));
+    }
 }

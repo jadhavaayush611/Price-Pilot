@@ -113,4 +113,65 @@ class ExplainabilityService:
 
         return reasons
 
+    def explain_recommendation(self, request: Any) -> Any:
+        """
+        Generates a transparent, evidence-grounded explanation for a recommendation decision.
+        Strictly utilizes supplied evidence and does not invent product facts.
+        """
+        from app.schemas.recommendation import ExplainRecommendationResponse
+
+        product_name = request.recommendedProductName
+        rec_type = getattr(request, "recommendationType", "BEST_OVERALL")
+        score = getattr(request, "score", 85.0)
+        confidence = getattr(request, "confidence", 0.85)
+
+        supporting_factors = [e.description for e in getattr(request, "evidence", []) if e.description]
+        trade_offs = [t.description for t in getattr(request, "tradeOffEvidence", []) if t.description]
+
+        # Build summary explanation
+        if not supporting_factors:
+            summary = f"{product_name} is recommended based on overall multi-factor performance (Score: {score:.1f}/100)."
+        else:
+            evidence_types = [e.type.lower().replace("_", " ") for e in getattr(request, "evidence", [])]
+            highlights = []
+            for et in evidence_types:
+                if "lowest price" in et:
+                    highlights.append("the lowest current price")
+                elif "below average" in et:
+                    highlights.append("below-average pricing")
+                elif "highest rating" in et:
+                    highlights.append("the highest customer rating")
+                elif "highest discount" in et:
+                    highlights.append("the steepest discount")
+                elif "seller" in et:
+                    highlights.append("strong seller availability")
+                elif "spec" in et:
+                    highlights.append("superior specifications")
+                else:
+                    highlights.append("strong competitive metrics")
+
+            if len(highlights) == 1:
+                joined = highlights[0]
+            elif len(highlights) == 2:
+                joined = f"{highlights[0]} and {highlights[1]}"
+            else:
+                joined = ", ".join(highlights[:-1]) + f", and {highlights[-1]}"
+
+            type_label = "the strongest overall choice"
+            if "VALUE" in rec_type.upper():
+                type_label = "the best price-to-value choice"
+            elif "RATE" in rec_type.upper():
+                type_label = "the top-rated selection"
+            elif "DISCOUNT" in rec_type.upper():
+                type_label = "the strongest discount deal"
+
+            summary = f"{product_name} is {type_label} because it has {joined}."
+
+        return ExplainRecommendationResponse(
+            explanation=summary,
+            supportingFactors=supporting_factors,
+            tradeOffs=trade_offs,
+            model="PricePilot-Explainability-v1"
+        )
+
 explainability_service = ExplainabilityService()

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest } from '../types';
 import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../currency';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -609,8 +609,15 @@ export const apiService = {
     await apiClient.delete(`/compare/${sessionId}`);
   },
 
-  async getIntelligenceRecommendations(productId: string, limit: number = 10): Promise<RecommendationResponse> {
-    const response = await apiClient.get(`/recommendations/${productId}`, { params: { limit } });
+  async getIntelligenceRecommendations(productId: string, limit: number = 10, type?: string): Promise<RecommendationResponse> {
+    const params: Record<string, string | number> = { limit };
+    if (type) params.type = type;
+    const response = await apiClient.get(`/recommendations/${productId}`, { params });
+    return response.data;
+  },
+
+  async compareAndRecommend(request: RecommendationCompareRequest): Promise<RecommendationResponse> {
+    const response = await apiClient.post('/recommendations/compare', request);
     return response.data;
   },
 

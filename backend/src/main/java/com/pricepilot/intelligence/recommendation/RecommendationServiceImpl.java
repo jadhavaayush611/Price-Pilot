@@ -1,102 +1,93 @@
 package com.pricepilot.intelligence.recommendation;
 
+import com.pricepilot.ai.v2.RecommendationPipeline;
 import com.pricepilot.exception.ResourceNotFoundException;
-import com.pricepilot.intelligence.recommendation.dto.ProductScore;
+import com.pricepilot.intelligence.recommendation.dto.RecommendationCompareRequest;
 import com.pricepilot.intelligence.recommendation.dto.RecommendationResponse;
+import com.pricepilot.intelligence.recommendation.dto.RecommendationType;
 import com.pricepilot.intelligence.recommendation.repository.RecommendationMetadataRepository;
 import com.pricepilot.product.ProductService;
 import com.pricepilot.product.dto.ProductResponseDTO;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
- * Foundation implementation of RecommendationService for PricePilot v1.1 Shopping Intelligence module.
+ * Service implementation for PricePilot Shopping Intelligence Recommendation Engine v2.
+ * Delegates orchestration, evidence extraction, confidence scoring, and explanation generation
+ * to the RecommendationPipeline.
  */
 @Service("intelligenceRecommendationService")
 public class RecommendationServiceImpl implements RecommendationService {
 
     private final ProductService productService;
+    private final RecommendationPipeline pipeline;
     private final RecommendationMetadataRepository recommendationMetadataRepository;
 
     public RecommendationServiceImpl(
             ProductService productService,
+            @Qualifier("defaultRecommendationPipeline") RecommendationPipeline pipeline,
             RecommendationMetadataRepository recommendationMetadataRepository) {
         this.productService = productService;
+        this.pipeline = pipeline;
         this.recommendationMetadataRepository = recommendationMetadataRepository;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public RecommendationResponse getRecommendationsForProduct(UUID productId, int limit) {
-        ProductResponseDTO targetProduct;
+    public RecommendationResponse getRecommendationsForProduct(UUID productId, int limit, RecommendationType type) {
+        if (productId == null) {
+            throw new IllegalArgumentException("Product ID cannot be null");
+        }
+
         try {
-            targetProduct = productService.getProductById(productId);
+            productService.getProductById(productId);
         } catch (Exception e) {
             throw new ResourceNotFoundException("Target product not found for recommendation with ID: " + productId);
         }
 
-        List<ProductResponseDTO> trending = productService.getTrendingProducts(limit + 1);
-        List<ProductResponseDTO> recommended = trending.stream()
-                .filter(p -> !p.getId().equals(productId))
-                .limit(limit)
-                .collect(Collectors.toList());
+        RecommendationType selectedType = type != null ? type : RecommendationType.BEST_OVERALL;
+        Map<String, Object> context = Map.of("recommendationType", selectedType.name());
 
-        List<ProductScore> scores = recommended.stream()
-                .map(p -> new ProductScore(
-                        p.getId(),
-                        p.getName(),
-                        88.5,
-                        90.0,
-                        85.0,
-                        92.0,
-                        Map.of("PriceValue", 90.0, "CategoryRelevance", 85.0),
-                        "HIGHLY RECOMMENDED"
-                ))
-                .collect(Collectors.toList());
+        return pipeline.executePipeline(productId, null, limit, context);
+    }
 
-        String explanation = String.format("Recommendations generated for %s using similarity matrix and trending demand factors.", targetProduct.getName());
+    @Override
+    @Transactional(readOnly = true)
+    public RecommendationResponse compareAndRecommend(RecommendationCompareRequest request, UUID userId) {
+        if (request == null || request.getProductIds() == null) {
+            throw new IllegalArgumentException("Comparison request and product IDs cannot be null");
+        }
 
-        return new RecommendationResponse(
-                productId,
-                null,
-                recommended,
-                scores,
-                explanation,
-                "V2_FOUNDATION_PIPELINE",
-                LocalDateTime.now()
-        );
+        List<UUID> productIds = request.getProductIds();
+        if (productIds.size() < 2 || productIds.size() > 5) {
+            throw new IllegalArgumentException("Comparison recommendations require between 2 and 5 product IDs");
+        }
+
+        List<ProductResponseDTO> candidates = productService.getProductsBatch(productIds);
+        if (candidates.size() < 2) {
+            throw new ResourceNotFoundException("At least 2 valid product candidates must be found for comparison recommendations");
+        }
+
+        RecommendationType type = RecommendationType.fromString(request.getRecommendationType());
+        return pipeline.executeComparisonPipeline(candidates, type, userId, Map.of());
     }
 
     @Override
     @Transactional(readOnly = true)
     public RecommendationResponse getPersonalizedRecommendations(UUID userId, int limit) {
-        List<ProductResponseDTO> trending = productService.getTrendingProducts(limit);
+        if (userId == null) {
+            throw new AccessDeniedException("Authentication required for personalized recommendations");
+        }
 
-        List<ProductScore> scores = trending.stream()
-                .map(p -> new ProductScore(
-                        p.getId(),
-                        p.getName(),
-                        91.0,
-                        88.0,
-                        93.0,
-                        94.0,
-                        Map.of("UserAffinity", 95.0, "PriceValue", 88.0),
-                        "PERSONAL MATCH"
-                ))
-                .collect(Collectors.toList());
+        List<ProductResponseDTO> trending = productService.getTrendingProducts(Math.max(limit, 5));
+        if (trending.isEmpty()) {
+            throw new ResourceNotFoundException("No candidate products available for personalized recommendations");
+        }
 
-        return new RecommendationResponse(
-                null,
-                userId,
-                trending,
-                scores,
-                "Personalized shopping recommendations based on historical browsing affinity.",
-                "V2_PERSONALIZED_STUB",
-                LocalDateTime.now()
-        );
+        return pipeline.executeComparisonPipeline(trending, RecommendationType.BEST_OVERALL, userId, Map.of("personalized", true));
     }
 }

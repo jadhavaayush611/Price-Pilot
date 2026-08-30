@@ -167,12 +167,38 @@ export interface SavedComparison {
   products?: ProductWithPrices[];
 }
 
+export interface EvidenceItem {
+  productId: string;
+  productName: string;
+  type: string;
+  description: string;
+  metricName?: string;
+  metricValue?: number | string;
+  comparisonValue?: number | string;
+  positive: boolean;
+  importance: number;
+}
+
+export interface RecommendationCompareRequest {
+  productIds: string[];
+  recommendationType?: string;
+}
+
 export interface RecommendationResponse {
   targetProductId?: string;
   userId?: string;
   recommendedProducts: ProductWithPrices[];
-  scores: ProductScore[];
+  recommendedProduct?: ProductWithPrices;
+  recommendationType?: string;
+  score?: number;
+  confidence?: number;
   explanation: string;
+  supportingFactors?: string[];
+  tradeOffs?: string[];
+  evidence?: EvidenceItem[];
+  scores: ProductScore[];
+  scoringStrategy?: string;
+  explanationStrategy?: string;
   strategyUsed: string;
   generatedAt: string;
 }

@@ -37,5 +37,13 @@ public interface AiClient {
      * Forwards memory clearing requests to the FastAPI assistant clear memory endpoint.
      */
     java.util.Map<String, Object> clearMemory(java.util.Map<String, Object> request, String authorizationHeader);
+
+    /**
+     * Forwards structured explainable recommendation requests to FastAPI AI microservice.
+     *
+     * @param request Structured evidence request.
+     * @return AI explain response.
+     */
+    com.pricepilot.ai.dto.AiExplainResponse explain(com.pricepilot.ai.dto.AiExplainRequest request);
 }
 
