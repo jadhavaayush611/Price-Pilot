@@ -60,7 +60,9 @@ public class CacheConfig implements CachingConfigurer {
                             Map.entry("recommendations", createCacheConfig(Duration.ofMinutes(10))),
                             Map.entry("price-analytics", createCacheConfig(Duration.ofMinutes(10))),
                             Map.entry("dashboard", createCacheConfig(Duration.ofMinutes(5))),
-                            Map.entry("dashboard-v2", createCacheConfig(Duration.ofMinutes(3)))
+                            Map.entry("dashboard-v2", createCacheConfig(Duration.ofMinutes(3))),
+                            Map.entry("user-preferences", createCacheConfig(Duration.ofMinutes(30))),
+                            Map.entry("user-recommendations", createCacheConfig(Duration.ofMinutes(10)))
                     ))
                     .build();
 
@@ -81,7 +83,8 @@ public class CacheConfig implements CachingConfigurer {
             ConcurrentMapCacheManager concurrentMapCacheManager = new ConcurrentMapCacheManager(
                     "product-details", "product-searches", "popular-products",
                     "trending-products", "most-watched-products", "most-saved-products", "biggest-drops",
-                    "recommendations", "price-analytics", "dashboard", "dashboard-v2"
+                    "recommendations", "price-analytics", "dashboard", "dashboard-v2",
+                    "user-preferences", "user-recommendations"
             );
 
             return new CacheManager() {

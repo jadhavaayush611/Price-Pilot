@@ -23,6 +23,9 @@ public class RecommendationResponse {
     private List<String> supportingFactors = new ArrayList<>();
     private List<String> tradeOffs = new ArrayList<>();
     private List<EvidenceItem> evidence = new ArrayList<>();
+    private List<EvidenceItem> personalizationEvidence = new ArrayList<>();
+    private Double baseScore;
+    private Double personalizationContribution;
     private List<ProductScore> scores = new ArrayList<>();
     private String scoringStrategy;
     private String explanationStrategy;
@@ -203,5 +206,29 @@ public class RecommendationResponse {
 
     public void setGeneratedAt(LocalDateTime generatedAt) {
         this.generatedAt = generatedAt;
+    }
+
+    public List<EvidenceItem> getPersonalizationEvidence() {
+        return personalizationEvidence;
+    }
+
+    public void setPersonalizationEvidence(List<EvidenceItem> personalizationEvidence) {
+        this.personalizationEvidence = personalizationEvidence != null ? personalizationEvidence : new ArrayList<>();
+    }
+
+    public Double getBaseScore() {
+        return baseScore;
+    }
+
+    public void setBaseScore(Double baseScore) {
+        this.baseScore = baseScore;
+    }
+
+    public Double getPersonalizationContribution() {
+        return personalizationContribution;
+    }
+
+    public void setPersonalizationContribution(Double personalizationContribution) {
+        this.personalizationContribution = personalizationContribution;
     }
 }

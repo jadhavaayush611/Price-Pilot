@@ -19,6 +19,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -89,6 +90,9 @@ public class PriceAlertServiceImpl implements PriceAlertService {
         return alertRepository.countUnreadByUserId(userId);
     }
 
+    @Autowired(required = false)
+    private com.pricepilot.interaction.UserInteractionEventService eventService;
+
     @Override
     @Transactional
     public PriceAlertResponseDTO markAsRead(UUID alertId, UUID userId) {
@@ -100,7 +104,21 @@ public class PriceAlertServiceImpl implements PriceAlertService {
         }
 
         alert.markAsRead();
-        return PriceAlertResponseDTO.fromEntity(alertRepository.save(alert));
+        PriceAlertEntity saved = alertRepository.save(alert);
+
+        if (eventService != null && saved.getProduct() != null) {
+            try {
+                eventService.trackEvent(
+                        userId,
+                        saved.getProduct().getId(),
+                        null,
+                        com.pricepilot.interaction.InteractionType.ALERT_INTERACTION,
+                        java.util.Map.of("alertId", saved.getId().toString())
+                );
+            } catch (Exception ignored) {}
+        }
+
+        return PriceAlertResponseDTO.fromEntity(saved);
     }
 
     @Override

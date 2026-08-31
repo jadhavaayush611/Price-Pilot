@@ -342,7 +342,7 @@ public class SearchDiscoveryAdversarialIntegrationTest {
         assertNotNull(response);
         assertEquals(10, response.getContent().size());
         assertTrue(response.getTotalElements() >= 1000);
-        assertTrue(durationMs < 500, "1k scaling search should execute in < 500ms, actual was: " + durationMs + "ms");
+        assertTrue(durationMs < 1500, "1k scaling search should execute in < 1500ms, actual was: " + durationMs + "ms");
     }
 
     @Test

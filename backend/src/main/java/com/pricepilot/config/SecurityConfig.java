@@ -74,7 +74,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/compare/*").authenticated()
                 .requestMatchers("/api/v1/recommendations/personalized", "/api/v1/intelligence/recommendations/personalized").authenticated()
                 .requestMatchers("/api/v1/events/me").authenticated()
-                .requestMatchers("/api/v1/alerts/**", "/api/v1/watchlists/**", "/api/v1/dashboard/**").authenticated()
+                .requestMatchers("/api/v1/alerts/**", "/api/v1/watchlists/**", "/api/v1/dashboard/**", "/api/v1/users/preferences/**").authenticated()
 
                 // Public Endpoints
                 .requestMatchers("/api/v1/auth/**").permitAll()

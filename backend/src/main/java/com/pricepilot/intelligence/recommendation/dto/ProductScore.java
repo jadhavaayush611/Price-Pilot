@@ -11,10 +11,13 @@ public class ProductScore {
     private UUID productId;
     private String productName;
     private double overallScore;
+    private double baseScore;
+    private double personalizationContribution;
     private double priceValueScore;
     private double featureScore;
     private double popularityScore;
     private Map<String, Double> breakdown;
+    private Map<String, Double> personalizationBreakdown;
     private String recommendationBadge;
 
     public ProductScore() {
@@ -24,6 +27,8 @@ public class ProductScore {
         this.productId = productId;
         this.productName = productName;
         this.overallScore = overallScore;
+        this.baseScore = overallScore;
+        this.personalizationContribution = 0.0;
         this.priceValueScore = priceValueScore;
         this.featureScore = featureScore;
         this.popularityScore = popularityScore;
@@ -93,5 +98,29 @@ public class ProductScore {
 
     public void setRecommendationBadge(String recommendationBadge) {
         this.recommendationBadge = recommendationBadge;
+    }
+
+    public double getBaseScore() {
+        return baseScore;
+    }
+
+    public void setBaseScore(double baseScore) {
+        this.baseScore = baseScore;
+    }
+
+    public double getPersonalizationContribution() {
+        return personalizationContribution;
+    }
+
+    public void setPersonalizationContribution(double personalizationContribution) {
+        this.personalizationContribution = personalizationContribution;
+    }
+
+    public Map<String, Double> getPersonalizationBreakdown() {
+        return personalizationBreakdown;
+    }
+
+    public void setPersonalizationBreakdown(Map<String, Double> personalizationBreakdown) {
+        this.personalizationBreakdown = personalizationBreakdown;
     }
 }

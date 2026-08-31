@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest, PriceAlert, WatchlistAlertPreference, UpdateWatchlistAlertPreferenceRequest, DashboardV2Response, DiscoverySearchResponse, SearchSuggestion } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest, PriceAlert, WatchlistAlertPreference, UpdateWatchlistAlertPreferenceRequest, DashboardV2Response, DiscoverySearchResponse, SearchSuggestion, UserShoppingPreference, UpdateShoppingPreferenceRequest } from '../types';
 import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../currency';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -708,6 +708,26 @@ export const apiService = {
 
   async getDashboardV2(): Promise<DashboardV2Response> {
     const response = await apiClient.get('/dashboard/v2');
+    return response.data;
+  },
+
+  // Phase 8: User Shopping Preferences & Personalized Intelligence
+  async getUserPreferences(): Promise<UserShoppingPreference> {
+    const response = await apiClient.get('/users/preferences');
+    return response.data;
+  },
+
+  async updateUserPreferences(data: UpdateShoppingPreferenceRequest): Promise<UserShoppingPreference> {
+    const response = await apiClient.put('/users/preferences', data);
+    return response.data;
+  },
+
+  async resetUserPreferences(): Promise<void> {
+    await apiClient.delete('/users/preferences');
+  },
+
+  async getPersonalizedRecommendations(limit: number = 10): Promise<RecommendationResponse> {
+    const response = await apiClient.get('/recommendations/personalized', { params: { limit } });
     return response.data;
   }
 };

@@ -27,6 +27,7 @@ const AiAssistantPage = lazy(() => import('./pages/AiAssistantPage').then(m => (
 const ComparisonPage = lazy(() => import('./pages/ComparisonPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const DashboardV2Page = lazy(() => import('./pages/DashboardV2Page'));
+const PreferencesPage = lazy(() => import('./pages/PreferencesPage'));
 
 // Create TanStack Query Client with optimal caching configuration
 const queryClient = new QueryClient({
@@ -102,6 +103,22 @@ export const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <AiAssistantPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/settings/preferences"
+                  element={
+                    <ProtectedRoute>
+                      <PreferencesPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/preferences"
+                  element={
+                    <ProtectedRoute>
+                      <PreferencesPage />
                     </ProtectedRoute>
                   }
                 />

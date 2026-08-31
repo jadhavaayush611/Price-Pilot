@@ -84,6 +84,44 @@ public class UserInteractionEventService {
         }
     }
 
+    @Transactional
+    public void trackEvent(
+            UUID userId,
+            UUID productId,
+            UUID sellerId,
+            InteractionType interactionType,
+            Map<String, Object> metadata) {
+
+        UserEntity user = null;
+        if (userId != null) {
+            user = userRepository.findById(userId).orElse(null);
+        }
+
+        ProductEntity product = null;
+        if (productId != null) {
+            product = productRepository.findById(productId).orElse(null);
+        }
+
+        SellerEntity seller = null;
+        if (sellerId != null) {
+            seller = sellerRepository.findById(sellerId).orElse(null);
+        }
+
+        UserInteractionEventEntity event = UserInteractionEventEntity.builder()
+                .user(user)
+                .product(product)
+                .seller(seller)
+                .interactionType(interactionType)
+                .metadata(metadata != null ? metadata : Map.of())
+                .build();
+
+        eventRepository.save(event);
+
+        if (user != null) {
+            cacheHelper.evictUserCaches(user.getId());
+        }
+    }
+
     /**
      * Queries events with dynamic filtering and returns projections (DTOs).
      */

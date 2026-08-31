@@ -498,12 +498,15 @@ export const DashboardV2Page: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-indigo-400" aria-hidden="true" />
                   <h2 id="recommendations-heading" className="text-lg font-bold text-white tracking-tight">
-                    Explainable AI Recommendations
+                    Personalized Recommendations
                   </h2>
                 </div>
-                <span className="text-xs text-zinc-500 font-mono">
-                  Engine v2 Matrix
-                </span>
+                <Link
+                  to="/settings/preferences"
+                  className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors inline-flex items-center gap-1"
+                >
+                  <span>Customize Preferences &rarr;</span>
+                </Link>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

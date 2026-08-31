@@ -22,6 +22,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import com.pricepilot.intelligence.personalization.preference.UserShoppingPreferenceEntity;
+import com.pricepilot.intelligence.personalization.scoring.DefaultPersonalizationScorer;
+import com.pricepilot.intelligence.personalization.scoring.PersonalizationResult;
+import com.pricepilot.intelligence.personalization.scoring.PersonalizationScorer;
+import com.pricepilot.intelligence.personalization.signals.UserShoppingSignals;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -45,7 +52,12 @@ public class DefaultRecommendationPipeline implements RecommendationPipeline {
     private final ExplanationGenerator explanationGenerator;
     private final RecommendationHistoryEventRepository historyRepository;
     private final MeterRegistry meterRegistry;
+    private final PersonalizationScorer personalizationScorer;
 
+    @Autowired(required = false)
+    private com.pricepilot.interaction.UserInteractionEventService eventService;
+
+    @Autowired
     public DefaultRecommendationPipeline(
             ProductService productService,
             ComparisonScoringStrategy scoringStrategy,
@@ -53,7 +65,8 @@ public class DefaultRecommendationPipeline implements RecommendationPipeline {
             ConfidenceCalculator confidenceCalculator,
             @Qualifier("hybridAiExplanationGenerator") ExplanationGenerator explanationGenerator,
             RecommendationHistoryEventRepository historyRepository,
-            MeterRegistry meterRegistry) {
+            MeterRegistry meterRegistry,
+            PersonalizationScorer personalizationScorer) {
         this.productService = productService;
         this.scoringStrategy = scoringStrategy;
         this.evidenceExtractor = evidenceExtractor;
@@ -61,6 +74,20 @@ public class DefaultRecommendationPipeline implements RecommendationPipeline {
         this.explanationGenerator = explanationGenerator;
         this.historyRepository = historyRepository;
         this.meterRegistry = meterRegistry;
+        this.personalizationScorer = personalizationScorer;
+    }
+
+    public DefaultRecommendationPipeline(
+            ProductService productService,
+            ComparisonScoringStrategy scoringStrategy,
+            EvidenceExtractor evidenceExtractor,
+            ConfidenceCalculator confidenceCalculator,
+            ExplanationGenerator explanationGenerator,
+            RecommendationHistoryEventRepository historyRepository,
+            MeterRegistry meterRegistry) {
+        this(productService, scoringStrategy, evidenceExtractor, confidenceCalculator,
+             explanationGenerator, historyRepository, meterRegistry,
+             new DefaultPersonalizationScorer());
     }
 
     @Override
@@ -118,11 +145,49 @@ public class DefaultRecommendationPipeline implements RecommendationPipeline {
 
         RecommendationType type = recommendationType != null ? recommendationType : RecommendationType.BEST_OVERALL;
 
-        // 2. Deterministic Scoring via existing ComparisonScoringStrategy
+        boolean isPersonalized = context != null && Boolean.TRUE.equals(context.get("personalized"));
+        UserShoppingPreferenceEntity preferences = null;
+        UserShoppingSignals signals = null;
+        if (isPersonalized) {
+            if (context.get("preferences") instanceof UserShoppingPreferenceEntity p) {
+                preferences = p;
+            }
+            if (context.get("signals") instanceof UserShoppingSignals s) {
+                signals = s;
+            }
+        }
+
+        // 2. Deterministic Base Scoring via existing ComparisonScoringStrategy
         Map<UUID, ProductScore> rawScores = scoringStrategy.calculateScores(candidates);
 
+        // 2b. Optional Personalization Layer
+        Map<UUID, PersonalizationResult> personalizationResults = new HashMap<>();
+        if (isPersonalized && personalizationScorer != null) {
+            for (ProductResponseDTO candidate : candidates) {
+                ProductScore baseScore = rawScores.get(candidate.getId());
+                PersonalizationResult pRes = personalizationScorer.scorePersonalization(
+                        candidate, baseScore, preferences, signals
+                );
+                personalizationResults.put(candidate.getId(), pRes);
+
+                if (baseScore != null) {
+                    baseScore.setBaseScore(pRes.getBaseScore());
+                    baseScore.setPersonalizationContribution(pRes.getPersonalizationContribution());
+                    baseScore.setOverallScore(pRes.getFinalScore());
+                    baseScore.setPersonalizationBreakdown(pRes.getPersonalizationBreakdown());
+                }
+            }
+        }
+
         // 3. Rank candidates according to RecommendationType with deterministic tie-breaking
-        List<ProductResponseDTO> rankedCandidates = rankCandidates(candidates, rawScores, type);
+        List<ProductResponseDTO> rankedCandidates;
+        if (isPersonalized && personalizationScorer != null) {
+            rankedCandidates = new ArrayList<>(candidates);
+            rankedCandidates.sort(personalizationScorer.getDeterministicPersonalizedComparator(personalizationResults));
+        } else {
+            rankedCandidates = rankCandidates(candidates, rawScores, type);
+        }
+
         List<ProductScore> rankedScores = rankedCandidates.stream()
                 .map(p -> rawScores.get(p.getId()))
                 .filter(Objects::nonNull)
@@ -141,8 +206,16 @@ public class DefaultRecommendationPipeline implements RecommendationPipeline {
         EvidenceExtractor.ExtractedEvidence extracted = evidenceExtractor.extractEvidence(
                 recommendedProduct, rankedCandidates, rawScores
         );
-        List<EvidenceItem> positiveEvidence = extracted.positiveEvidence();
-        List<EvidenceItem> tradeOffEvidence = extracted.negativeTradeOffs();
+        List<EvidenceItem> positiveEvidence = new ArrayList<>(extracted.positiveEvidence());
+        List<EvidenceItem> tradeOffEvidence = new ArrayList<>(extracted.negativeTradeOffs());
+
+        List<EvidenceItem> personalizationEvidenceList = new ArrayList<>();
+        PersonalizationResult topPersonalization = personalizationResults.get(recommendedProduct.getId());
+        if (isPersonalized && topPersonalization != null) {
+            personalizationEvidenceList.addAll(topPersonalization.getPersonalizationEvidence());
+            positiveEvidence.addAll(topPersonalization.getPersonalizationEvidence());
+            tradeOffEvidence.addAll(topPersonalization.getPersonalizationTradeOffs());
+        }
 
         // 6. Calculate deterministic confidence score
         double confidence = confidenceCalculator.calculateConfidence(
@@ -159,6 +232,15 @@ public class DefaultRecommendationPipeline implements RecommendationPipeline {
                 recommendedProduct, rankedCandidates, positiveEvidence, tradeOffEvidence, type, scoreValue, confidence
         );
 
+        List<String> decisionDrivers = new ArrayList<>(explanationResult.keyDecisionDrivers());
+        if (isPersonalized && !personalizationEvidenceList.isEmpty()) {
+            for (EvidenceItem pe : personalizationEvidenceList) {
+                if (pe.getDescription() != null && !decisionDrivers.contains(pe.getDescription())) {
+                    decisionDrivers.add(0, pe.getDescription());
+                }
+            }
+        }
+
         // 8. Return structured RecommendationResponse
         RecommendationResponse response = new RecommendationResponse(
                 targetProductId,
@@ -169,7 +251,7 @@ public class DefaultRecommendationPipeline implements RecommendationPipeline {
                 scoreValue,
                 confidence,
                 explanationResult.summaryExplanation(),
-                explanationResult.keyDecisionDrivers(),
+                decisionDrivers,
                 explanationResult.tradeOffs(),
                 positiveEvidence,
                 rankedScores,
@@ -177,6 +259,12 @@ public class DefaultRecommendationPipeline implements RecommendationPipeline {
                 explanationResult.explanationStrategy(),
                 LocalDateTime.now()
         );
+
+        if (isPersonalized && topPersonalization != null) {
+            response.setBaseScore(topPersonalization.getBaseScore());
+            response.setPersonalizationContribution(topPersonalization.getPersonalizationContribution());
+            response.setPersonalizationEvidence(personalizationEvidenceList);
+        }
 
         // 9. Asynchronously/safely persist to recommendation history
         saveHistoryEvent(response, rankedCandidates, userId, targetProductId, type);
@@ -286,6 +374,18 @@ public class DefaultRecommendationPipeline implements RecommendationPipeline {
                     LocalDateTime.now()
             );
             historyRepository.save(entity);
+
+            if (userId != null && eventService != null) {
+                try {
+                    eventService.trackEvent(
+                            userId,
+                            response.getRecommendedProduct().getId(),
+                            null,
+                            com.pricepilot.interaction.InteractionType.RECOMMENDATION_INTERACTION,
+                            Map.of("type", type.name())
+                    );
+                } catch (Exception ignored) {}
+            }
         } catch (Exception e) {
             log.warn("Failed to persist recommendation history event (non-fatal): {}", e.getMessage());
         }

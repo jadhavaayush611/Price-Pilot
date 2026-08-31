@@ -228,10 +228,13 @@ export interface ProductScore {
   productId: string;
   productName: string;
   overallScore: number;
+  baseScore?: number;
+  personalizationContribution?: number;
   priceValueScore: number;
   featureScore: number;
   popularityScore: number;
   breakdown: Record<string, number>;
+  personalizationBreakdown?: Record<string, number>;
   recommendationBadge: string;
 }
 
@@ -279,11 +282,14 @@ export interface RecommendationResponse {
   recommendedProduct?: ProductWithPrices;
   recommendationType?: string;
   score?: number;
+  baseScore?: number;
+  personalizationContribution?: number;
   confidence?: number;
   explanation: string;
   supportingFactors?: string[];
   tradeOffs?: string[];
   evidence?: EvidenceItem[];
+  personalizationEvidence?: EvidenceItem[];
   scores: ProductScore[];
   scoringStrategy?: string;
   explanationStrategy?: string;
@@ -443,4 +449,35 @@ export interface DashboardV2Response {
   recommendations: DashboardRecommendations;
   recentActivity: RecentActivity[];
   generatedAt: string;
+}
+
+// Phase 8: User Shopping Preferences & Personalized Intelligence
+export type DealSensitivity = 'LOW' | 'MEDIUM' | 'HIGH';
+export type PriceSensitivity = 'LOW' | 'MEDIUM' | 'HIGH';
+export type AvailabilityPreference = 'ALL' | 'IN_STOCK_ONLY';
+
+export interface UserShoppingPreference {
+  id?: string;
+  userId?: string;
+  preferredCategories: string[];
+  preferredBrands: string[];
+  minBudget?: number;
+  maxBudget?: number;
+  minRating?: number;
+  dealSensitivity: DealSensitivity;
+  priceSensitivity: PriceSensitivity;
+  availabilityPreference: AvailabilityPreference;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UpdateShoppingPreferenceRequest {
+  preferredCategories?: string[];
+  preferredBrands?: string[];
+  minBudget?: number;
+  maxBudget?: number;
+  minRating?: number;
+  dealSensitivity?: DealSensitivity;
+  priceSensitivity?: PriceSensitivity;
+  availabilityPreference?: AvailabilityPreference;
 }
