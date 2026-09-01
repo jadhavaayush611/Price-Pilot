@@ -173,6 +173,7 @@ public class ShoppingAssistantServiceImpl implements ShoppingAssistantService {
     @Override
     @Transactional
     public AssistantResponseDTO sendMessage(UUID conversationId, UUID userId, SendMessageRequest request) {
+        long startTime = System.currentTimeMillis();
         UserEntity user = getUserOrThrow(userId);
         AssistantConversationEntity conversation = conversationRepository.findByIdAndUserId(conversationId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found with id: " + conversationId));
@@ -224,6 +225,10 @@ public class ShoppingAssistantServiceImpl implements ShoppingAssistantService {
         // Update conversation updated_at
         conversation.setUpdatedAt(LocalDateTime.now());
         conversationRepository.save(conversation);
+
+        long durationMs = System.currentTimeMillis() - startTime;
+        log.info("Assistant message processed | conv_id={} | intent={} | grounded_items={} | duration_ms={}",
+                conversationId, intent, bundle.getGroundedProducts().size(), durationMs);
 
         // 7. Format backward-compatible response DTO
         return buildResponseDTO(conversation.getId(), assistantMessage.getId(), intent, responseText, bundle);
@@ -661,7 +666,10 @@ public class ShoppingAssistantServiceImpl implements ShoppingAssistantService {
                 if (aiRes != null && aiRes.containsKey("response")) {
                     String candidate = (String) aiRes.get("response");
                     if (promptProtector.isResponseGrounded(candidate, bundle)) {
+                        log.debug("AI response accepted and grounded | conv_id={}", conversationId);
                         return candidate;
+                    } else {
+                        log.warn("AI response rejected due to ungrounded or fabricated claims | conv_id={}", conversationId);
                     }
                 }
             } catch (Exception e) {

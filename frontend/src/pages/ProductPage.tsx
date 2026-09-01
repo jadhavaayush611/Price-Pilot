@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductWithPrices, Watchlist, ProductAnalytics } from '../types';
-import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity } from 'lucide-react';
+import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity, Bot, Layers, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, getSavedCurrency, saveCurrency, getDisplayPrice, type CurrencyCode, CURRENCY_SYMBOLS } from '../currency';
 import { SellerCard } from '../components/SellerCard';
@@ -364,10 +364,10 @@ export const ProductPage: React.FC = () => {
               <h1 className="text-3xl font-extrabold tracking-tight text-white leading-tight">
                 {product.name}
               </h1>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
                 <button
                   onClick={handleOpenTrackingModal}
-                  className={`flex items-center gap-1.5 px-4.5 py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                  className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer active:scale-95 ${
                     isTracking
                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
                       : 'bg-white hover:bg-zinc-200 text-black border-transparent font-extrabold shadow-md'
@@ -379,16 +379,34 @@ export const ProductPage: React.FC = () => {
                 </button>
 
                 <button
+                  onClick={() => navigate(`/compare?ids=${product.id}`)}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-bold transition-all cursor-pointer active:scale-95"
+                  title="Compare with other products"
+                >
+                  <Layers className="h-4 w-4 text-zinc-400" />
+                  <span>Compare</span>
+                </button>
+
+                <button
+                  onClick={() => navigate(`/assistant?query=${encodeURIComponent('Analyze price history, deals, and purchase timing for ' + product.name)}`)}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-950/30 hover:bg-indigo-950/60 text-indigo-300 text-xs font-bold transition-all cursor-pointer active:scale-95"
+                  title="Ask Shopping Decision Assistant"
+                >
+                  <Bot className="h-4 w-4 text-indigo-400" />
+                  <span>Ask AI</span>
+                </button>
+
+                <button
                   onClick={handleToggleSave}
                   disabled={saving}
-                  className={`flex items-center justify-center p-3 rounded-xl border transition-all cursor-pointer active:scale-95 shrink-0 ${
+                  className={`flex items-center justify-center p-2.5 rounded-xl border transition-all cursor-pointer active:scale-95 shrink-0 ${
                     isSaved 
                       ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20' 
                       : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
                   }`}
                   title={isSaved ? "Remove from Saved" : "Save Product"}
                 >
-                  <Heart className={`h-5 w-5 ${isSaved ? 'fill-current text-rose-500' : ''} ${saving ? 'animate-pulse' : ''}`} />
+                  <Heart className={`h-4.5 w-4.5 ${isSaved ? 'fill-current text-rose-500' : ''} ${saving ? 'animate-pulse' : ''}`} />
                 </button>
               </div>
             </div>
@@ -404,19 +422,45 @@ export const ProductPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick Stats */}
+          {/* Quick Stats & Unified Intelligence Badges */}
           {processedPrices.length > 0 && (
-            <div className="grid grid-cols-2 gap-4 p-4.5 rounded-2xl bg-zinc-950/40 border border-zinc-900/80 backdrop-blur-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-zinc-950/40 border border-zinc-900/80 backdrop-blur-sm">
               <div className="flex flex-col">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Best Price</span>
-                <span className="text-xl font-extrabold text-emerald-400">
+                <span className="text-lg font-extrabold text-emerald-400">
                   {formatPrice(lowestPrice, currency)}
                 </span>
               </div>
               <div className="flex flex-col">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Market Range</span>
-                <span className="text-xl font-extrabold text-zinc-400">
+                <span className="text-xs font-bold text-zinc-300 mt-1 truncate">
                   {formatPrice(lowestPrice, currency)} - {formatPrice(highestPrice, currency)}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Intelligence</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase ${
+                    analytics?.dealQuality === 'GOOD_DEAL'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                      : analytics?.dealQuality === 'FAIR_PRICE'
+                      ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                      : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                  }`}>
+                    {analytics?.dealQuality ? analytics.dealQuality.replace(/_/g, ' ') : 'VERIFIED'}
+                  </span>
+                  {analytics?.trend && (
+                    <span className="text-[10px] font-semibold text-zinc-400 flex items-center gap-0.5">
+                      {analytics.trend === 'FALLING' ? <TrendingDown size={11} className="text-emerald-400" /> : analytics.trend === 'RISING' ? <TrendingUp size={11} className="text-rose-400" /> : null}
+                      {analytics.trend}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Availability</span>
+                <span className="text-xs font-semibold text-zinc-200 mt-1">
+                  {processedPrices.length} {processedPrices.length === 1 ? 'Offer' : 'Offers'} Available
                 </span>
               </div>
             </div>

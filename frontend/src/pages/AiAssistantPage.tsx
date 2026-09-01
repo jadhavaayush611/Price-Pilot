@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Send, Trash2, Bot, User, Sparkles, RefreshCw, AlertCircle, 
   Plus, MessageSquare, ShieldCheck, 
@@ -61,6 +61,10 @@ export const AiAssistantPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const userCurrency = getSavedCurrency();
 
+  const [searchParams] = useSearchParams();
+  const queryParam = searchParams.get('query');
+  const initialQueryHandled = useRef(false);
+
   // Redirect to login if unauthenticated
   useEffect(() => {
     if (!isAuthenticated) {
@@ -74,6 +78,14 @@ export const AiAssistantPage: React.FC = () => {
       loadConversations();
     }
   }, [isAuthenticated]);
+
+  // Auto-send query if passed via URL parameter (e.g. from Product Page or Dashboard)
+  useEffect(() => {
+    if (queryParam && !initialQueryHandled.current && isAuthenticated && !conversationsLoading) {
+      initialQueryHandled.current = true;
+      handleSend(queryParam);
+    }
+  }, [queryParam, isAuthenticated, conversationsLoading]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
