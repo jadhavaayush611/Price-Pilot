@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest, PriceAlert, WatchlistAlertPreference, UpdateWatchlistAlertPreferenceRequest, DashboardV2Response, DiscoverySearchResponse, SearchSuggestion, UserShoppingPreference, UpdateShoppingPreferenceRequest } from '../types';
+import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest, PriceAlert, WatchlistAlertPreference, UpdateWatchlistAlertPreferenceRequest, DashboardV2Response, DiscoverySearchResponse, SearchSuggestion, UserShoppingPreference, UpdateShoppingPreferenceRequest, AssistantConversationDTO, AssistantResponseDTO } from '../types';
 import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../currency';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -568,7 +568,35 @@ export const apiService = {
     return data;
   },
 
-  // Assistant APIs
+  // Assistant APIs (Phase 9 Conversation & Decision Support)
+  async listAssistantConversations(): Promise<AssistantConversationDTO[]> {
+    const response = await apiClient.get('/assistant/conversations');
+    return response.data;
+  },
+
+  async getAssistantConversation(id: string): Promise<AssistantConversationDTO> {
+    const response = await apiClient.get(`/assistant/conversations/${id}`);
+    return response.data;
+  },
+
+  async createAssistantConversation(title?: string): Promise<AssistantConversationDTO> {
+    const response = await apiClient.post('/assistant/conversations', { title: title || 'New Shopping Discussion' });
+    return response.data;
+  },
+
+  async deleteAssistantConversation(id: string): Promise<void> {
+    await apiClient.delete(`/assistant/conversations/${id}`);
+  },
+
+  async sendAssistantMessage(conversationId: string, content: string, activeProductId?: string): Promise<AssistantResponseDTO> {
+    const response = await apiClient.post(`/assistant/conversations/${conversationId}/messages`, {
+      content,
+      activeProductId,
+    });
+    return response.data;
+  },
+
+  // Legacy Assistant APIs
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async assistantChat(message: string, conversationId?: string): Promise<any> {
     const response = await apiClient.post('/assistant/chat', { message, conversationId });

@@ -82,4 +82,57 @@ describe('apiService Assistant Gateway Client', () => {
     });
     expect(result.status).toBe('success');
   });
+
+  it('should list assistant conversations', async () => {
+    const mockConversations = [{ id: 'c1', title: 'Chat 1', messages: [] }];
+    const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({ data: mockConversations });
+
+    const result = await apiService.listAssistantConversations();
+
+    expect(getSpy).toHaveBeenCalledWith('/assistant/conversations');
+    expect(result).toHaveLength(1);
+    expect(result[0].title).toBe('Chat 1');
+  });
+
+  it('should create an assistant conversation', async () => {
+    const mockConv = { id: 'c2', title: 'New Thread', messages: [] };
+    const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: mockConv });
+
+    const result = await apiService.createAssistantConversation('New Thread');
+
+    expect(postSpy).toHaveBeenCalledWith('/assistant/conversations', { title: 'New Thread' });
+    expect(result.id).toBe('c2');
+  });
+
+  it('should send message to assistant conversation', async () => {
+    const mockResponse = {
+      data: {
+        conversationId: 'c2',
+        messageId: 'm1',
+        response: 'Grounded suggestion',
+        intent: 'DISCOVERY',
+        evidenceBundle: { groundedProducts: [], personalizationFactors: [], tradeOffs: [], unknownOrInsufficientDataNotes: [], suggestedActions: [] },
+        suggestedPrompts: [],
+        actions: []
+      }
+    };
+    const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue(mockResponse);
+
+    const result = await apiService.sendAssistantMessage('c2', 'Find headphones under $200');
+
+    expect(postSpy).toHaveBeenCalledWith('/assistant/conversations/c2/messages', {
+      content: 'Find headphones under $200',
+      activeProductId: undefined
+    });
+    expect(result.response).toBe('Grounded suggestion');
+    expect(result.intent).toBe('DISCOVERY');
+  });
+
+  it('should delete assistant conversation', async () => {
+    const deleteSpy = vi.spyOn(apiClient, 'delete').mockResolvedValue({ data: null });
+
+    await apiService.deleteAssistantConversation('c2');
+
+    expect(deleteSpy).toHaveBeenCalledWith('/assistant/conversations/c2');
+  });
 });

@@ -481,3 +481,78 @@ export interface UpdateShoppingPreferenceRequest {
   priceSensitivity?: PriceSensitivity;
   availabilityPreference?: AvailabilityPreference;
 }
+
+// Phase 9: Intelligent Shopping Assistant & Decision Support
+export interface GroundedEvidenceItem {
+  productId: string;
+  productName: string;
+  brand?: string;
+  category?: string;
+  currentPrice: number;
+  originalPrice?: number;
+  discountPercentage?: number;
+  sellersCount?: number;
+  dealQuality?: string;
+  buyConfidenceScore?: number;
+  buyRecommendation?: string;
+  sourceUrl?: string;
+  notes?: string;
+}
+
+export interface PersonalizationReasoningItem {
+  factor: string;
+  explanation: string;
+  confidenceScore: number;
+}
+
+export interface TradeOffItem {
+  dimension: string;
+  pro: string;
+  con: string;
+}
+
+export interface AssistantAction {
+  type: string;
+  label: string;
+  targetId?: string;
+  actionUrl?: string;
+}
+
+export interface AssistantEvidenceBundle {
+  groundedProducts: GroundedEvidenceItem[];
+  personalizationFactors: PersonalizationReasoningItem[];
+  tradeOffs: TradeOffItem[];
+  unknownOrInsufficientDataNotes: string[];
+  suggestedActions: AssistantAction[];
+}
+
+export interface AssistantMessageDTO {
+  id: string;
+  role: 'USER' | 'ASSISTANT' | 'SYSTEM';
+  content: string;
+  intent?: string;
+  evidenceBundle?: AssistantEvidenceBundle;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: any;
+  createdAt: string;
+}
+
+export interface AssistantConversationDTO {
+  id: string;
+  userId: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: AssistantMessageDTO[];
+}
+
+export interface AssistantResponseDTO {
+  conversationId: string;
+  messageId: string;
+  response: string;
+  intent: string;
+  evidenceBundle: AssistantEvidenceBundle;
+  suggestedPrompts: string[];
+  actions: AssistantAction[];
+  products?: GroundedEvidenceItem[];
+}
