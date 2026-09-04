@@ -18,9 +18,17 @@
     "lucide-react": "^1.25.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.18.1",
+    "react-router-dom": "^7.18.2",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3"
+  },
+  "overrides": {
+    "brace-expansion": "^5.0.9",
+    "browserslist": "^4.28.7",
+    "nanoid": "^3.3.18",
+    "postcss": "^8.5.23",
+    "react-router": "^7.18.2",
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
