@@ -256,9 +256,100 @@ flowchart TD
 
 ---
 
-## 9. Extension Points for Future Phases
+## 9. Phase 3: Hybrid Search & Candidate Fusion Architecture
 
-- **Phase 3: Natural Language Search**: Query understanding bridging user search queries to `VectorSearchService` with hybrid lexical-semantic fusion.
-- **Phase 4: Semantic Recommendations & Alternatives**: Near-neighbor retrieval for finding direct substitutes and product alternatives.
-- **Phase 5: Contextual Price Intelligence**: Embedding-informed price sensitivity models and smart budget planning.
+### 9.1 Core Architectural Philosophy
+> **"Semantic retrieval is for candidate discovery. Deterministic PricePilot intelligence remains the source of truth for final ranking, filtering, and price analytics."**
+
+Hybrid search combines the high precision of lexical/keyword filtering with the high recall and conceptual matching of semantic vector similarity.
+
+### 9.2 Candidate Fusion & Lifecycle Pipeline
+
+```mermaid
+flowchart TD
+    subgraph Request ["1. User Search Request"]
+        REQ["/api/v1/discovery/hybrid<br/>or /api/v1/discovery/products?hybrid=true"]
+    end
+
+    subgraph DualRetrieval ["2. Dual Candidate Retrieval"]
+        QI[QueryInterpreter]
+        SPEC["Structured Retrieval<br/>(JPA Specification)"]
+        SEM["Semantic Vector Retrieval<br/>(Local VectorStore)"]
+    end
+
+    subgraph Resilience ["3. Resilience & Hard Filter Pre-Validation"]
+        GD["Graceful Degradation Fallback<br/>(Fallback to Structured-Only on Error)"]
+        VAL["Hard Taxonomy & Archival Validation"]
+    end
+
+    subgraph FusionEngine ["4. Candidate Set Fusion"]
+        RRF["Reciprocal Rank Fusion (RRF)<br/>score = Σ (w_i / (k + rank_i))<br/>Deterministic Tie-Breaking"]
+    end
+
+    subgraph Verification ["5. Authoritative Hard Filter & Price Enforcement"]
+        HF["Hard Constraints Enforcement<br/>• Min/Max Price<br/>• In-Stock Status<br/>• Seller / Merchant ID<br/>• Minimum Discount %"]
+    end
+
+    subgraph Intelligence ["6. Deterministic Intelligence & Enrichment"]
+        REL["DefaultSearchRelevanceScorer<br/>(Lexical + Semantic Provenance Signals)"]
+        PA["PriceAnalyticsService<br/>(DealQuality, PriceTrends, HistoricalLow)"]
+    end
+
+    subgraph Response ["7. Response Formation"]
+        RESP["DiscoverySearchResponseDTO<br/>(Paged Slice, Provenance Badges, Facets)"]
+    end
+
+    REQ --> QI
+    QI --> SPEC
+    QI --> SEM
+    SEM -.->|On Failure| GD
+    GD --> RRF
+    SEM --> VAL
+    VAL --> RRF
+    SPEC --> RRF
+    RRF --> HF
+    HF --> REL
+    REL --> PA
+    PA --> RESP
+```
+
+### 9.3 Key Components in `com.pricepilot.intelligence.discovery.hybrid`
+
+1. **`HybridSearchService` & `HybridSearchServiceImpl`**:
+   - Manages the dual-candidate orchestration pipeline with bounded query limits (`structuredCandidateLimit`, `semanticCandidateLimit`, `maxFusedCandidates`).
+   - Implements graceful degradation: any semantic model/vector store failure immediately falls back to structured results with metric tracking (`pricepilot.hybrid.search.degraded`).
+   - Enforces hard constraints: guarantees that semantic candidates violating price ranges, stock requirements, or merchant filters are strictly excluded.
+   - Enriches candidate items with provenance badges (`Semantic Discovery`, `Semantic Match`) and explanation strings.
+
+2. **`CandidateProvenance`**:
+   - Enum indicating the retrieval source: `STRUCTURED` (keyword only), `SEMANTIC` (vector search only), or `BOTH` (dual confirmation).
+
+3. **`HybridCandidateFusionStrategy` & `ReciprocalRankFusionStrategy`**:
+   - Implements Reciprocal Rank Fusion (RRF) with default smoothing constant $k = 60.0$:
+     $$RRF(d) = w_{\text{struct}} \cdot \frac{1}{k + r_{\text{struct}}(d)} + w_{\text{sem}} \cdot \frac{1}{k + r_{\text{sem}}(d)}$$
+   - Provides deterministic tie-breaking on identical scores (ordered by `score DESC`, `productId ASC`).
+
+4. **REST API Endpoint (`DiscoveryController`)**:
+   - Dedicated endpoint: `GET /api/v1/discovery/hybrid` with parameters for query, category, brand, minPrice, maxPrice, inStock, sellerId, minDiscount, page, size, sort, structuredWeight, semanticWeight.
+   - Backward-compatible enhancement: `GET /api/v1/discovery/products?hybrid=true` allows seamless hybrid retrieval through the existing discovery endpoint.
+
+### 9.4 Hybrid Observability & Metrics
+
+| Metric Name | Type | Description |
+| :--- | :--- | :--- |
+| `pricepilot.hybrid.search.requests` | Counter | Total hybrid search requests initiated |
+| `pricepilot.hybrid.search.failures` | Counter | Total failed hybrid search executions |
+| `pricepilot.hybrid.search.degraded` | Counter | Number of times search gracefully degraded to structured-only |
+| `pricepilot.hybrid.search.duration` | Timer | Latency distribution of hybrid search operations |
+| `pricepilot.hybrid.search.structured.candidates` | DistributionSummary | Size distribution of structured candidate pools |
+| `pricepilot.hybrid.search.semantic.candidates` | DistributionSummary | Size distribution of semantic candidate pools |
+| `pricepilot.hybrid.search.fused.candidates` | DistributionSummary | Size distribution of fused candidate pools |
+
+---
+
+## 10. Extension Points for Future Phases
+
+- **Phase 4: Natural Language Intent Parsing & Extraction**: Conversational entity extraction, budget range understanding, and query expansion.
+- **Phase 5: Semantic Recommendations & Alternative Finding**: Near-neighbor retrieval for finding direct substitutes and cheaper alternatives.
+- **Phase 6: Personalized Discovery**: User interest vectors and personalized rank re-weighting.
 
