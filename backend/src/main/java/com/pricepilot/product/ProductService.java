@@ -36,14 +36,25 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductPriceRepository productPriceRepository;
     private final ProductAnalyticsRepository productAnalyticsRepository;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     public ProductService(
             ProductRepository productRepository,
             ProductPriceRepository productPriceRepository,
             ProductAnalyticsRepository productAnalyticsRepository) {
+        this(productRepository, productPriceRepository, productAnalyticsRepository, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ProductService(
+            ProductRepository productRepository,
+            ProductPriceRepository productPriceRepository,
+            ProductAnalyticsRepository productAnalyticsRepository,
+            org.springframework.context.ApplicationEventPublisher eventPublisher) {
         this.productRepository = productRepository;
         this.productPriceRepository = productPriceRepository;
         this.productAnalyticsRepository = productAnalyticsRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -76,6 +87,18 @@ public class ProductService {
                 .priceChangeCount(0L)
                 .build();
         productAnalyticsRepository.save(analytics);
+        savedEntity.setAnalytics(analytics);
+
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new com.pricepilot.product.event.ProductCreatedEvent(
+                    savedEntity.getId(),
+                    savedEntity.getName(),
+                    savedEntity.getBrand(),
+                    savedEntity.getCategory(),
+                    savedEntity.getDescription(),
+                    savedEntity.isArchived()
+            ));
+        }
 
         return ProductResponseDTO.fromEntity(savedEntity);
     }
@@ -158,6 +181,12 @@ public class ProductService {
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
+        String oldName = entity.getName();
+        String oldBrand = entity.getBrand();
+        String oldCategory = entity.getCategory();
+        String oldDescription = entity.getDescription();
+        boolean oldArchived = entity.isArchived();
+
         entity.setName(requestDTO.getName());
         entity.setBrand(requestDTO.getBrand());
         entity.setCategory(requestDTO.getCategory());
@@ -166,6 +195,23 @@ public class ProductService {
         entity.setArchived(requestDTO.isArchived());
 
         ProductEntity updatedEntity = productRepository.save(entity);
+
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new com.pricepilot.product.event.ProductUpdatedEvent(
+                    updatedEntity.getId(),
+                    oldName,
+                    oldBrand,
+                    oldCategory,
+                    oldDescription,
+                    oldArchived,
+                    updatedEntity.getName(),
+                    updatedEntity.getBrand(),
+                    updatedEntity.getCategory(),
+                    updatedEntity.getDescription(),
+                    updatedEntity.isArchived()
+            ));
+        }
+
         return ProductResponseDTO.fromEntity(updatedEntity);
     }
 
@@ -183,7 +229,11 @@ public class ProductService {
         if (!productRepository.existsById(id)) {
             throw new ResourceNotFoundException("Product not found with id: " + id);
         }
+        productAnalyticsRepository.deleteByProductId(id);
         productRepository.deleteById(id);
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new com.pricepilot.product.event.ProductDeletedEvent(id));
+        }
     }
 
     @Transactional(readOnly = true)

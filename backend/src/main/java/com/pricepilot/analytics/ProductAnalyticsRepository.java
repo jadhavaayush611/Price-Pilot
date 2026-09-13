@@ -65,4 +65,8 @@ public interface ProductAnalyticsRepository extends JpaRepository<ProductAnalyti
            "    pa.updatedAt = :updatedAt " +
            "WHERE pa.product.id = :productId")
     int incrementPriceChangeCount(@Param("productId") UUID productId, @Param("updatedAt") LocalDateTime updatedAt);
+
+    @Modifying
+    @Query("DELETE FROM ProductAnalyticsEntity pa WHERE pa.product.id = :productId")
+    void deleteByProductId(@Param("productId") UUID productId);
 }

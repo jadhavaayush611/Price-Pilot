@@ -13,6 +13,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, J
     Page<ProductEntity> findByNameContainingIgnoreCaseOrBrandContainingIgnoreCaseOrCategoryContainingIgnoreCase(
             String name, String brand, String category, Pageable pageable);
 
+    Page<ProductEntity> findByArchivedFalse(Pageable pageable);
+
     @org.springframework.data.jpa.repository.Query("SELECT p FROM ProductEntity p " +
             "LEFT JOIN FETCH p.productPrices pp " +
             "LEFT JOIN FETCH pp.seller " +

@@ -55,6 +55,16 @@ public class SemanticIntelligenceProperties {
      */
     private int maxInputLength = 4096;
 
+    /**
+     * Canonical product text contract version.
+     */
+    private String canonicalVersion = "product-semantic-v1";
+
+    /**
+     * Maximum character length allowed for product descriptions in canonical text contract.
+     */
+    private int maxDescriptionLength = 2048;
+
     public SemanticIntelligenceProperties() {
     }
 
@@ -128,5 +138,21 @@ public class SemanticIntelligenceProperties {
 
     public void setMaxInputLength(int maxInputLength) {
         this.maxInputLength = maxInputLength;
+    }
+
+    public String getCanonicalVersion() {
+        return canonicalVersion;
+    }
+
+    public void setCanonicalVersion(String canonicalVersion) {
+        this.canonicalVersion = canonicalVersion;
+    }
+
+    public int getMaxDescriptionLength() {
+        return maxDescriptionLength;
+    }
+
+    public void setMaxDescriptionLength(int maxDescriptionLength) {
+        this.maxDescriptionLength = maxDescriptionLength;
     }
 }

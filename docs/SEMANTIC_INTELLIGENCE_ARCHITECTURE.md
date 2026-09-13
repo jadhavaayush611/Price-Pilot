@@ -178,8 +178,87 @@ Configuration is managed via `pricepilot.intelligence.semantic` prefix:
 
 ---
 
-## 8. Extension Points for Future Phases
+## 8. Phase 2: Product Embedding Pipeline & Canonical Product Text Contract
 
-- **Phase 2: Product Embeddings**: Bulk generation and background indexing of product catalog titles, descriptions, and categories into `semantic_embeddings`.
+### 8.1 Canonical Product Text Contract (`product-semantic-v1`)
+
+The **Canonical Product Text Contract** establishes a formal, deterministic translation of e-commerce `ProductEntity` records into standardized semantic text representations prior to vector embedding.
+
+#### Field Inclusion & Exclusion Rationale
+
+| Field Name | Domain Type | Inclusion Decision | Rationale |
+| :--- | :--- | :---: | :--- |
+| `name` | Core Identity | **INCLUDED** (Prefix: `title:`) | Primary semantic product identifier and user-facing title. |
+| `brand` | Core Identity | **INCLUDED** (Prefix: `brand:`) | Manufacturer / brand identity; omitted if null or blank. |
+| `category` | Taxonomy | **INCLUDED** (Prefix: `category:`) | Domain category taxonomy defining semantic product class. |
+| `description` | Semantic Details | **INCLUDED** (Prefix: `description:`) | Technical specifications and features; truncated if > `maxDescriptionLength`. |
+| `currentPrice`, `originalPrice` | Shopping Intel | **EXCLUDED** | Highly volatile; changing prices must not dirty the semantic vector space. |
+| `discountPercentage` | Shopping Intel | **EXCLUDED** | Promotional volatility; belongs to deterministic ranking filters. |
+| `imageUrl`, `productUrl` | Media / Links | **EXCLUDED** | Non-semantic navigational and asset identifiers. |
+| `seller`, `sellerId` | Merchant Intel | **EXCLUDED** | Multi-seller pricing variants should not distort the core product identity. |
+| `analytics` (views, saves, etc.) | Behavioral Intel | **EXCLUDED** | Dynamic real-time counters belonging to discovery ranking layers. |
+| `priceHistories` | Historical Intel | **EXCLUDED** | Time-series data irrelevant to intrinsic semantic identity. |
+| `searchVector` | Internal Postgres | **EXCLUDED** | Database-internal PostgreSQL FTS tsvector column. |
+
+#### Canonical Normalization Pipeline
+1. **Unicode Normalization:** Normalized via `java.text.Normalizer.normalize(text, Normalizer.Form.NFC)` (canonical composition).
+2. **Control Character Stripping:** `[\p{Cntrl}&&[^\r\n\t]]` stripped to prevent serialization anomalies.
+3. **Whitespace Collapsing:** Consecutive whitespace runs (`\s+`, tabs, newlines) collapsed into single ASCII spaces (` `), trimmed at boundaries.
+4. **Structured Format:** Formatted as `title: <title> | brand: <brand> | category: <category> | description: <description>`.
+5. **Deterministic Hashing:** Computes SHA-256 hash stored in `metadata_json.semanticHash` for zero-overhead change detection during incremental updates.
+
+### 8.2 Product Embedding Pipeline Architecture
+
+```mermaid
+flowchart TD
+    subgraph LifecycleEvents ["Product Lifecycle Events"]
+        CE[ProductCreatedEvent]
+        UE[ProductUpdatedEvent]
+        DE[ProductDeletedEvent]
+    end
+
+    subgraph Pipeline ["Product Embedding Pipeline"]
+        LISTENER[ProductSemanticEventListener]
+        PES[ProductEmbeddingService]
+        PBIS[ProductBatchIndexingService]
+        CIS[CatalogIndexingService]
+        BUILDER[CanonicalProductTextBuilder]
+    end
+
+    subgraph CoreSemantic ["Core Semantic Foundation"]
+        ES[EmbeddingService]
+        EP[EmbeddingProvider]
+        VS[VectorStore]
+        DB[(semantic_embeddings)]
+    end
+
+    CE --> LISTENER
+    UE --> LISTENER
+    DE --> LISTENER
+
+    LISTENER -->|Has Semantic Diff| PES
+    CIS --> PBIS
+    PBIS --> PES
+
+    PES --> BUILDER
+    BUILDER -->|Canonical Text| PES
+    PES --> ES
+    ES --> EP
+    PES --> VS
+    VS --> DB
+```
+
+### 8.3 Incremental & Batch Indexing Features
+- **Incremental Event-Driven Indexing:** `ProductSemanticEventListener` listens to lifecycle events. If a product update only alters volatile fields (price, seller, discount, image), semantic re-embedding is skipped.
+- **Chunked Batch Processing:** `ProductBatchIndexingService` executes bounded pagination via `ProductRepository.findByArchivedFalse(PageRequest.of(page, chunkSize, Sort.by("id")))`, preventing heap exhaustion on large catalogs.
+- **Partial Failure Isolation:** Batch indexing isolates individual product errors; a single malformed product does not fail the entire chunk.
+- **Archival Synchronization:** Archived products are excluded from indexing, and existing embeddings are automatically pruned from the vector store upon archival.
+
+---
+
+## 9. Extension Points for Future Phases
+
 - **Phase 3: Natural Language Search**: Query understanding bridging user search queries to `VectorSearchService` with hybrid lexical-semantic fusion.
 - **Phase 4: Semantic Recommendations & Alternatives**: Near-neighbor retrieval for finding direct substitutes and product alternatives.
+- **Phase 5: Contextual Price Intelligence**: Embedding-informed price sensitivity models and smart budget planning.
+
