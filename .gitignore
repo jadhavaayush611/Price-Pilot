@@ -135,3 +135,11 @@ phase1_summary.md
 /pricepilot-ai/.env
 /pricepilot-ai/models/
 /pricepilot-ai/datasets/
+
+# Semantic Intelligence and Vector Embeddings
+.embeddings/
+.vector_cache/
+*.safetensors
+*.bin
+*.pt
+*.gguf

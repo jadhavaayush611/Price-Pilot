@@ -33,3 +33,14 @@ pricepilot:
     allowed-origins: ${PRICEPILOT_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
   rate-limit:
     enabled: false
+  intelligence:
+    semantic:
+      enabled: true
+      provider: local-deterministic
+      model-name: local-hash-embedding
+      model-version: v1
+      dimension: 64
+      timeout-ms: 5000
+      batch-size: 32
+      min-similarity-score: 0.0
+      max-input-length: 4096
