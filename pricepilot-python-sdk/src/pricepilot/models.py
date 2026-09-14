@@ -373,3 +373,103 @@ class DashboardData:
             recent_searches=data.get("recentSearches") or [],
             most_clicked_sellers=data.get("mostClickedSellers") or []
         )
+
+
+@dataclass
+class AlternativeEvidenceModel:
+    category: str
+    description: str
+    source_value: Optional[str] = None
+    candidate_value: Optional[str] = None
+    relationship: Optional[str] = None
+    confidence: float = 1.0
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AlternativeEvidenceModel":
+        return cls(
+            category=data.get("category", ""),
+            description=data.get("description", ""),
+            source_value=data.get("sourceValue"),
+            candidate_value=data.get("candidateValue"),
+            relationship=data.get("relationship"),
+            confidence=data.get("confidence", 1.0)
+        )
+
+
+@dataclass
+class AlternativeProductModel:
+    id: str
+    name: str
+    brand: str
+    category: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    current_best_price: Optional[Decimal] = None
+    original_price: Optional[Decimal] = None
+    discount_percentage: Optional[Decimal] = None
+    in_stock: bool = True
+    alternative_score: float = 0.0
+    semantic_similarity_score: Optional[float] = None
+    relevance_score: float = 0.0
+    rating: Optional[float] = None
+    price_difference: Optional[Decimal] = None
+    price_difference_percentage: Optional[float] = None
+    badges: List[str] = field(default_factory=list)
+    reason_codes: List[str] = field(default_factory=list)
+    evidence: List[AlternativeEvidenceModel] = field(default_factory=list)
+    primary_explanation: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AlternativeProductModel":
+        return cls(
+            id=data["id"],
+            name=data.get("name", ""),
+            brand=data.get("brand", ""),
+            category=data.get("category", ""),
+            description=data.get("description"),
+            image_url=data.get("imageUrl"),
+            current_best_price=_parse_decimal(data.get("currentBestPrice")),
+            original_price=_parse_decimal(data.get("originalPrice")),
+            discount_percentage=_parse_decimal(data.get("discountPercentage")),
+            in_stock=data.get("inStock", True),
+            alternative_score=data.get("alternativeScore", 0.0),
+            semantic_similarity_score=data.get("semanticSimilarityScore"),
+            relevance_score=data.get("relevanceScore", 0.0),
+            rating=data.get("rating"),
+            price_difference=_parse_decimal(data.get("priceDifference")),
+            price_difference_percentage=data.get("priceDifferencePercentage"),
+            badges=data.get("badges") or [],
+            reason_codes=data.get("reasonCodes") or [],
+            evidence=[AlternativeEvidenceModel.from_dict(e) for e in (data.get("evidence") or [])],
+            primary_explanation=data.get("primaryExplanation")
+        )
+
+
+@dataclass
+class AlternativeResponseModel:
+    alternative_type: str
+    execution_mode: str
+    total_found: int
+    content: List[AlternativeProductModel]
+    execution_time_ms: int = 0
+    query: Optional[str] = None
+    source_product_context: Optional[Dict[str, Any]] = None
+    available_categories: List[str] = field(default_factory=list)
+    available_brands: List[str] = field(default_factory=list)
+    applied_notes: List[str] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AlternativeResponseModel":
+        return cls(
+            alternative_type=data.get("alternativeType", "SIMILAR"),
+            execution_mode=data.get("executionMode", "PRODUCT"),
+            total_found=data.get("totalFound", 0),
+            content=[AlternativeProductModel.from_dict(p) for p in (data.get("content") or [])],
+            execution_time_ms=data.get("executionTimeMs", 0),
+            query=data.get("query"),
+            source_product_context=data.get("sourceProductContext"),
+            available_categories=data.get("availableCategories") or [],
+            available_brands=data.get("availableBrands") or [],
+            applied_notes=data.get("appliedNotes") or []
+        )
+

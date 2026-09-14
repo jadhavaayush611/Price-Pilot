@@ -449,8 +449,94 @@ flowchart TD
 
 ---
 
-## 11. Extension Points for Future Phases
+## 11. Alternative Finder Architecture (v1.2 Phase 5)
 
-- **Phase 5: Semantic Recommendations & Alternative Finding**: Near-neighbor retrieval for finding direct substitutes, cheaper alternatives, and feature-equivalent trade-offs.
+Phase 5 introduces the **Alternative Finder** subsystem under package `com.pricepilot.intelligence.alternative`.
+
+### Core Tenet
+> *"Semantic retrieval is for candidate discovery. Deterministic PricePilot intelligence remains the source of truth for final ranking, filtering, and product facts. Natural language is an input mechanism, not the source of truth."*
+
+### 11.1 Architecture & Flow
+
+```mermaid
+graph TD
+    subgraph Input ["1. Dual Entry Modes"]
+        PMODE["Product-Driven Mode<br/>(GET /api/v1/alternatives/product/{id})"]
+        QMODE["Query-Driven Mode<br/>(GET/POST /api/v1/alternatives/query)"]
+        NLMODE["Natural-Language Mode<br/>(GET/POST /api/v1/alternatives/natural-language)"]
+    end
+
+    subgraph CandidateDiscovery ["2. Candidate Retrieval & Hard Filtering"]
+        VEC["VectorStore (Top 50 Cosine Nearest Neighbors)"]
+        STR["Structured Taxonomy Query (Category / Brand Match)"]
+        EXCL["Self-Exclusion Filter (candidate != sourceProduct)"]
+        HARD["Hard Constraints (archived=false, inStock, maxPrice)"]
+    end
+
+    subgraph PricePilotIntelligence ["3. Scoring, Evidence & Analytics"]
+        SCORER["DefaultAlternativeScoringStrategy<br/>(Type-Specific Multi-Dimensional Scoring)"]
+        EVID["Evidence Synthesis (Price, Similarity, Rating, Deal, Discount)"]
+        ANALYTICS["Bounded Price Analytics Enrichment (Top-K Slice)"]
+        RANK["Deterministic Tie-Breaking Order"]
+    end
+
+    subgraph Output ["4. Structured Response"]
+        RESP["AlternativeResponseDTO<br/>• Source Context<br/>• Alternatives with Scores, Evidence & Badges<br/>• Reason Codes & Human-Readable Explanations"]
+    end
+
+    PMODE --> VEC
+    PMODE --> STR
+    QMODE --> STR
+    NLMODE --> STR
+    VEC --> EXCL
+    STR --> EXCL
+    EXCL --> HARD
+    HARD --> SCORER
+    SCORER --> EVID
+    EVID --> RANK
+    RANK --> ANALYTICS
+    ANALYTICS --> RESP
+```
+
+### 11.2 Supported Alternative Types
+
+1. **`SIMILAR`**: High semantic similarity and taxonomy compatibility for functionally interchangeable products.
+2. **`CHEAPER`**: Lower price point than the source product with strong concept similarity and feature compatibility.
+3. **`BETTER_VALUE`**: Optimal trade-off between price savings, promotional discount %, and historical deal quality.
+4. **`PERFORMANCE_UPGRADE`**: Superior customer ratings (★), higher product specification tier, or premium build quality.
+5. **`PREMIUM`**: Higher price tier and premium brand prestige.
+6. **`BUDGET_FALLBACK`**: Substantial price reduction (e.g. $\ge 20\%$ lower) when the baseline product exceeds budget limits.
+
+### 11.3 Factual Evidence & Reason Codes Taxonomy
+
+Every alternative recommendation is accompanied by structured, explainable evidence and standardized reason codes:
+- **Evidence Categories**: `PRICE`, `SIMILARITY`, `RATING`, `DISCOUNT`, `SELLER`, `AVAILABILITY`, `CATEGORY`, `BRAND`, `FEATURE`, `VALUE`
+- **Reason Codes**: `SIMILAR_CATEGORY`, `HIGH_SEMANTIC_SIMILARITY`, `LOWER_PRICE`, `HIGHER_RATING`, `BETTER_DEAL`, `IN_STOCK`, `PREMIUM_PRICE_TIER`, `BUDGET_SAVING`, `BRAND_MATCH`, `SAME_CATEGORY_LOWER_PRICE`, `SIGNIFICANT_DISCOUNT`, `SUPERIOR_PRICE_POSITION`, `BUDGET_COMPLIANT`, `COMPATIBLE_FEATURES`
+- **Deterministic Tie-Breaking Order**:
+  `alternativeScore DESC -> semanticSimilarity DESC -> dealQuality DESC -> rating DESC -> currentBestPrice ASC -> productId ASC`
+
+### 11.4 REST Endpoints
+
+- `GET /api/v1/alternatives/product/{productId}`: Product-driven discovery with type and constraint parameters.
+- `GET /api/v1/alternatives/query` & `POST /api/v1/alternatives/query`: Structured or keyword query alternative discovery.
+- `GET /api/v1/alternatives/natural-language` & `POST /api/v1/alternatives/natural-language`: Free-form natural-language alternative discovery.
+
+### 11.5 Observability & Metrics
+
+| Metric Name | Type | Description |
+| :--- | :--- | :--- |
+| `pricepilot.alternative.requests` | Counter | Total alternative finder requests |
+| `pricepilot.alternative.failures` | Counter | Total failed alternative finder requests |
+| `pricepilot.alternative.degraded` | Counter | Vector retrieval degraded to structured retrieval |
+| `pricepilot.alternative.latency` | Timer | Latency distribution of alternative discovery |
+| `pricepilot.alternative.candidates` | DistributionSummary | Number of candidate products evaluated |
+| `pricepilot.alternative.results` | DistributionSummary | Number of alternatives returned |
+
+---
+
+## 12. Extension Points for Future Phases
+
 - **Phase 6: Personalized Discovery & User Preference Alignment**: User interest vectors and personalized rank re-weighting.
+- **Phase 7: Autonomous Budget Planner**: Constraint-satisfaction budget allocation engine built on Alternative Finder and Shopping Query Intent foundations.
+
 
