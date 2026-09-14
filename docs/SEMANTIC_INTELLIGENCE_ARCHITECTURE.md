@@ -347,9 +347,110 @@ flowchart TD
 
 ---
 
-## 10. Extension Points for Future Phases
+## 10. Phase 4: Natural-Language Shopping Queries Architecture
 
-- **Phase 4: Natural Language Intent Parsing & Extraction**: Conversational entity extraction, budget range understanding, and query expansion.
-- **Phase 5: Semantic Recommendations & Alternative Finding**: Near-neighbor retrieval for finding direct substitutes and cheaper alternatives.
-- **Phase 6: Personalized Discovery**: User interest vectors and personalized rank re-weighting.
+### 10.1 Core Architectural Tenet
+> **"Natural language is an input mechanism, not a source of truth. Natural-language understanding interprets user intent; deterministic PricePilot intelligence determines product eligibility, hard constraints, and final ranking."**
+
+### 10.2 Natural-Language Query Understanding Pipeline
+
+```mermaid
+flowchart TD
+    subgraph Input ["1. User Natural-Language Input"]
+        RAW["Raw Query<br/>'wireless headphones under ₹10,000 with good ANC and 4+ stars'"]
+    end
+
+    subgraph Interpretation ["2. Deterministic Query Understanding"]
+        INTERP[DeterministicShoppingQueryInterpreter]
+        CURR["Currency & Numeric Normalizer<br/>(₹, INR, Rs, $, EUR, 'k', decimals)"]
+        TAX["Taxonomy & Brand Alias Matcher"]
+        CONF["Contradiction & Ambiguity Detector"]
+    end
+
+    subgraph DomainIntent ["3. ShoppingQueryIntent Contract"]
+        INTENT["ShoppingQueryIntent<br/>• Structured: maxPrice=10000, category=Headphones, minRating=4.0<br/>• Semantic: 'wireless headphones with good ANC'"]
+    end
+
+    subgraph Validation ["4. Intent Validation & Transformation"]
+        VAL[DefaultShoppingQueryIntentValidator]
+        HREQ[HybridSearchRequest]
+    end
+
+    subgraph Execution ["5. Hybrid Search & Candidate Fusion (Phase 3)"]
+        HS[HybridSearchService]
+        FUSION["Reciprocal Rank Fusion + Hard Filter Enforcement"]
+        RANK["Deterministic PricePilot Ranking + Deal Analytics"]
+    end
+
+    subgraph Output ["6. Response Formation"]
+        RESP["DiscoverySearchResponseDTO<br/>(Products, Enriched InterpretedQuery, Provenance)"]
+    end
+
+    RAW --> INTERP
+    INTERP --> CURR
+    INTERP --> TAX
+    INTERP --> CONF
+    INTERP --> INTENT
+    INTENT --> VAL
+    VAL --> HREQ
+    HREQ --> HS
+    HS --> FUSION
+    FUSION --> RANK
+    RANK --> RESP
+```
+
+### 10.3 Key Components in `com.pricepilot.intelligence.discovery.intent`
+
+1. **`ShoppingQueryIntent`**:
+   - Strongly-typed, immutable domain contract capturing:
+     - `rawQuery` & `semanticQuery` (residual semantic search text with structured constraints stripped)
+     - `category`, `brand` (normalized canonical taxonomy)
+     - `minPrice`, `maxPrice` (numeric bounds parsed from ₹, INR, Rs, $, EUR, 'k' multipliers)
+     - `minRating` (star ratings 0.0 - 5.0)
+     - `minDiscount` (minimum discount percentage 0 - 100%)
+     - `inStock` (availability requirement)
+     - `sortIntent` (e.g. `price-asc` for cheapest, `discount-desc` for deals, `newest`)
+     - `dealIntent` (deal/value seeking flag)
+     - `hasConflicts` & `conflictDescription` (flagging contradictory constraints like `minPrice > maxPrice`)
+     - `confidenceNotes` (explanatory interpretation audit trail)
+
+2. **`ShoppingQueryInterpreter` & `DeterministicShoppingQueryInterpreter`**:
+   - Interface and zero-external-API implementation providing strict deterministic query parsing.
+   - Normalizes currency prefixes and suffixes (`₹`, `Rs.`, `Rs`, `INR`, `$`, `USD`, `€`, `EUR`, `£`, `GBP`), 'k' multipliers (`10k -> 10000`), commas (`10,000`), and decimals (`1499.50`).
+   - Prioritizes rating and discount patterns before price extraction to prevent semantic collisions.
+   - Extracts residual semantic text by cleanly stripping matched constraint clauses without losing descriptive adjectives (e.g. "wireless", "noise cancelling", "lightweight", "good battery life").
+
+3. **`ShoppingQueryIntentValidator` & `DefaultShoppingQueryIntentValidator`**:
+   - Validates mathematical ranges (non-negative prices, valid 0.0-5.0 ratings, 0-100% discounts).
+   - Rejects or flags contradictory constraints (`minPrice > maxPrice`).
+   - Maps valid intent into a bounded `HybridSearchRequest` for downstream candidate discovery.
+
+4. **`NaturalLanguageDiscoveryService` & `NaturalLanguageDiscoveryServiceImpl`**:
+   - Orchestrates the full pipeline with graceful fallback on unexpected exceptions.
+   - Enriches search response with intent diagnostics.
+   - Records Micrometer metrics.
+
+5. **REST API Endpoints**:
+   - `GET /api/v1/discovery/natural-language`: Dedicated natural-language query endpoint.
+   - `GET /api/v1/discovery/intent`: Lightweight intent inspection preview endpoint.
+   - `GET /api/v1/discovery/products?nl=true`: Seamless opt-in for existing discovery consumers.
+
+### 10.4 Observability & Metrics
+
+| Metric Name | Type | Description |
+| :--- | :--- | :--- |
+| `pricepilot.nl.search.requests` | Counter | Total natural-language search requests initiated |
+| `pricepilot.nl.search.success` | Counter | Total successful natural-language searches |
+| `pricepilot.nl.search.failures` | Counter | Total failed natural-language search operations |
+| `pricepilot.nl.search.conflicts` | Counter | Total queries containing contradictory constraints |
+| `pricepilot.nl.search.degraded` | Counter | Total times search degraded to raw semantic retrieval |
+| `pricepilot.nl.search.duration` | Timer | Latency distribution of natural-language search pipeline |
+| `pricepilot.nl.interpretation.duration` | Timer | Latency distribution of intent interpretation |
+
+---
+
+## 11. Extension Points for Future Phases
+
+- **Phase 5: Semantic Recommendations & Alternative Finding**: Near-neighbor retrieval for finding direct substitutes, cheaper alternatives, and feature-equivalent trade-offs.
+- **Phase 6: Personalized Discovery & User Preference Alignment**: User interest vectors and personalized rank re-weighting.
 
