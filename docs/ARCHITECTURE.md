@@ -170,5 +170,13 @@ The Personalized Shopping Intelligence subsystem establishes an immutable domain
    * **Missing Preference & Partial Handling:** Users without persisted preferences receive a valid empty `PersonalizationContext` with zero fabricated signals.
    * **Failure Isolation:** Persistence errors gracefully fall back to an empty context for uninterrupted base intelligence, while security and authorization exceptions are preserved.
    * **Zero AI/API-Key Dependency:** Entire pipeline operates 100% locally and deterministically.
-8. **Future Consumers & Providers (`PersonalizationContextProvider`):**
-   * Designed to be consumed by downstream personalized discovery (Batch 6.5), alternatives (Batch 6.6), and recommendation scoring (Batches 6.4/6.7).
+8. **Behavioral Signal Integration (`com.pricepilot.intelligence.personalization.signals.adapter.BehavioralSignalAdapter`):**
+   * Adapts the existing v1.1 behavioral extraction system (`BehavioralSignalService` / `UserShoppingSignals`) into the normalized `PersonalizationContext`.
+   * **Single Source of Truth:** Existing v1.1 behavioral aggregation remains authoritative; the adapter does NOT reprocess raw events or create duplicate event repositories.
+   * **Safeguard Reuse:** Directly preserves existing 3-minute deduplication windows, replay protection, and satiation caps (max 5 views/interactions per product) enforced by `BehavioralSignalServiceImpl`.
+   * **Behavioral Provenance:** All mapped signals are tagged strictly with `PersonalizationSource.BEHAVIORAL_SIGNAL` with strength bounded in $[0.0, 1.0]$.
+   * **Explicit/Behavioral Coexistence:** Signals targeting the same dimension (e.g., category "laptops") coexist as distinct signals (`CATEGORY_PREFERENCE` vs `CATEGORY_AFFINITY`) without overwriting each other.
+   * **Privacy & User Isolation:** Context contains only aggregate affinity signals (category, brand, product interaction); no raw clickstreams, timestamps, or IP addresses are exposed.
+   * **Missing History & Failure Isolation:** Users with zero interactions receive an empty context with no fabricated signals; unexpected retrieval errors degrade gracefully to an empty behavioral context.
+9. **Future Consumers & Scoring Composition (Phase 6.4):**
+   * Prepares the foundation for Phase 6.4 scoring to compose both `ExplicitPreferenceAdapter` and `BehavioralSignalAdapter` into unified `PersonalizationContext` instances for candidate ranking in discovery, alternatives, and recommendation engines.
