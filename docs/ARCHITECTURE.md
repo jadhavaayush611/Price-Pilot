@@ -207,3 +207,15 @@ The Personalized Shopping Intelligence subsystem establishes an immutable domain
     * **Privacy Boundary:** Evidence descriptions strictly omit raw clickstreams, timestamps, IP addresses, or internal event identifiers.
     * **Deterministic Ordering:** Evidence items are ordered deterministically by importance descending, then EvidenceType name, then description.
     * **Immutability & Safety:** All evidence collections are exposed via unmodifiable lists in `PersonalizedEvidence`. Zero persistence, Redis, or external AI dependencies.
+11. **Personalized Discovery (`com.pricepilot.intelligence.discovery.personalized`):**
+    * Integrates the completed personalization engine (`PersonalizationContextProvider`, `PersonalizedScoringStrategy`, `PersonalizedEvidenceGenerator`) into the discovery pipeline.
+    * **Discovery Request Pipeline:**
+      $$\text{Discovery Request} \rightarrow \text{Hard-Filter Retrieval} \rightarrow \text{Base Scoring} \rightarrow \text{Context Acquisition} \rightarrow \text{Personalized Scoring} \rightarrow \text{Ranking} \rightarrow \text{Paging} \rightarrow \text{Evidence Generation} \rightarrow \text{Response}$$
+    * **Hard Constraint Invariance:** Personalization strictly modifies ranking among eligible candidates; hard filters (budget max, category, brand, stock) and pagination limits are enforced prior to personalization.
+    * **Authentication Boundary & Security:**
+      * Public unauthenticated discovery requests (`personalized=false`) remain completely public and execute without touching user context.
+      * Personalized discovery (`personalized=true` or `/api/v1/discovery/personalized`) requires an authenticated user principal (`UserPrincipal`). Unauthenticated requests are rejected (401/403). Arbitrary `userId` query parameters are ignored.
+    * **Single-Pass Context Acquisition:** Context is acquired exactly once per discovery request via `PersonalizationContextProvider` and applied consistently across all candidates.
+    * **Optimized Page-Level Evidence Generation:** To minimize latency, personalized evidence generation is performed strictly on the requested page slice of ranked candidates rather than all candidates.
+    * **Graceful Degradation:** If context acquisition encounters errors or the user has no history/preferences, the system seamlessly falls back to base relevance ranking with zero score adjustments.
+    * **Observability:** Key metrics tracked via Micrometer `MeterRegistry` (`discovery.personalized.requests`, `discovery.personalized.latency`, `discovery.personalized.candidates`, `discovery.personalized.adjustments`).

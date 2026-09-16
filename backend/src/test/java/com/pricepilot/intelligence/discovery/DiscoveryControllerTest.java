@@ -95,6 +95,28 @@ public class DiscoveryControllerTest {
                 .andExpect(jsonPath("$[1].text", is("AirPods Pro")));
     }
 
+    @MockitoBean
+    private com.pricepilot.intelligence.discovery.personalized.PersonalizedDiscoveryService personalizedDiscoveryService;
+
+    @Test
+    @DisplayName("GET /api/v1/discovery/products with personalized=true without authentication returns 403/401")
+    void testPersonalizedDiscoveryWithoutAuthReturnsForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/discovery/products")
+                        .param("query", "macbook")
+                        .param("personalized", "true")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/discovery/personalized without authentication returns 403/401")
+    void testPersonalizedEndpointWithoutAuthReturnsForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/discovery/personalized")
+                        .param("query", "macbook")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
     @Test
     @DisplayName("GET /api/v1/discovery/products with invalid sort returns 400 Bad Request")
     void testInvalidSortReturns400() throws Exception {

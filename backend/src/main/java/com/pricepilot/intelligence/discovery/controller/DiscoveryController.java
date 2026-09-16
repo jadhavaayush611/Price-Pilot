@@ -22,14 +22,17 @@ public class DiscoveryController {
     private final SearchDiscoveryService discoveryService;
     private final com.pricepilot.intelligence.discovery.hybrid.HybridSearchService hybridSearchService;
     private final com.pricepilot.intelligence.discovery.intent.NaturalLanguageDiscoveryService naturalLanguageDiscoveryService;
+    private final com.pricepilot.intelligence.discovery.personalized.PersonalizedDiscoveryService personalizedDiscoveryService;
 
     public DiscoveryController(
             SearchDiscoveryService discoveryService,
             @org.springframework.beans.factory.annotation.Autowired(required = false) com.pricepilot.intelligence.discovery.hybrid.HybridSearchService hybridSearchService,
-            @org.springframework.beans.factory.annotation.Autowired(required = false) com.pricepilot.intelligence.discovery.intent.NaturalLanguageDiscoveryService naturalLanguageDiscoveryService) {
+            @org.springframework.beans.factory.annotation.Autowired(required = false) com.pricepilot.intelligence.discovery.intent.NaturalLanguageDiscoveryService naturalLanguageDiscoveryService,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) com.pricepilot.intelligence.discovery.personalized.PersonalizedDiscoveryService personalizedDiscoveryService) {
         this.discoveryService = discoveryService;
         this.hybridSearchService = hybridSearchService;
         this.naturalLanguageDiscoveryService = naturalLanguageDiscoveryService;
+        this.personalizedDiscoveryService = personalizedDiscoveryService;
     }
 
     @GetMapping("/products")
@@ -51,7 +54,9 @@ public class DiscoveryController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "false") boolean hybrid,
             @RequestParam(defaultValue = "false") boolean naturalLanguage,
-            @RequestParam(defaultValue = "false") boolean nl) {
+            @RequestParam(defaultValue = "false") boolean nl,
+            @RequestParam(defaultValue = "false") boolean personalized,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.pricepilot.security.UserPrincipal principal) {
 
         String effectiveQuery = query != null ? query : (q != null ? q : keyword);
 
@@ -82,12 +87,67 @@ public class DiscoveryController {
                 .size(size)
                 .build();
 
+        if (personalized) {
+            if (principal == null || principal.getId() == null) {
+                throw new org.springframework.security.access.AccessDeniedException("Authentication required for personalized product discovery");
+            }
+            if (personalizedDiscoveryService != null) {
+                return ResponseEntity.ok(personalizedDiscoveryService.discover(request, principal.getId()));
+            }
+        }
+
         if (hybrid && hybridSearchService != null) {
             return ResponseEntity.ok(hybridSearchService.search(request));
         }
 
         DiscoverySearchResponseDTO response = discoveryService.searchAndDiscover(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/personalized")
+    public ResponseEntity<DiscoverySearchResponseDTO> discoverPersonalizedProducts(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) BigDecimal minDiscount,
+            @RequestParam(required = false) Boolean inStock,
+            @RequestParam(required = false) String dealQuality,
+            @RequestParam(required = false) UUID sellerId,
+            @RequestParam(defaultValue = "relevance") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.pricepilot.security.UserPrincipal principal) {
+
+        if (principal == null || principal.getId() == null) {
+            throw new org.springframework.security.access.AccessDeniedException("Authentication required for personalized product discovery");
+        }
+
+        String effectiveQuery = query != null ? query : (q != null ? q : keyword);
+        DiscoverySearchRequestDTO request = DiscoverySearchRequestDTO.builder()
+                .query(effectiveQuery)
+                .category(category)
+                .brand(brand)
+                .minPrice(minPrice)
+                .maxPrice(maxPrice)
+                .minRating(minRating)
+                .minDiscount(minDiscount)
+                .inStock(inStock)
+                .dealQuality(dealQuality)
+                .sellerId(sellerId)
+                .sort(sort)
+                .page(page)
+                .size(size)
+                .build();
+
+        if (personalizedDiscoveryService != null) {
+            return ResponseEntity.ok(personalizedDiscoveryService.discover(request, principal.getId()));
+        }
+        return ResponseEntity.ok(discoveryService.searchAndDiscover(request));
     }
 
     @GetMapping("/hybrid")

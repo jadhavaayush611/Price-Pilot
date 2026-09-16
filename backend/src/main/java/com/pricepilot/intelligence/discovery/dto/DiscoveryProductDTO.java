@@ -58,4 +58,9 @@ public class DiscoveryProductDTO {
     private PriceTrend priceTrend;
     private PurchaseSignal purchaseSignal;
     private Boolean isHistoricalLow;
+
+    // Personalization Intelligence (Phase 6.6)
+    private Double personalizedScore;
+    private Double personalizationAdjustment;
+    private com.pricepilot.intelligence.personalization.evidence.PersonalizedEvidence personalizedEvidence;
 }
