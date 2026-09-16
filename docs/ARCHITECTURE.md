@@ -136,3 +136,31 @@ The frontend is a lightweight Single Page Application (SPA) built on React 19, T
 * **Health Orchestration:** Prevents the backend from starting before the database is ready, and prevents the frontend from starting before the backend is ready.
 * **Docker Network:** All three services communicate on a private bridge network (`pricepilot-network`). Only backend and frontend ports are exposed to the host machine for safety.
 * **Data Volume:** Persists PostgreSQL records across container restarts (`postgres_data`).
+
+---
+
+## 6. Personalized Shopping Intelligence (v1.2)
+
+The Personalized Shopping Intelligence subsystem establishes an immutable domain layer that captures and normalizes personalization context for intelligent product ranking and recommendations.
+
+### Core Architectural Principle
+> **"Personalization changes ranking and selection among objectively valid candidates. It does not change product facts or override hard constraints."**
+
+### Key Subsystem Components
+1. **PersonalizationContext (`com.pricepilot.intelligence.personalization.context.PersonalizationContext`):**
+   * Immutable, user-scoped domain object representing the complete personalization state for a single intelligence request.
+   * Completely uncoupled from JPA persistence, HTTP sessions, database entities, and recommendation algorithms.
+2. **Provenance & Source Distinction (`PersonalizationSource`):**
+   * Preserves explicit provenance: `EXPLICIT_PREFERENCE` (user-configured shopping profile) vs `BEHAVIORAL_SIGNAL` (deterministic aggregated interactions).
+   * Enforces the architectural rule: `EXPLICIT_PREFERENCE > BEHAVIORAL_SIGNAL` in confidence and ranking authority without prematurely collapsing signals into an undifferentiated number.
+3. **Bounded Signal Representation (`SignalStrength` & `PersonalizationSignal`):**
+   * Signal strength is strictly bounded in the range `[0.0, 1.0]`, rejecting NaN, infinite, and out-of-bounds values to prevent unbounded personalization bias.
+4. **Deterministic Ordering & Construction (`PersonalizationContextBuilder`):**
+   * Sorts signals by `(signalType, source, targetKey, normalizedValue, strength)` deterministically, ensuring `Context A.equals(Context B)` regardless of input collection sequencing or JVM map iteration order.
+   * Deduplicates duplicate signals while retaining the highest signal strength.
+5. **Hard-Constraint Boundary:**
+   * Personalization context provides preference guidance only and cannot override deterministic product facts or hard shopping filters (e.g. strict budget bounds, stock availability, category boundaries, security policies).
+6. **Privacy Boundary:**
+   * Stores normalized domain signals only (e.g. preferred categories, normalized brand affinity). Does not store raw clickstreams, search transcripts, timestamps of individual events, or private activity logs in context.
+7. **Future Consumers & Providers (`PersonalizationContextProvider`):**
+   * Designed to be consumed by downstream personalized discovery (Batch 6.5), alternatives (Batch 6.6), and recommendation scoring (Batches 6.4/6.7).
