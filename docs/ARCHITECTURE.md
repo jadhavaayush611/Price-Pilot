@@ -162,5 +162,13 @@ The Personalized Shopping Intelligence subsystem establishes an immutable domain
    * Personalization context provides preference guidance only and cannot override deterministic product facts or hard shopping filters (e.g. strict budget bounds, stock availability, category boundaries, security policies).
 6. **Privacy Boundary:**
    * Stores normalized domain signals only (e.g. preferred categories, normalized brand affinity). Does not store raw clickstreams, search transcripts, timestamps of individual events, or private activity logs in context.
-7. **Future Consumers & Providers (`PersonalizationContextProvider`):**
+7. **Explicit Preference Integration (`com.pricepilot.intelligence.personalization.preference.adapter.ExplicitPreferenceAdapter`):**
+   * Adapts the existing v1.1 explicit preference system (`UserShoppingPreferenceService` / `UserShoppingPreferenceEntity`) into the normalized `PersonalizationContext`.
+   * **Single Source of Truth:** Existing v1.1 preference storage remains authoritative; no duplicate preference tables or entities are introduced.
+   * **Cache Reuse:** Directly leverages the existing Spring/Redis `@Cacheable("user-preferences")` cache layer without duplicate caching mechanisms.
+   * **Explicit Provenance:** All mapped signals are tagged strictly with `PersonalizationSource.EXPLICIT_PREFERENCE` (no behavioral contamination).
+   * **Missing Preference & Partial Handling:** Users without persisted preferences receive a valid empty `PersonalizationContext` with zero fabricated signals.
+   * **Failure Isolation:** Persistence errors gracefully fall back to an empty context for uninterrupted base intelligence, while security and authorization exceptions are preserved.
+   * **Zero AI/API-Key Dependency:** Entire pipeline operates 100% locally and deterministically.
+8. **Future Consumers & Providers (`PersonalizationContextProvider`):**
    * Designed to be consumed by downstream personalized discovery (Batch 6.5), alternatives (Batch 6.6), and recommendation scoring (Batches 6.4/6.7).
