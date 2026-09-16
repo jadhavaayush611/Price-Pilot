@@ -178,5 +178,22 @@ The Personalized Shopping Intelligence subsystem establishes an immutable domain
    * **Explicit/Behavioral Coexistence:** Signals targeting the same dimension (e.g., category "laptops") coexist as distinct signals (`CATEGORY_PREFERENCE` vs `CATEGORY_AFFINITY`) without overwriting each other.
    * **Privacy & User Isolation:** Context contains only aggregate affinity signals (category, brand, product interaction); no raw clickstreams, timestamps, or IP addresses are exposed.
    * **Missing History & Failure Isolation:** Users with zero interactions receive an empty context with no fabricated signals; unexpected retrieval errors degrade gracefully to an empty behavioral context.
-9. **Future Consumers & Scoring Composition (Phase 6.4):**
-   * Prepares the foundation for Phase 6.4 scoring to compose both `ExplicitPreferenceAdapter` and `BehavioralSignalAdapter` into unified `PersonalizationContext` instances for candidate ranking in discovery, alternatives, and recommendation engines.
+9. **Personalized Scoring Engine (`com.pricepilot.intelligence.personalization.scoring`):**
+   * Computes bounded, deterministic personalized score adjustments on product candidates based exclusively on `PersonalizationContext`.
+   * **Core Mathematical Formula:**
+     $$\text{PersonalizedScore} = \text{BaseScore} + \text{BoundedPersonalizationAdjustment}$$
+     $$\text{Adjustment} \in [-30.0, +35.0]$$
+     $$\text{FinalScore} = \text{clamp}(\text{round}(\text{BaseScore} + \text{Adjustment}, 1), 0.0, 100.0)$$
+   * **Empty Context Neutrality:** When `PersonalizationContext.isEmpty()`, `Adjustment = 0.0` and `FinalScore == BaseScore`.
+   * **Hard Constraints & Product Invariance:** Scoring operates as a pure ranking modifier. It cannot mutate underlying product facts, alter candidate availability, or bypass security/eligibility boundaries.
+   * **Weighted Signals & Evidence:**
+     * Preferred Category Match: `+12.0` (`PREFERRED_CATEGORY`)
+     * Preferred Brand Match: `+10.0` (`PREFERRED_BRAND`)
+     * Within Budget: `+8.0` (`WITHIN_BUDGET`) / Exceeds Budget: `-10.0` (`EXCEEDS_BUDGET`)
+     * Rating Threshold Met: `+6.0` (`RATING_CRITERIA_MET`)
+     * High Deal Sensitivity Match: `+8.0` (`DEAL_SENSITIVITY_MATCH`)
+     * In-Stock Preference Match: `+4.0` / Out of Stock Penalty: `-20.0` (`LIMITED_AVAILABILITY`)
+     * Behavioral Category Affinity: `affinity * 6.0` (`BEHAVIORAL_AFFINITY`)
+     * Behavioral Brand Affinity: `affinity * 4.0` (`BEHAVIORAL_AFFINITY`)
+     * Behavioral Interaction Affinity: `+3.0` (`BEHAVIORAL_AFFINITY`)
+   * **Deterministic 5-Tier Tie-Breaking:** Candidate ranking strictly breaks ties across: (1) final score desc, (2) base score desc, (3) personalization adjustment desc, (4) lowest price asc, and (5) lexicographical product UUID asc.

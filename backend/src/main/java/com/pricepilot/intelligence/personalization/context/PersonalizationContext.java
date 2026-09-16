@@ -33,6 +33,7 @@ public final class PersonalizationContext implements Serializable {
     private final AvailabilityPreference availabilityPreference;
     private final Map<String, Double> categoryAffinities;
     private final Map<String, Double> brandAffinities;
+    private final Set<UUID> interactedProductIds;
 
     public PersonalizationContext(UUID userId, List<PersonalizationSignal> signals) {
         this.userId = userId;
@@ -49,6 +50,7 @@ public final class PersonalizationContext implements Serializable {
             this.availabilityPreference = null;
             this.categoryAffinities = Map.of();
             this.brandAffinities = Map.of();
+            this.interactedProductIds = Set.of();
             return;
         }
 
@@ -69,6 +71,7 @@ public final class PersonalizationContext implements Serializable {
 
         Map<String, Double> catAffinities = new LinkedHashMap<>();
         Map<String, Double> brAffinities = new LinkedHashMap<>();
+        Set<UUID> resolvedInteractedProductIds = new LinkedHashSet<>();
 
         for (PersonalizationSignal sig : this.signals) {
             if (sig.source() == PersonalizationSource.EXPLICIT_PREFERENCE) {
@@ -119,6 +122,15 @@ public final class PersonalizationContext implements Serializable {
                         String key = sig.targetKey() != null ? sig.targetKey() : sig.normalizedValue().toLowerCase();
                         brAffinities.put(key, sig.strength().value());
                     }
+                    case INTERACTION_AFFINITY -> {
+                        String target = sig.targetKey() != null ? sig.targetKey() : sig.normalizedValue();
+                        if (target != null && !target.trim().isEmpty()) {
+                            try {
+                                resolvedInteractedProductIds.add(UUID.fromString(target.trim()));
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
+                    }
                     default -> {}
                 }
             }
@@ -134,6 +146,7 @@ public final class PersonalizationContext implements Serializable {
         this.availabilityPreference = resolvedAvailabilityPreference;
         this.categoryAffinities = Map.copyOf(catAffinities);
         this.brandAffinities = Map.copyOf(brAffinities);
+        this.interactedProductIds = Set.copyOf(resolvedInteractedProductIds);
     }
 
     public UUID getUserId() {
@@ -222,6 +235,24 @@ public final class PersonalizationContext implements Serializable {
 
     public Map<String, Double> getBrandAffinities() {
         return brandAffinities;
+    }
+
+    public boolean hasInteractedWithProduct(UUID productId) {
+        if (productId == null) {
+            return false;
+        }
+        return interactedProductIds.contains(productId);
+    }
+
+    public double getProductInteractionAffinity(UUID productId) {
+        if (productId == null) {
+            return 0.0;
+        }
+        return interactedProductIds.contains(productId) ? 1.0 : 0.0;
+    }
+
+    public Set<UUID> getInteractedProductIds() {
+        return interactedProductIds;
     }
 
     public boolean isEmpty() {
