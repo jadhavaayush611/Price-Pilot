@@ -219,3 +219,31 @@ The Personalized Shopping Intelligence subsystem establishes an immutable domain
     * **Optimized Page-Level Evidence Generation:** To minimize latency, personalized evidence generation is performed strictly on the requested page slice of ranked candidates rather than all candidates.
     * **Graceful Degradation:** If context acquisition encounters errors or the user has no history/preferences, the system seamlessly falls back to base relevance ranking with zero score adjustments.
     * **Observability:** Key metrics tracked via Micrometer `MeterRegistry` (`discovery.personalized.requests`, `discovery.personalized.latency`, `discovery.personalized.candidates`, `discovery.personalized.adjustments`).
+12. **Personalized Alternative Finder (`com.pricepilot.intelligence.alternative.personalized`):**
+    * Personalizes alternative discovery across product-driven, query-driven, and natural-language entry points based on the user's `PersonalizationContext`.
+    * **Core Invariant:** Personalization may change the ranking among valid alternatives, but it must never make an invalid alternative valid or bypass alternative qualification rules.
+    * **Alternative Pipeline Flow:**
+      $$\text{Alternative Request} \rightarrow \text{Semantic + Structured Retrieval} \rightarrow \text{Hard Constraints} \rightarrow \text{Authoritative Qualification} \rightarrow \text{Base Alternative Scoring} \rightarrow \text{Personalization Context} \rightarrow \text{Personalized Scoring} \rightarrow \text{Deterministic Sort} \rightarrow \text{Slice Top-K} \rightarrow \text{Analytics Enrichment} \rightarrow \text{Personalized Evidence Generation} \rightarrow \text{Response}$$
+    * **Qualification Invariance:**
+      * Existing `AlternativeType` qualification semantics (`SIMILAR`, `CHEAPER`, `BETTER_VALUE`, `PERFORMANCE_UPGRADE`, `PREMIUM`, `BUDGET_FALLBACK`) remain authoritative. Candidates that fail eligibility checks are immediately discarded.
+      * Source-product self-exclusion is strictly preserved.
+    * **Scoring & Evidence Architecture:**
+      * Reuses Phase 6.4 `PersonalizedScoringStrategy` to calculate bounded adjustments $[-30.0, +35.0]$ onto base alternative scores $[0.0, 100.0]$.
+      * Reuses Phase 6.5 `PersonalizedEvidenceGenerator` to produce grounded, privacy-safe explainability metadata alongside existing objective alternative evidence (`PRICE`, `SIMILARITY`, `RATING`, `DISCOUNT`, `VALUE`).
+    * **Deterministic Multi-Tier Ordering:**
+      1. Personalized final score descending
+      2. Generic alternative base score descending
+      3. Personalization adjustment descending
+      4. Semantic similarity descending
+      5. Deal quality rank descending
+      6. Rating descending
+      7. Current price ascending
+      8. Product UUID lexicographical ascending
+      * When `PersonalizationContext.empty()`, adjustment is `0.0` and ordering is identical to generic alternative ordering.
+    * **Security & Authentication Boundary:**
+      * Generic alternatives remain public (`personalized=false`).
+      * Personalized alternatives (`personalized=true` or `/personalized` endpoints) require authenticated `UserPrincipal`. Unauthenticated requests throw `AccessDeniedException` (401/403). Arbitrary `userId` parameters in requests are strictly ignored.
+    * **Bounded Execution & Analytics:**
+      * Candidate retrieval bounded to 50 items; final alternative results bounded to top-20.
+      * Analytics and personalized evidence generation are performed on the sliced top-K results, avoiding N+1 overhead.
+    * **Observability:** Tracks `pricepilot.alternative.personalized.requests`, `pricepilot.alternative.personalized.failures`, `pricepilot.alternative.personalized.fallbacks`, `pricepilot.alternative.personalized.latency`, `pricepilot.alternative.personalized.candidates`, and `pricepilot.alternative.personalized.results`.

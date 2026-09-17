@@ -63,4 +63,9 @@ public class AlternativeProductDTO {
     @Builder.Default
     private List<AlternativeEvidence> evidence = new ArrayList<>();
     private String primaryExplanation;
+
+    // Personalization Intelligence (Phase 6.7)
+    private Double personalizedScore;
+    private Double personalizationAdjustment;
+    private com.pricepilot.intelligence.personalization.evidence.PersonalizedEvidence personalizedEvidence;
 }

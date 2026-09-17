@@ -125,4 +125,55 @@ class AlternativeControllerTest {
                 .andExpect(jsonPath("$.alternativeType").value("CHEAPER"))
                 .andExpect(jsonPath("$.content[0].name").value("Nothing Ear (a)"));
     }
+
+    @MockitoBean
+    private com.pricepilot.intelligence.alternative.personalized.PersonalizedAlternativeService personalizedAlternativeService;
+
+    @Test
+    @DisplayName("GET /api/v1/alternatives/product/{productId} with personalized=true without authentication throws AccessDenied")
+    void testPersonalizedProductAlternativesWithoutAuth() throws Exception {
+        UUID productId = UUID.randomUUID();
+        mockMvc.perform(get("/api/v1/alternatives/product/" + productId)
+                        .param("personalized", "true")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/alternatives/product/{productId}/personalized without authentication throws AccessDenied")
+    void testDedicatedPersonalizedProductAlternativesWithoutAuth() throws Exception {
+        UUID productId = UUID.randomUUID();
+        mockMvc.perform(get("/api/v1/alternatives/product/" + productId + "/personalized")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/alternatives/query with personalized=true without authentication throws AccessDenied")
+    void testPersonalizedQueryAlternativesWithoutAuth() throws Exception {
+        mockMvc.perform(get("/api/v1/alternatives/query")
+                        .param("query", "laptop")
+                        .param("personalized", "true")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/alternatives/query/personalized without authentication throws AccessDenied")
+    void testDedicatedPersonalizedQueryAlternativesWithoutAuth() throws Exception {
+        mockMvc.perform(get("/api/v1/alternatives/query/personalized")
+                        .param("query", "laptop")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/alternatives/natural-language with personalized=true without authentication throws AccessDenied")
+    void testPersonalizedNaturalLanguageWithoutAuth() throws Exception {
+        mockMvc.perform(get("/api/v1/alternatives/natural-language")
+                        .param("query", "laptop")
+                        .param("personalized", "true")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
 }

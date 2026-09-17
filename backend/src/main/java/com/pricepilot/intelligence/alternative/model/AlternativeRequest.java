@@ -38,6 +38,7 @@ public class AlternativeRequest {
     @Builder.Default
     private Double semanticWeight = 0.30;
     private String sort;
+    private Boolean personalized;
 
     public int getEffectiveLimit() {
         return limit != null && limit > 0 ? limit : 10;
