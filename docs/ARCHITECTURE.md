@@ -286,3 +286,23 @@ The Personalized Shopping Intelligence subsystem establishes an immutable domain
       * Prompt injections and malicious query strings are sanitized by `QueryInterpreter` and cannot bypass authentication or database boundaries.
       * Hard constraints (e.g. out-of-stock, archived, category mismatch) strictly supersede personalization affinity; invalid products are never made valid by high preference scores.
     * **Concurrent Thread Safety:** Multi-threaded request isolation guarantees zero cross-talk across parallel user contexts.
+15. **Personalization Caching & Performance Engine (`com.pricepilot.config.CacheConfig`, `com.pricepilot.intelligence.personalization`):**
+    * **Core Performance Invariant:** *"Same inputs + Same product facts + Same personalization context = Identical deterministic output."*
+    * **Multi-Tier Cache Topology & TTLs:**
+      * `"user-preferences"`: 30-minute TTL, keyed by `userId`, invalidated immediately upon preference modification (`PUT /api/v1/users/preferences`).
+      * `"user-behavioral-signals"`: 10-minute TTL, keyed by `userId`, invalidated upon new user interaction events (`UserInteractionEventService.trackEvent`) and preference updates.
+      * `"user-recommendations"`: 10-minute TTL, keyed by `userId`, invalidated upon user events and preference updates via `RecommendationCacheHelper.evictUserCaches`.
+      * Generic discovery, alternatives, and price analytics caches remain completely isolated and never cache user-specific personalized payloads.
+    * **Single Context Resolution Guarantee:**
+      * Personalization context (`PersonalizationContext`) is resolved exactly **once** at the orchestration entrypoint per request (`PersonalizedDiscoveryService`, `PersonalizedAlternativeService`, `RecommendationService`) and passed down immutably through downstream scoring, ranking, and evidence generation.
+    * **Batch Intelligence & Zero N+1 Queries:**
+      * Product prices and sellers are retrieved in bulk via `ProductPriceRepository.findPricesWithSellersByProductIds` (zero N+1 queries).
+      * Scoring computations are purely in-memory vector dot-products and bounded rule evaluations.
+    * **Bounded Retrieval & Sliced Evidence Generation:**
+      * Discovery retrieval bounds: Top 100 semantic + 100 structured candidates max before deduplication and filtering.
+      * Alternative retrieval bounds: Max 50 semantic candidates + 50 structured candidates, ranked and clamped to max 20 alternatives.
+      * Evidence computation is strictly deferred and executed only on the final sliced/paginated top-K candidates (e.g. top 10 or 20 items), never on the full candidate pool.
+    * **Micrometer Performance Instrumentation:**
+      * `pricepilot.personalization.context.lookups`: Counter tracking context resolution requests.
+      * `pricepilot.personalization.context.duration`: Timer recording end-to-end context assembly latency.
+      * `pricepilot.personalization.context.fallbacks`: Tagged counter recording fallback occurrences (`source=explicit`, `source=behavioral`).

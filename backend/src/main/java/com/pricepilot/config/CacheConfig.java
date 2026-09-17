@@ -62,7 +62,8 @@ public class CacheConfig implements CachingConfigurer {
                             Map.entry("dashboard", createCacheConfig(Duration.ofMinutes(5))),
                             Map.entry("dashboard-v2", createCacheConfig(Duration.ofMinutes(3))),
                             Map.entry("user-preferences", createCacheConfig(Duration.ofMinutes(30))),
-                            Map.entry("user-recommendations", createCacheConfig(Duration.ofMinutes(10)))
+                            Map.entry("user-recommendations", createCacheConfig(Duration.ofMinutes(10))),
+                            Map.entry("user-behavioral-signals", createCacheConfig(Duration.ofMinutes(10)))
                     ))
                     .build();
 
@@ -84,7 +85,7 @@ public class CacheConfig implements CachingConfigurer {
                     "product-details", "product-searches", "popular-products",
                     "trending-products", "most-watched-products", "most-saved-products", "biggest-drops",
                     "recommendations", "price-analytics", "dashboard", "dashboard-v2",
-                    "user-preferences", "user-recommendations"
+                    "user-preferences", "user-recommendations", "user-behavioral-signals"
             );
 
             return new CacheManager() {

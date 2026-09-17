@@ -4,6 +4,7 @@ import com.pricepilot.interaction.InteractionType;
 import com.pricepilot.interaction.UserInteractionEventEntity;
 import com.pricepilot.interaction.UserInteractionEventRepository;
 import com.pricepilot.product.ProductEntity;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class BehavioralSignalServiceImpl implements BehavioralSignalService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "user-behavioral-signals", key = "#userId", condition = "#userId != null")
     public UserShoppingSignals extractSignals(UUID userId) {
         if (userId == null) {
             return UserShoppingSignals.builder().userId(null).build();

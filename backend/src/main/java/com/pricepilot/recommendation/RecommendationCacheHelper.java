@@ -34,11 +34,22 @@ public class RecommendationCacheHelper {
             dashboardV2Cache.evict(userId);
         }
 
+        // Evict behavioral signals cache for user
+        Cache behavioralCache = cacheManager.getCache("user-behavioral-signals");
+        if (behavioralCache != null) {
+            behavioralCache.evict(userId);
+        }
+
         // Recommendations cache has dynamic compound keys based on limits/filters.
         // We clear the recommendations cache to ensure fresh suggestions.
         Cache recommendationsCache = cacheManager.getCache("recommendations");
         if (recommendationsCache != null) {
             recommendationsCache.clear();
+        }
+        
+        Cache userRecsCache = cacheManager.getCache("user-recommendations");
+        if (userRecsCache != null) {
+            userRecsCache.evict(userId);
         }
     }
 
