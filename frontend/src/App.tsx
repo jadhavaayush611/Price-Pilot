@@ -28,6 +28,7 @@ const ComparisonPage = lazy(() => import('./pages/ComparisonPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const DashboardV2Page = lazy(() => import('./pages/DashboardV2Page'));
 const PreferencesPage = lazy(() => import('./pages/PreferencesPage'));
+const RecommendationsPage = lazy(() => import('./pages/RecommendationsPage'));
 
 // Create TanStack Query Client with optimal caching configuration
 const queryClient = new QueryClient({
@@ -64,6 +65,8 @@ export const App: React.FC = () => {
                 <Route path="/compare" element={<ComparisonPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/analytics/:productId" element={<AnalyticsPage />} />
+                <Route path="/recommendations" element={<RecommendationsPage />} />
+                <Route path="/recommendations/personalized" element={<RecommendationsPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route

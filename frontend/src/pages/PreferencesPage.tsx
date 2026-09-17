@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { UserShoppingPreference, DealSensitivity, PriceSensitivity, AvailabilityPreference } from '../types';
 import { 
@@ -13,7 +14,8 @@ import {
   CheckCircle, 
   AlertCircle,
   Plus,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -164,6 +166,13 @@ export const PreferencesPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            to="/recommendations"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-indigo-300 hover:text-white bg-indigo-950/40 border border-indigo-800/40 hover:border-indigo-700/60 rounded-lg transition-all"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            View Recommendations
+          </Link>
           <button
             type="button"
             onClick={handleReset}

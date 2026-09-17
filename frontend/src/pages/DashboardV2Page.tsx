@@ -501,12 +501,20 @@ export const DashboardV2Page: React.FC = () => {
                     Personalized Recommendations
                   </h2>
                 </div>
-                <Link
-                  to="/settings/preferences"
-                  className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors inline-flex items-center gap-1"
-                >
-                  <span>Customize Preferences &rarr;</span>
-                </Link>
+                <div className="flex items-center gap-3">
+                  <Link
+                    to="/recommendations"
+                    className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors inline-flex items-center gap-1 font-semibold"
+                  >
+                    <span>View All Recommendations &rarr;</span>
+                  </Link>
+                  <Link
+                    to="/settings/preferences"
+                    className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors inline-flex items-center gap-1"
+                  >
+                    <span>Preferences &rarr;</span>
+                  </Link>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
