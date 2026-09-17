@@ -3,15 +3,16 @@ package com.pricepilot.intelligence.personalization;
 import com.pricepilot.ai.v2.ExplanationGenerator;
 import com.pricepilot.ai.v2.RecommendationExplanation;
 import com.pricepilot.intelligence.comparison.scoring.ComparisonScoringStrategy;
-import com.pricepilot.intelligence.personalization.preference.AvailabilityPreference;
-import com.pricepilot.intelligence.personalization.preference.DealSensitivity;
-import com.pricepilot.intelligence.personalization.preference.PriceSensitivity;
-import com.pricepilot.intelligence.personalization.preference.UserShoppingPreferenceEntity;
-import com.pricepilot.intelligence.personalization.preference.UserShoppingPreferenceService;
-import com.pricepilot.intelligence.personalization.scoring.DefaultPersonalizationScorer;
-import com.pricepilot.intelligence.personalization.scoring.PersonalizationScorer;
-import com.pricepilot.intelligence.personalization.signals.BehavioralSignalService;
-import com.pricepilot.intelligence.personalization.signals.UserShoppingSignals;
+import com.pricepilot.intelligence.personalization.context.PersonalizationContext;
+import com.pricepilot.intelligence.personalization.context.PersonalizationContextProvider;
+import com.pricepilot.intelligence.personalization.context.PersonalizationSignal;
+import com.pricepilot.intelligence.personalization.context.PersonalizationSignalType;
+import com.pricepilot.intelligence.personalization.context.PersonalizationSource;
+import com.pricepilot.intelligence.personalization.context.SignalStrength;
+import com.pricepilot.intelligence.personalization.evidence.DefaultPersonalizedEvidenceGenerator;
+import com.pricepilot.intelligence.personalization.evidence.PersonalizedEvidenceGenerator;
+import com.pricepilot.intelligence.personalization.scoring.DefaultPersonalizedScoringStrategy;
+import com.pricepilot.intelligence.personalization.scoring.PersonalizedScoringStrategy;
 import com.pricepilot.intelligence.recommendation.DefaultRecommendationPipeline;
 import com.pricepilot.intelligence.recommendation.RecommendationServiceImpl;
 import com.pricepilot.intelligence.recommendation.confidence.ConfidenceCalculator;
@@ -57,11 +58,10 @@ class PersonalizedRecommendationIntegrationTest {
     @Mock
     private ExplanationGenerator explanationGenerator;
     @Mock
-    private UserShoppingPreferenceService preferenceService;
-    @Mock
-    private BehavioralSignalService behavioralSignalService;
+    private PersonalizationContextProvider contextProvider;
 
-    private PersonalizationScorer personalizationScorer;
+    private PersonalizedScoringStrategy personalizedScoringStrategy;
+    private PersonalizedEvidenceGenerator personalizedEvidenceGenerator;
     private DefaultRecommendationPipeline pipeline;
     private RecommendationServiceImpl recommendationService;
 
@@ -76,7 +76,8 @@ class PersonalizedRecommendationIntegrationTest {
         userA = UUID.randomUUID();
         userB = UUID.randomUUID();
 
-        personalizationScorer = new DefaultPersonalizationScorer();
+        personalizedScoringStrategy = new DefaultPersonalizedScoringStrategy();
+        personalizedEvidenceGenerator = new DefaultPersonalizedEvidenceGenerator();
         EvidenceExtractor evidenceExtractor = new EvidenceExtractor();
         ConfidenceCalculator confidenceCalculator = new ConfidenceCalculator();
 
@@ -88,15 +89,15 @@ class PersonalizedRecommendationIntegrationTest {
                 explanationGenerator,
                 historyRepository,
                 new SimpleMeterRegistry(),
-                personalizationScorer
+                personalizedScoringStrategy,
+                personalizedEvidenceGenerator
         );
 
         recommendationService = new RecommendationServiceImpl(
                 productService,
                 pipeline,
                 metadataRepository,
-                preferenceService,
-                behavioralSignalService,
+                contextProvider,
                 productRepository
         );
 
@@ -129,8 +130,7 @@ class PersonalizedRecommendationIntegrationTest {
     @Test
     @DisplayName("Cold start user receives valid recommendations without preferences or signals")
     void testColdStartPersonalizedRecommendations() {
-        when(preferenceService.getPreferenceEntity(userA)).thenReturn(Optional.empty());
-        when(behavioralSignalService.extractSignals(userA)).thenReturn(UserShoppingSignals.builder().userId(userA).build());
+        when(contextProvider.getPersonalizationContext(userA)).thenReturn(PersonalizationContext.empty(userA));
         when(productService.getTrendingProducts(any(Integer.class))).thenReturn(List.of(applePhone, samsungPhone));
 
         // Base objective scoring (equal scores)
@@ -155,21 +155,13 @@ class PersonalizedRecommendationIntegrationTest {
     @DisplayName("Strict user isolation: User A's Apple preference ranks Apple top; User B's Samsung preference ranks Samsung top")
     void testCrossUserPreferenceIsolation() {
         // User A prefers Apple
-        UserShoppingPreferenceEntity prefA = UserShoppingPreferenceEntity.builder()
-                .userId(userA)
-                .preferredBrands(Set.of("Apple"))
-                .dealSensitivity(DealSensitivity.MEDIUM)
-                .priceSensitivity(PriceSensitivity.MEDIUM)
-                .availabilityPreference(AvailabilityPreference.ALL)
+        PersonalizationContext contextA = PersonalizationContext.builder(userA)
+                .addPreferredBrand("Apple")
                 .build();
 
         // User B prefers Samsung
-        UserShoppingPreferenceEntity prefB = UserShoppingPreferenceEntity.builder()
-                .userId(userB)
-                .preferredBrands(Set.of("Samsung"))
-                .dealSensitivity(DealSensitivity.MEDIUM)
-                .priceSensitivity(PriceSensitivity.MEDIUM)
-                .availabilityPreference(AvailabilityPreference.ALL)
+        PersonalizationContext contextB = PersonalizationContext.builder(userB)
+                .addPreferredBrand("Samsung")
                 .build();
 
         when(productService.getTrendingProducts(any(Integer.class))).thenReturn(List.of(applePhone, samsungPhone));
@@ -190,8 +182,7 @@ class PersonalizedRecommendationIntegrationTest {
                 ));
 
         // 1. Evaluate User A
-        when(preferenceService.getPreferenceEntity(userA)).thenReturn(Optional.of(prefA));
-        when(behavioralSignalService.extractSignals(userA)).thenReturn(UserShoppingSignals.builder().userId(userA).build());
+        when(contextProvider.getPersonalizationContext(userA)).thenReturn(contextA);
         RecommendationResponse responseA = recommendationService.getPersonalizedRecommendations(userA, 5);
 
         assertEquals(applePhone.getId(), responseA.getRecommendedProduct().getId());
@@ -199,8 +190,7 @@ class PersonalizedRecommendationIntegrationTest {
         assertTrue(responseA.getPersonalizationEvidence().stream().anyMatch(e -> e.getType() == EvidenceType.PREFERRED_BRAND));
 
         // 2. Evaluate User B
-        when(preferenceService.getPreferenceEntity(userB)).thenReturn(Optional.of(prefB));
-        when(behavioralSignalService.extractSignals(userB)).thenReturn(UserShoppingSignals.builder().userId(userB).build());
+        when(contextProvider.getPersonalizationContext(userB)).thenReturn(contextB);
         RecommendationResponse responseB = recommendationService.getPersonalizedRecommendations(userB, 5);
 
         assertEquals(samsungPhone.getId(), responseB.getRecommendedProduct().getId());

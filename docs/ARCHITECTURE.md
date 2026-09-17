@@ -247,3 +247,25 @@ The Personalized Shopping Intelligence subsystem establishes an immutable domain
       * Candidate retrieval bounded to 50 items; final alternative results bounded to top-20.
       * Analytics and personalized evidence generation are performed on the sliced top-K results, avoiding N+1 overhead.
     * **Observability:** Tracks `pricepilot.alternative.personalized.requests`, `pricepilot.alternative.personalized.failures`, `pricepilot.alternative.personalized.fallbacks`, `pricepilot.alternative.personalized.latency`, `pricepilot.alternative.personalized.candidates`, and `pricepilot.alternative.personalized.results`.
+13. **Personalized Recommendations (`com.pricepilot.intelligence.recommendation`):**
+    * Orchestrates explainable, personalized product recommendations by combining candidate retrieval, multi-criteria comparison scoring, single-context personalization, and grounded explainability.
+    * **Core Invariant:** "Personalization may rank objectively valid recommendation candidates differently, but it must never make an invalid candidate valid."
+    * **Recommendation Pipeline Flow:**
+      $$\text{Recommendation Request} \rightarrow \text{Candidate Retrieval} \rightarrow \text{Hard Constraints} \rightarrow \text{Base Comparison Scoring} \rightarrow \text{Single Context Acquisition} \rightarrow \text{Personalized Scoring} \rightarrow \text{Deterministic Ranking} \rightarrow \text{Evidence Extraction} \rightarrow \text{Grounded Personalized Evidence} \rightarrow \text{Explanation Generation} \rightarrow \text{Response}$$
+    * **Scoring & Evidence Integration:**
+      * Base recommendation candidates are scored using deterministic `ComparisonScoringStrategy`.
+      * Personalization uses `PersonalizationContextProvider` to resolve `PersonalizationContext` once and applies `PersonalizedScoringStrategy` (Phase 6.4) with bounded adjustments $[-30.0, +35.0]$ and clamping $[0.0, 100.0]$.
+      * Grounded personalized evidence generated via `PersonalizedEvidenceGenerator` (Phase 6.5) is attached to `RecommendationResponse.personalizationEvidence` and merged into explanation decision drivers.
+    * **Deterministic Multi-Tier Tie-Breaking:**
+      1. Personalized final score descending
+      2. Base score descending
+      3. Personalization adjustment descending
+      4. Lowest price ascending
+      5. Product UUID lexicographical ascending
+      * Cold start / empty context (`PersonalizationContext.empty(userId)`) produces $0.0$ adjustment and identical ranking to generic recommendations.
+    * **Authentication & Security:**
+      * Public recommendation endpoints (`/api/v1/recommendations/{productId}`, `/api/v1/recommendations/compare`) remain public.
+      * Personalized recommendations (`/api/v1/recommendations/personalized`) require authenticated `UserPrincipal`. Unauthenticated requests throw `AccessDeniedException` (401/403).
+    * **Observability & History Logging:**
+      * Records execution duration and request counters (`pricepilot.recommendation.duration`, `pricepilot.recommendation.requests.total`, `pricepilot.recommendation.confidence.distribution`).
+      * Logs recommendation event history asynchronously and safely without breaking user responses.

@@ -2,25 +2,24 @@ package com.pricepilot.intelligence.recommendation;
 
 import com.pricepilot.ai.v2.RecommendationPipeline;
 import com.pricepilot.exception.ResourceNotFoundException;
+import com.pricepilot.intelligence.personalization.context.PersonalizationContext;
+import com.pricepilot.intelligence.personalization.context.PersonalizationContextProvider;
 import com.pricepilot.intelligence.recommendation.dto.RecommendationCompareRequest;
 import com.pricepilot.intelligence.recommendation.dto.RecommendationResponse;
 import com.pricepilot.intelligence.recommendation.dto.RecommendationType;
 import com.pricepilot.intelligence.recommendation.repository.RecommendationMetadataRepository;
+import com.pricepilot.product.ProductEntity;
+import com.pricepilot.product.ProductRepository;
 import com.pricepilot.product.ProductService;
 import com.pricepilot.product.dto.ProductResponseDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.pricepilot.intelligence.personalization.preference.UserShoppingPreferenceEntity;
-import com.pricepilot.intelligence.personalization.preference.UserShoppingPreferenceService;
-import com.pricepilot.intelligence.personalization.signals.BehavioralSignalService;
-import com.pricepilot.intelligence.personalization.signals.UserShoppingSignals;
-import com.pricepilot.product.ProductEntity;
-import com.pricepilot.product.ProductRepository;
-import org.springframework.data.domain.PageRequest;
 
 import java.util.*;
 
@@ -32,25 +31,24 @@ import java.util.*;
 @Service("intelligenceRecommendationService")
 public class RecommendationServiceImpl implements RecommendationService {
 
+    private static final Logger log = LoggerFactory.getLogger(RecommendationServiceImpl.class);
+
     private final ProductService productService;
     private final RecommendationPipeline pipeline;
     private final RecommendationMetadataRepository recommendationMetadataRepository;
-    private final UserShoppingPreferenceService preferenceService;
-    private final BehavioralSignalService behavioralSignalService;
+    private final PersonalizationContextProvider personalizationContextProvider;
     private final ProductRepository productRepository;
 
     public RecommendationServiceImpl(
             ProductService productService,
             @Qualifier("defaultRecommendationPipeline") RecommendationPipeline pipeline,
             RecommendationMetadataRepository recommendationMetadataRepository,
-            UserShoppingPreferenceService preferenceService,
-            BehavioralSignalService behavioralSignalService,
+            PersonalizationContextProvider personalizationContextProvider,
             ProductRepository productRepository) {
         this.productService = productService;
         this.pipeline = pipeline;
         this.recommendationMetadataRepository = recommendationMetadataRepository;
-        this.preferenceService = preferenceService;
-        this.behavioralSignalService = behavioralSignalService;
+        this.personalizationContextProvider = personalizationContextProvider;
         this.productRepository = productRepository;
     }
 
@@ -120,34 +118,36 @@ public class RecommendationServiceImpl implements RecommendationService {
 
         int targetLimit = Math.max(limit, 5);
 
-        // 1. Fetch user explicit preferences
-        UserShoppingPreferenceEntity preferences = preferenceService.getPreferenceEntity(userId).orElse(null);
+        // 1. Resolve Single PersonalizationContext
+        PersonalizationContext context = resolveContext(userId);
 
-        // 2. Fetch bounded behavioral signals
-        UserShoppingSignals signals = behavioralSignalService.extractSignals(userId);
-
-        // 3. Gather bounded personalized candidates
-        List<ProductResponseDTO> candidates = gatherPersonalizedCandidates(preferences, signals, targetLimit);
+        // 2. Gather bounded personalized candidates
+        List<ProductResponseDTO> candidates = gatherPersonalizedCandidates(context, targetLimit);
         if (candidates.isEmpty()) {
             throw new ResourceNotFoundException("No candidate products available for personalized recommendations");
         }
 
-        // 4. Construct execution context
-        Map<String, Object> context = new HashMap<>();
-        context.put("personalized", true);
-        if (preferences != null) {
-            context.put("preferences", preferences);
-        }
-        if (signals != null) {
-            context.put("signals", signals);
-        }
+        // 3. Construct execution context
+        Map<String, Object> pipelineContext = new HashMap<>();
+        pipelineContext.put("personalized", true);
+        pipelineContext.put("personalizationContext", context);
 
-        return pipeline.executeComparisonPipeline(candidates, RecommendationType.BEST_OVERALL, userId, context);
+        return pipeline.executeComparisonPipeline(candidates, RecommendationType.BEST_OVERALL, userId, pipelineContext);
+    }
+
+    private PersonalizationContext resolveContext(UUID userId) {
+        try {
+            return personalizationContextProvider.getPersonalizationContext(userId);
+        } catch (AccessDeniedException | SecurityException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Personalization context provider failed for user {}. Falling back to empty context: {}", userId, e.getMessage());
+            return PersonalizationContext.empty(userId);
+        }
     }
 
     private List<ProductResponseDTO> gatherPersonalizedCandidates(
-            UserShoppingPreferenceEntity preferences,
-            UserShoppingSignals signals,
+            PersonalizationContext context,
             int limit) {
 
         Map<UUID, ProductResponseDTO> candidateMap = new LinkedHashMap<>();
@@ -155,22 +155,16 @@ public class RecommendationServiceImpl implements RecommendationService {
         Set<String> categories = new HashSet<>();
         Set<String> brands = new HashSet<>();
 
-        if (preferences != null) {
-            if (preferences.getPreferredCategories() != null) {
-                categories.addAll(preferences.getPreferredCategories());
-            }
-            if (preferences.getPreferredBrands() != null) {
-                brands.addAll(preferences.getPreferredBrands());
-            }
-        }
+        if (context != null && !context.isEmpty()) {
+            categories.addAll(context.getPreferredCategories());
+            brands.addAll(context.getPreferredBrands());
 
-        if (signals != null) {
-            signals.getCategoryAffinity().entrySet().stream()
+            context.getCategoryAffinities().entrySet().stream()
                     .filter(e -> e.getValue() >= 0.3)
                     .map(Map.Entry::getKey)
                     .forEach(categories::add);
 
-            signals.getBrandAffinity().entrySet().stream()
+            context.getBrandAffinities().entrySet().stream()
                     .filter(e -> e.getValue() >= 0.3)
                     .map(Map.Entry::getKey)
                     .forEach(brands::add);
