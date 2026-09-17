@@ -429,7 +429,13 @@ export const ProductPage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => navigate(`/assistant?query=${encodeURIComponent('Analyze price history, deals, and purchase timing for ' + product.name)}`)}
+                  onClick={() => {
+                    const params = new URLSearchParams({
+                      productId: product.id,
+                      query: 'Analyze price history, deals, and purchase timing for ' + product.name
+                    });
+                    navigate(`/assistant?${params.toString()}`);
+                  }}
                   className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-950/30 hover:bg-indigo-950/60 text-indigo-300 text-xs font-bold transition-all cursor-pointer active:scale-95"
                   title="Ask Shopping Decision Assistant"
                 >

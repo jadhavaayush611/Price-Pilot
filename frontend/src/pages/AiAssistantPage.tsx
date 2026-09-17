@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Send, Trash2, Bot, User, Sparkles, RefreshCw, AlertCircle, 
   Plus, MessageSquare, ShieldCheck, 
-  Layers, CheckCircle2, AlertTriangle, ExternalLink, ChevronDown, ChevronUp
+  Layers, CheckCircle2, AlertTriangle, ExternalLink, ChevronDown, ChevronUp, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiService } from '../services/api';
@@ -15,7 +15,8 @@ import type {
   AssistantAction, 
   GroundedEvidenceItem,
   PersonalizationReasoningItem,
-  TradeOffItem
+  TradeOffItem,
+  ProductWithPrices
 } from '../types';
 
 interface ProductCardDTO {
@@ -44,7 +45,7 @@ interface Message {
 
 export const AiAssistantPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
   // Conversations State
   const [conversations, setConversations] = useState<AssistantConversationDTO[]>([]);
@@ -58,12 +59,21 @@ export const AiAssistantPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [expandedEvidence, setExpandedEvidence] = useState<Record<string, boolean>>({});
 
+  const [searchParams] = useSearchParams();
+  const productIdParam = searchParams.get('productId');
+  const queryParam = searchParams.get('query');
+
+  // Active Product Context State
+  const [activeProductId, setActiveProductId] = useState<string | null>(() => productIdParam || null);
+  const [activeProduct, setActiveProduct] = useState<ProductWithPrices | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const userCurrency = getSavedCurrency();
 
-  const [searchParams] = useSearchParams();
-  const queryParam = searchParams.get('query');
+  // Race safety and user isolation tracking refs
   const initialQueryHandled = useRef(false);
+  const activeUserIdRef = useRef<string | null>(user?.id || null);
+  const activeRequestRef = useRef<number>(0);
 
   // Redirect to login if unauthenticated
   useEffect(() => {
@@ -71,6 +81,40 @@ export const AiAssistantPage: React.FC = () => {
       navigate('/login?from=/assistant');
     }
   }, [isAuthenticated, navigate]);
+
+  // Load active product metadata if productId is present in URL
+  useEffect(() => {
+    if (productIdParam) {
+      setActiveProductId(productIdParam);
+      apiService.getProduct(productIdParam)
+        .then((prod) => {
+          if (prod) {
+            setActiveProduct(prod);
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load metadata for active product context:', err);
+        });
+    }
+  }, [productIdParam]);
+
+  // Handle user authentication transitions (login/logout/user switch)
+  useEffect(() => {
+    const currentUserId = user?.id || null;
+    if (activeUserIdRef.current !== currentUserId) {
+      activeUserIdRef.current = currentUserId;
+      setMessages([]);
+      setConversations([]);
+      setActiveConversationId(null);
+      setActiveProductId(null);
+      setActiveProduct(null);
+      setError(null);
+      initialQueryHandled.current = false;
+      if (isAuthenticated && currentUserId) {
+        loadConversations();
+      }
+    }
+  }, [user, isAuthenticated]);
 
   // Load conversations on mount
   useEffect(() => {
@@ -173,6 +217,11 @@ export const AiAssistantPage: React.FC = () => {
     }));
   };
 
+  const handleClearProductContext = () => {
+    setActiveProductId(null);
+    setActiveProduct(null);
+  };
+
   const handleSend = async (textToSend: string) => {
     if (!textToSend.trim() || loading) return;
 
@@ -192,16 +241,31 @@ export const AiAssistantPage: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setLoading(true);
 
+    const currentReqId = ++activeRequestRef.current;
+    const requestUserId = activeUserIdRef.current;
+
     try {
       let targetConvId = activeConversationId;
       if (!targetConvId) {
         const newConv = await apiService.createAssistantConversation(userMessageText.slice(0, 30));
         targetConvId = newConv.id;
-        setActiveConversationId(newConv.id);
-        setConversations(prev => [newConv, ...prev]);
+        if (currentReqId === activeRequestRef.current && activeUserIdRef.current === requestUserId) {
+          setActiveConversationId(newConv.id);
+          setConversations(prev => [newConv, ...prev]);
+        }
       }
 
-      const data = await apiService.sendAssistantMessage(targetConvId, userMessageText);
+      // Send message carrying activeProductId if active
+      const data = await apiService.sendAssistantMessage(
+        targetConvId,
+        userMessageText,
+        activeProductId || undefined
+      );
+
+      // Stale response / user transition check
+      if (currentReqId !== activeRequestRef.current || activeUserIdRef.current !== requestUserId) {
+        return;
+      }
       
       const assistantMessage: Message = {
         id: data.messageId || generateId(),
@@ -220,9 +284,15 @@ export const AiAssistantPage: React.FC = () => {
         setExpandedEvidence(prev => ({ ...prev, [assistantMessage.id]: true }));
       }
     } catch (err: unknown) {
+      if (currentReqId !== activeRequestRef.current || activeUserIdRef.current !== requestUserId) {
+        return;
+      }
       console.error('Error sending message:', err);
       try {
         const legacyData = await apiService.assistantChat(userMessageText, activeConversationId || undefined);
+        if (currentReqId !== activeRequestRef.current || activeUserIdRef.current !== requestUserId) {
+          return;
+        }
         const assistantMessage: Message = {
           id: generateId(),
           role: 'assistant',
@@ -233,11 +303,16 @@ export const AiAssistantPage: React.FC = () => {
         };
         setMessages(prev => [...prev, assistantMessage]);
       } catch (legacyErr: unknown) {
+        if (currentReqId !== activeRequestRef.current || activeUserIdRef.current !== requestUserId) {
+          return;
+        }
         const errorObj = legacyErr as { response?: { data?: { detail?: string } }; message?: string };
         setError(errorObj?.response?.data?.detail || errorObj.message || 'Failed to connect to the PricePilot Shopping Assistant.');
       }
     } finally {
-      setLoading(false);
+      if (currentReqId === activeRequestRef.current && activeUserIdRef.current === requestUserId) {
+        setLoading(false);
+      }
     }
   };
 
@@ -614,7 +689,7 @@ export const AiAssistantPage: React.FC = () => {
                                   if (act.actionUrl) {
                                     navigate(act.actionUrl);
                                   } else if (act.type === 'SEARCH') {
-                                    navigate(`/products?search=${encodeURIComponent(act.label)}`);
+                                    navigate(`/search?keyword=${encodeURIComponent(act.label)}`);
                                   } else {
                                     handleSend(act.label);
                                   }
@@ -700,6 +775,49 @@ export const AiAssistantPage: React.FC = () => {
 
         {/* Input Bar */}
         <div className="p-3.5 bg-zinc-950 border-t border-zinc-800">
+          {/* Active Product Context Badge */}
+          {activeProductId && (
+            <div className="mb-2.5 px-3 py-2 bg-zinc-900/90 border border-zinc-800 rounded-xl flex items-center justify-between gap-3 text-xs animate-fade-in">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/30 text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1 shrink-0">
+                  <Sparkles size={11} />
+                  Active Product
+                </span>
+                {activeProduct?.imageUrl && (
+                  <img
+                    src={activeProduct.imageUrl}
+                    alt={activeProduct.name || 'Product'}
+                    className="h-6 w-6 rounded-md object-cover border border-zinc-700 shrink-0"
+                  />
+                )}
+                <div className="flex items-center gap-2 truncate">
+                  <span className="font-semibold text-zinc-200 truncate">
+                    {activeProduct?.name || `Product: ${activeProductId.slice(0, 8)}...`}
+                  </span>
+                  {activeProduct?.brand && (
+                    <span className="text-[10px] text-zinc-500 shrink-0 hidden sm:inline">
+                      · {activeProduct.brand}
+                    </span>
+                  )}
+                  {activeProduct?.lowestPrice && (
+                    <span className="text-[10px] font-semibold text-emerald-400 shrink-0 hidden sm:inline">
+                      ({formatPrice(getDisplayPrice(activeProduct.lowestPrice, userCurrency), userCurrency)})
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearProductContext}
+                aria-label="Clear active product context"
+                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+                title="Clear active product context"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
           <form
             onSubmit={(e) => {
               e.preventDefault();

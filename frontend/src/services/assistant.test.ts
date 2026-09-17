@@ -104,7 +104,7 @@ describe('apiService Assistant Gateway Client', () => {
     expect(result.id).toBe('c2');
   });
 
-  it('should send message to assistant conversation', async () => {
+  it('should send message to assistant conversation without active product', async () => {
     const mockResponse = {
       data: {
         conversationId: 'c2',
@@ -126,6 +126,50 @@ describe('apiService Assistant Gateway Client', () => {
     });
     expect(result.response).toBe('Grounded suggestion');
     expect(result.intent).toBe('DISCOVERY');
+  });
+
+  it('should send message to assistant conversation WITH activeProductId', async () => {
+    const mockResponse = {
+      data: {
+        conversationId: 'c2',
+        messageId: 'm2',
+        response: 'Product-specific analysis',
+        intent: 'PRICE_ANALYSIS',
+        evidenceBundle: { groundedProducts: [], personalizationFactors: [], tradeOffs: [], unknownOrInsufficientDataNotes: [], suggestedActions: [] },
+        suggestedPrompts: [],
+        actions: []
+      }
+    };
+    const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue(mockResponse);
+
+    const result = await apiService.sendAssistantMessage('c2', 'Is this a good time to buy?', 'prod-12345');
+
+    expect(postSpy).toHaveBeenCalledWith('/assistant/conversations/c2/messages', {
+      content: 'Is this a good time to buy?',
+      activeProductId: 'prod-12345'
+    });
+    expect(result.response).toBe('Product-specific analysis');
+    expect(result.intent).toBe('PRICE_ANALYSIS');
+  });
+
+  it('should verify sendAssistantMessage never includes userId parameter in request payload or url', async () => {
+    const mockResponse = {
+      data: {
+        conversationId: 'c2',
+        messageId: 'm3',
+        response: 'Security verified',
+        intent: 'DISCOVERY'
+      }
+    };
+    const postSpy = vi.spyOn(apiClient, 'post').mockResolvedValue(mockResponse);
+
+    await apiService.sendAssistantMessage('c2', 'Check security', 'prod-999');
+
+    const [url, payload] = postSpy.mock.calls[0];
+    expect(url).not.toContain('userId');
+    expect(payload).not.toHaveProperty('userId');
+    expect(payload).toHaveProperty('content', 'Check security');
+    expect(payload).toHaveProperty('activeProductId', 'prod-999');
   });
 
   it('should delete assistant conversation', async () => {
