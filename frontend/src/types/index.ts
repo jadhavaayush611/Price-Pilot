@@ -556,3 +556,167 @@ export interface AssistantResponseDTO {
   actions: AssistantAction[];
   products?: GroundedEvidenceItem[];
 }
+
+// Alternative Finder Types (v1.2)
+export type AlternativeType =
+  | 'SIMILAR'
+  | 'CHEAPER'
+  | 'BETTER_VALUE'
+  | 'PERFORMANCE_UPGRADE'
+  | 'PREMIUM'
+  | 'BUDGET_FALLBACK';
+
+export type AlternativeMode = 'PRODUCT' | 'QUERY';
+
+export type AlternativeEvidenceCategory =
+  | 'PRICE'
+  | 'SIMILARITY'
+  | 'RATING'
+  | 'DISCOUNT'
+  | 'SELLER'
+  | 'AVAILABILITY'
+  | 'CATEGORY'
+  | 'BRAND'
+  | 'FEATURE'
+  | 'VALUE';
+
+export type AlternativeReasonCode =
+  | 'SIMILAR_CATEGORY'
+  | 'HIGH_SEMANTIC_SIMILARITY'
+  | 'LOWER_PRICE'
+  | 'HIGHER_RATING'
+  | 'BETTER_DEAL'
+  | 'IN_STOCK'
+  | 'PREMIUM_PRICE_TIER'
+  | 'BUDGET_SAVING'
+  | 'BRAND_MATCH'
+  | 'SAME_CATEGORY_LOWER_PRICE'
+  | 'SIGNIFICANT_DISCOUNT'
+  | 'SUPERIOR_PRICE_POSITION'
+  | 'BUDGET_COMPLIANT'
+  | 'COMPATIBLE_FEATURES';
+
+export interface AlternativeEvidence {
+  category: AlternativeEvidenceCategory | string;
+  sourceValue?: string;
+  candidateValue?: string;
+  relationship?: string;
+  confidence?: number;
+  description?: string;
+}
+
+export interface SourceProductContext {
+  id: string;
+  name: string;
+  brand?: string;
+  category?: string;
+  description?: string;
+  imageUrl?: string;
+  currentBestPrice?: number;
+  originalPrice?: number;
+  discountPercentage?: number;
+  rating?: number;
+  dealQuality?: DealQuality | string;
+}
+
+export interface PersonalizedAlternativeEvidenceReason {
+  dimension?: string;
+  reason?: string;
+  scoreImpact?: number;
+  evidenceType?: string;
+}
+
+export interface PersonalizedAlternativeEvidence {
+  summary?: string;
+  scoreAdjustment?: number;
+  reasons?: PersonalizedAlternativeEvidenceReason[];
+  supportingFactors?: string[];
+  tradeOffs?: string[];
+}
+
+export interface AlternativeProduct {
+  id: string;
+  name: string;
+  brand?: string;
+  category?: string;
+  description?: string;
+  imageUrl?: string;
+  archived?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+
+  // Price & Availability
+  currentBestPrice?: number;
+  originalPrice?: number;
+  discountPercentage?: number;
+  prices?: ProductPrice[];
+  inStock?: boolean;
+
+  // Scoring & Comparison
+  alternativeScore: number;
+  semanticSimilarityScore?: number;
+  relevanceScore?: number;
+  rating?: number;
+  priceDifference?: number;
+  priceDifferencePercentage?: number;
+
+  // Shopping Intelligence Signals
+  dealQuality?: DealQuality | string;
+  priceTrend?: PriceTrend | string;
+  purchaseSignal?: PurchaseSignal | string;
+  isHistoricalLow?: boolean;
+
+  // Explainability & Badges
+  badges?: string[];
+  reasonCodes?: (AlternativeReasonCode | string)[];
+  evidence?: AlternativeEvidence[];
+  primaryExplanation?: string;
+
+  // Personalization Intelligence (Phase 6.7)
+  personalizedScore?: number;
+  personalizationAdjustment?: number;
+  personalizedEvidence?: PersonalizedAlternativeEvidence;
+}
+
+export interface AlternativeResponse {
+  sourceProductContext?: SourceProductContext;
+  alternativeType?: AlternativeType | string;
+  executionMode?: AlternativeMode | string;
+  query?: string;
+  interpretedIntent?: unknown;
+  totalFound: number;
+  content: AlternativeProduct[];
+  executionTimeMs?: number;
+  availableCategories?: string[];
+  availableBrands?: string[];
+  appliedNotes?: string[];
+}
+
+export interface AlternativeParams {
+  type?: AlternativeType;
+  category?: string;
+  brand?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minRating?: number;
+  minDiscount?: number;
+  inStock?: boolean;
+  minSemanticSimilarity?: number;
+  sellerId?: string;
+  limit?: number;
+  personalized?: boolean;
+}
+
+export interface AlternativeQueryParams {
+  type?: AlternativeType;
+  category?: string;
+  brand?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minRating?: number;
+  minDiscount?: number;
+  inStock?: boolean;
+  limit?: number;
+  personalized?: boolean;
+}
+

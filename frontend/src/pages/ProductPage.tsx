@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
-import type { ProductWithPrices, Watchlist, ProductAnalytics } from '../types';
-import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity, Bot, Layers, TrendingUp, TrendingDown } from 'lucide-react';
+import type { ProductWithPrices, Watchlist, ProductAnalytics, AlternativeResponse, AlternativeType } from '../types';
+import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity, Bot, Layers, TrendingUp, TrendingDown, Split } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, getSavedCurrency, saveCurrency, getDisplayPrice, type CurrencyCode, CURRENCY_SYMBOLS } from '../currency';
 import { SellerCard } from '../components/SellerCard';
 import { useAuth } from '../context/AuthContext';
 import { PriceHistorySection } from '../components/PriceHistorySection';
+import { AlternativeList } from '../components/alternative/AlternativeList';
 
 export const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,7 +36,13 @@ export const ProductPage: React.FC = () => {
   // Analytics states
   const [analytics, setAnalytics] = useState<ProductAnalytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
-  const [similarProducts, setSimilarProducts] = useState<ProductWithPrices[]>([]);
+
+  // Alternative Finder states (v1.2)
+  const [altType, setAltType] = useState<AlternativeType>('SIMILAR');
+  const [altPersonalized, setAltPersonalized] = useState(false);
+  const [altResponse, setAltResponse] = useState<AlternativeResponse | null>(null);
+  const [altLoading, setAltLoading] = useState(true);
+  const [altError, setAltError] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -48,15 +55,6 @@ export const ProductPage: React.FC = () => {
           setTimeout(() => {
             setLoading(false);
           }, 300);
-        });
-
-      // Fetch similar products
-      apiService.getSimilarProducts(id, 4)
-        .then((data) => {
-          setSimilarProducts(data);
-        })
-        .catch((err) => {
-          console.error("Error loading similar products:", err);
         });
 
       // Fetch intelligence analytics (with price intelligence and engagement metrics)
@@ -72,6 +70,33 @@ export const ProductPage: React.FC = () => {
         });
     }
   }, [id]);
+
+  // Fetch product alternatives with active strategy and personalization preference
+  useEffect(() => {
+    if (!id) return;
+    setAltLoading(true);
+    setAltError(null);
+
+    const fetchAlts = async () => {
+      try {
+        let res: AlternativeResponse;
+        if (altPersonalized && isAuthenticated) {
+          res = await apiService.getPersonalizedAlternatives(id, { type: altType, limit: 6 });
+        } else {
+          res = await apiService.getAlternatives(id, { type: altType, limit: 6 });
+        }
+        setAltResponse(res);
+      } catch (err: unknown) {
+        const errorObj = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
+        setAltError(errorObj.response?.data?.message || errorObj.message || 'Unable to retrieve alternative products.');
+      } finally {
+        setAltLoading(false);
+      }
+    };
+
+    fetchAlts();
+  }, [id, altType, altPersonalized, isAuthenticated]);
+
 
   useEffect(() => {
     if (id && isAuthenticated) {
@@ -376,6 +401,22 @@ export const ProductPage: React.FC = () => {
                 >
                   <Bell className={`h-4 w-4 ${isTracking ? 'fill-current' : ''}`} />
                   <span>{isTracking ? `Tracking at ${formatPrice(watchlistEntry?.targetPrice || 0, currency)}` : 'Track Price'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('alternatives-section');
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      navigate(`/product/${product.id}/alternatives`);
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-950/50 text-emerald-400 text-xs font-bold transition-all cursor-pointer active:scale-95"
+                  title="Discover qualified product alternatives"
+                >
+                  <Split className="h-4 w-4 text-emerald-400" />
+                  <span>Find Alternatives</span>
                 </button>
 
                 <button
@@ -871,40 +912,73 @@ export const ProductPage: React.FC = () => {
         <PriceHistorySection productId={product.id} currency={currency} />
       )}
 
-      {similarProducts.length > 0 && (
-        <div className="flex flex-col gap-6 mt-12 border-t border-zinc-900 pt-12 text-left">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-indigo-400" />
-            Similar Products You Might Like
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {similarProducts.map((p) => {
-              const lowestRaw = p.lowestPrice || (p.prices && p.prices.length > 0 ? Math.min(...p.prices.map(pr => pr.currentPrice)) : 0);
-              const lowest = getDisplayPrice(lowestRaw, currency);
-              return (
-                <div key={p.id} className="bg-zinc-955 border border-zinc-900 hover:border-zinc-800 p-3 rounded-2xl flex flex-col gap-3 group relative overflow-hidden transition-all hover:bg-zinc-900/10">
-                  <div className="aspect-square w-full rounded-xl overflow-hidden bg-zinc-900 border border-zinc-900">
-                    <img src={p.imageUrl} alt={p.name} className="h-full w-full object-cover group-hover:scale-103 transition-transform duration-300" />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <Link to={`/product/${p.id}`} className="text-white hover:text-blue-400 text-xs font-bold truncate block">
-                      {p.name}
-                    </Link>
-                    <span className="text-[9px] text-zinc-500 font-bold mt-0.5">{p.brand}</span>
-                    <div className="flex justify-between items-baseline mt-2">
-                      <span className="text-xs font-mono font-extrabold text-white">
-                        {lowest > 0 ? formatPrice(lowest, currency) : 'N/A'}
-                      </span>
-                      <Link to={`/product/${p.id}`} className="text-[10px] text-blue-450 font-bold hover:underline">
-                        View
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+      {product && (
+        <section id="alternatives-section" aria-label="Alternative Products" className="flex flex-col gap-6 mt-12 border-t border-zinc-900 pt-12 text-left">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Layers className="h-5 w-5 text-emerald-400" />
+                Qualified Alternatives & Upgrades
+              </h2>
+              <p className="text-xs text-zinc-400 mt-1">
+                Factual alternatives ranked by semantic similarity, price competitiveness, and deal intelligence
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Personalized Toggle */}
+              {isAuthenticated && (
+                <button
+                  type="button"
+                  onClick={() => setAltPersonalized(!altPersonalized)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    altPersonalized
+                      ? 'bg-indigo-950 text-indigo-200 border border-indigo-700/60 shadow-inner'
+                      : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Personalized</span>
+                </button>
+              )}
+
+              <Link
+                to={`/product/${product.id}/alternatives`}
+                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors"
+              >
+                Explore All Alternatives &rarr;
+              </Link>
+            </div>
           </div>
-        </div>
+
+          <AlternativeList
+            response={altResponse}
+            loading={altLoading}
+            error={altError}
+            isPersonalized={altPersonalized}
+            onRetry={() => {
+              setAltLoading(true);
+              const fetchRetry = async () => {
+                try {
+                  const res = altPersonalized && isAuthenticated
+                    ? await apiService.getPersonalizedAlternatives(product.id, { type: altType, limit: 6 })
+                    : await apiService.getAlternatives(product.id, { type: altType, limit: 6 });
+                  setAltResponse(res);
+                  setAltError(null);
+                } catch (e: unknown) {
+                  const errObj = e as { message?: string };
+                  setAltError(errObj.message || 'Failed to fetch alternatives.');
+                } finally {
+                  setAltLoading(false);
+                }
+              };
+              fetchRetry();
+            }}
+            selectedType={altType}
+            onSelectType={(t) => setAltType(t)}
+            sourceProductId={product.id}
+          />
+        </section>
       )}
 
       {/* Price Watchlist Modal */}

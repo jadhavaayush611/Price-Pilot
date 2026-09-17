@@ -1,5 +1,32 @@
 import axios from 'axios';
-import type { Product, ProductWithPrices, Seller, ProductPrice, User, SavedProduct, Watchlist, PriceHistory, ProductAnalytics, ComparisonRequest, ComparisonResponse, RecommendationResponse, RecommendationCompareRequest, PriceAlert, WatchlistAlertPreference, UpdateWatchlistAlertPreferenceRequest, DashboardV2Response, DiscoverySearchResponse, SearchSuggestion, UserShoppingPreference, UpdateShoppingPreferenceRequest, AssistantConversationDTO, AssistantResponseDTO } from '../types';
+import type {
+  Product,
+  ProductWithPrices,
+  Seller,
+  ProductPrice,
+  User,
+  SavedProduct,
+  Watchlist,
+  PriceHistory,
+  ProductAnalytics,
+  ComparisonRequest,
+  ComparisonResponse,
+  RecommendationResponse,
+  RecommendationCompareRequest,
+  PriceAlert,
+  WatchlistAlertPreference,
+  UpdateWatchlistAlertPreferenceRequest,
+  DashboardV2Response,
+  DiscoverySearchResponse,
+  SearchSuggestion,
+  UserShoppingPreference,
+  UpdateShoppingPreferenceRequest,
+  AssistantConversationDTO,
+  AssistantResponseDTO,
+  AlternativeResponse,
+  AlternativeParams,
+  AlternativeQueryParams
+} from '../types';
 import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../currency';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
@@ -757,6 +784,32 @@ export const apiService = {
   async getPersonalizedRecommendations(limit: number = 10): Promise<RecommendationResponse> {
     const response = await apiClient.get('/recommendations/personalized', { params: { limit } });
     return response.data;
+  },
+
+  // Alternative Finder APIs (v1.2)
+  async getAlternatives(productId: string, params?: AlternativeParams): Promise<AlternativeResponse> {
+    const response = await apiClient.get<AlternativeResponse>(`/alternatives/product/${productId}`, { params });
+    return response.data;
+  },
+
+  async getPersonalizedAlternatives(productId: string, params?: Omit<AlternativeParams, 'personalized'>): Promise<AlternativeResponse> {
+    const response = await apiClient.get<AlternativeResponse>(`/alternatives/product/${productId}/personalized`, { params });
+    return response.data;
+  },
+
+  async getQueryAlternatives(query: string, params?: AlternativeQueryParams): Promise<AlternativeResponse> {
+    const response = await apiClient.get<AlternativeResponse>('/alternatives/query', {
+      params: { query, ...params }
+    });
+    return response.data;
+  },
+
+  async getPersonalizedQueryAlternatives(query: string, params?: Omit<AlternativeQueryParams, 'personalized'>): Promise<AlternativeResponse> {
+    const response = await apiClient.get<AlternativeResponse>('/alternatives/query/personalized', {
+      params: { query, ...params }
+    });
+    return response.data;
   }
 };
+
 
