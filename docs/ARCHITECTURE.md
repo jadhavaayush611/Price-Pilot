@@ -269,3 +269,20 @@ The Personalized Shopping Intelligence subsystem establishes an immutable domain
     * **Observability & History Logging:**
       * Records execution duration and request counters (`pricepilot.recommendation.duration`, `pricepilot.recommendation.requests.total`, `pricepilot.recommendation.confidence.distribution`).
       * Logs recommendation event history asynchronously and safely without breaking user responses.
+14. **Systematic Security Hardening of Personalization Stack (`com.pricepilot.security`, `com.pricepilot.intelligence.personalization`):**
+    * **Core Security Doctrine:** *"Public Product Intelligence $\neq$ Private User Personalization."*
+    * **Strict Authentication & Non-Overridability:**
+      * Generic discovery, generic alternative search, and product details remain public and unauthenticated.
+      * Personalized endpoints (`/api/v1/discovery/products?personalized=true`, `/api/v1/alternatives/**/personalized`, `/api/v1/recommendations/personalized`, `/api/v1/users/preferences/**`) strictly enforce `@AuthenticationPrincipal UserPrincipal principal`.
+      * Unauthenticated requests trigger `AccessDeniedException` (HTTP 401/403). Client-supplied `userId` query, body, path, or header parameters cannot override the authenticated principal.
+    * **Cross-User Isolation & Privacy Guarantees:**
+      * Context acquisition (`PersonalizationContextProvider`) derives user context solely from `principal.getId()`. User A cannot access, query, or infer User B's explicit preferences, interaction events, or personalized adjustments.
+      * Personalized evidence and scores do not leak raw clickstreams, timestamps, IP addresses, or internal event identifiers.
+      * Response caches are partitioned by authenticated user identity, ensuring User A's personalized payload is never served to User B or anonymous callers.
+    * **Resilience & Security Exception Propagation:**
+      * Non-security provider errors (e.g. timeout, transient failure) gracefully fall back to `PersonalizationContext.empty(userId)` with $0.0$ adjustment.
+      * Security exceptions (`AccessDeniedException`, `SecurityException`) are immediately rethrown and never masked or converted into empty context.
+    * **Adversarial Resilience:**
+      * Prompt injections and malicious query strings are sanitized by `QueryInterpreter` and cannot bypass authentication or database boundaries.
+      * Hard constraints (e.g. out-of-stock, archived, category mismatch) strictly supersede personalization affinity; invalid products are never made valid by high preference scores.
+    * **Concurrent Thread Safety:** Multi-threaded request isolation guarantees zero cross-talk across parallel user contexts.
