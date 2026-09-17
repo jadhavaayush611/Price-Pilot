@@ -45,6 +45,14 @@ export interface ProductWithPrices extends Product {
   isHistoricalLow?: boolean;
   discoveryBadges?: string[];
   discoveryReasons?: string[];
+  rating?: number;
+  reviewCount?: number;
+  inStock?: boolean;
+
+  // Personalization Intelligence (Phase 6.6)
+  personalizedScore?: number;
+  personalizationAdjustment?: number;
+  personalizedEvidence?: PersonalizedAlternativeEvidence;
 }
 
 export interface InterpretedQuery {

@@ -26,6 +26,7 @@ interface SearchResultsProps {
   onPageChange: (newPage: number) => void;
   savedProductIds?: string[];
   onToggleSave?: (productId: string) => void;
+  isPersonalized?: boolean;
 }
 
 export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
@@ -36,7 +37,8 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
   totalElements,
   onPageChange,
   savedProductIds = [],
-  onToggleSave
+  onToggleSave,
+  isPersonalized = false,
 }) => {
   const navigate = useNavigate();
   const currency = getSavedCurrency();
@@ -172,16 +174,22 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
           const badges = product.discoveryBadges || [];
           const reasons = product.discoveryReasons || [];
 
+          const isItemPersonalized = isPersonalized || product.personalizedScore !== undefined || (product.personalizedEvidence && ((product.personalizedEvidence.reasons && product.personalizedEvidence.reasons.length > 0) || Boolean(product.personalizedEvidence.summary)));
+
           return (
             <motion.article
               key={product.id}
               variants={itemVariants}
               whileHover={{ 
                 y: -4, 
-                borderColor: 'var(--color-zinc-800)',
-                backgroundColor: 'rgba(24, 24, 27, 0.25)'
+                borderColor: isItemPersonalized ? 'rgba(99, 102, 241, 0.4)' : 'var(--color-zinc-800)',
+                backgroundColor: isItemPersonalized ? 'rgba(30, 27, 75, 0.25)' : 'rgba(24, 24, 27, 0.25)'
               }}
-              className="flex flex-col justify-between p-5 rounded-2xl bg-zinc-950/40 border border-zinc-900 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300 group cursor-pointer"
+              className={`flex flex-col justify-between p-5 rounded-2xl bg-zinc-950/40 border transition-all duration-300 group cursor-pointer ${
+                isItemPersonalized
+                  ? 'border-indigo-900/50 hover:border-indigo-700/70 hover:shadow-[0_8px_30px_rgba(79,70,229,0.15)]'
+                  : 'border-zinc-900 hover:border-zinc-800 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]'
+              }`}
               onClick={() => navigate(`/product/${product.id}`)}
               aria-label={`Product: ${product.name}, price from ${lowest ? formatPrice(getDisplayPrice(lowest, currency), currency) : 'not listed'}`}
             >
@@ -223,12 +231,24 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
                   )}
                 </div>
 
-                {/* Discovery Badges */}
-                {badges.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-2.5">
-                    {badges.map((b, idx) => renderBadge(b, idx))}
-                  </div>
-                )}
+                {/* Discovery Badges & Personalized Badges */}
+                <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+                  {isItemPersonalized && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                      <Sparkles className="h-3 w-3 text-indigo-400" aria-hidden="true" />
+                      Personalized
+                    </span>
+                  )}
+                  {product.personalizedScore !== undefined && (
+                    <span 
+                      title={product.personalizationAdjustment ? `Personalized Match Score: ${Math.round(product.personalizedScore)}/100 (Adjustment: +${product.personalizationAdjustment.toFixed(1)})` : `Match Score: ${Math.round(product.personalizedScore)}/100`}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-900 border border-zinc-800 text-indigo-300"
+                    >
+                      Score: {Math.round(product.personalizedScore)}/100
+                    </span>
+                  )}
+                  {badges.map((b, idx) => renderBadge(b, idx))}
+                </div>
 
                 {/* Brand & Category */}
                 <div className="flex items-center gap-1.5">
@@ -246,15 +266,30 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
                   {product.name}
                 </h3>
 
-                {/* Discovery Reason (Factual Explainability) */}
-                {reasons.length > 0 && (
+                {/* Personalized Evidence (Preference Alignment) */}
+                {isItemPersonalized && product.personalizedEvidence && product.personalizedEvidence.reasons && product.personalizedEvidence.reasons.length > 0 ? (
+                  <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-indigo-950/30 border border-indigo-900/50 flex items-start gap-1.5">
+                    <Sparkles className="h-3 w-3 text-indigo-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                    <p className="text-[11px] text-indigo-200 line-clamp-1">
+                      {product.personalizedEvidence.reasons[0].reason || product.personalizedEvidence.summary}
+                    </p>
+                  </div>
+                ) : isItemPersonalized && product.personalizedEvidence?.summary ? (
+                  <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-indigo-950/30 border border-indigo-900/50 flex items-start gap-1.5">
+                    <Sparkles className="h-3 w-3 text-indigo-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                    <p className="text-[11px] text-indigo-200 line-clamp-1">
+                      {product.personalizedEvidence.summary}
+                    </p>
+                  </div>
+                ) : reasons.length > 0 ? (
+                  /* Standard Discovery Reason (Factual Explainability) */
                   <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-zinc-900/50 border border-zinc-800/80 flex items-start gap-1.5">
                     <HelpCircle className="h-3 w-3 text-emerald-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
                     <p className="text-[11px] text-zinc-400 line-clamp-1">
                       {reasons[0]}
                     </p>
                   </div>
-                )}
+                ) : null}
 
                 <p className="text-xs text-zinc-400 line-clamp-2 mb-4 leading-relaxed">
                   {product.description}

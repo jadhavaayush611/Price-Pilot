@@ -233,10 +233,34 @@ export const apiService = {
     sort?: string;
     page?: number;
     size?: number;
+    personalized?: boolean;
+    hybrid?: boolean;
+    naturalLanguage?: boolean;
   }): Promise<DiscoverySearchResponse> {
     const response = await apiClient.get<DiscoverySearchResponse>('/discovery/products', { params });
     return response.data;
   },
+
+  // Dedicated Personalized Product Discovery (Phase 6.6)
+  async discoverPersonalizedProducts(params: {
+    query?: string;
+    category?: string;
+    brand?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    minRating?: number;
+    minDiscount?: number;
+    inStock?: boolean;
+    dealQuality?: string;
+    sellerId?: string;
+    sort?: string;
+    page?: number;
+    size?: number;
+  }): Promise<DiscoverySearchResponse> {
+    const response = await apiClient.get<DiscoverySearchResponse>('/discovery/personalized', { params });
+    return response.data;
+  },
+
 
   // Search autocomplete suggestions (Real API)
   async getSearchSuggestions(query: string, limit: number = 6): Promise<SearchSuggestion[]> {

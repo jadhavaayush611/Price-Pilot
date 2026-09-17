@@ -1,18 +1,18 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductWithPrices, InterpretedQuery } from '../types';
 import { SearchBar } from '../components/SearchBar';
 import { SearchFilters } from '../components/SearchFilters';
 import { SearchResults } from '../components/SearchResults';
-import { SlidersHorizontal, Sparkles, X, Filter } from 'lucide-react';
+import { SlidersHorizontal, Sparkles, X, Filter, ShieldAlert, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 
 export const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
   // Extract state from URL query parameters (supports 'keyword' or legacy 'q')
   const query = searchParams.get('keyword') || searchParams.get('q') || '';
@@ -24,6 +24,7 @@ export const SearchPage: React.FC = () => {
   const urlDealQuality = searchParams.get('dealQuality') || 'All';
   const urlPage = parseInt(searchParams.get('page') || '0', 10);
   const urlSort = searchParams.get('sort') || 'relevance';
+  const urlPersonalized = searchParams.get('personalized') === 'true';
 
   const [products, setProducts] = useState<ProductWithPrices[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +41,10 @@ export const SearchPage: React.FC = () => {
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
 
+  // Race safety and user isolation tracking refs
+  const activeRequestRef = useRef<string>('');
+  const activeUserIdRef = useRef<string | null>(user?.id || null);
+
   const hasActiveFilters = 
     urlCategory !== 'All' || 
     urlBrand !== 'All' || 
@@ -48,6 +53,20 @@ export const SearchPage: React.FC = () => {
     urlInStock || 
     urlDealQuality !== 'All' || 
     (urlSort !== 'default' && urlSort !== 'relevance');
+
+  // Handle user authentication transitions (login/logout)
+  useEffect(() => {
+    const currentUserId = user?.id || null;
+    if (activeUserIdRef.current !== currentUserId) {
+      activeUserIdRef.current = currentUserId;
+      if (!isAuthenticated && urlPersonalized) {
+        // Reset personalized mode on logout
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete('personalized');
+        setSearchParams(nextParams);
+      }
+    }
+  }, [user, isAuthenticated, urlPersonalized, searchParams, setSearchParams]);
 
   // Update URL parameters helper in a clean, immutable way
   const updateParams = useCallback((newParams: Record<string, string | number | boolean | null>) => {
@@ -64,7 +83,7 @@ export const SearchPage: React.FC = () => {
       }
     });
     
-    // Always reset page to 0 if filters, keyword, or sort changes
+    // Always reset page to 0 if filters, keyword, personalized, or sort changes
     if (!('page' in newParams)) {
       nextParams.delete('page');
     }
@@ -74,14 +93,16 @@ export const SearchPage: React.FC = () => {
 
   // Fetch paginated, filtered, sorted results from backend via Intelligent Discovery
   useEffect(() => {
-    let active = true;
     setLoading(true);
     setError(false);
+
+    const requestId = `search-${query}-${urlCategory}-${urlBrand}-${urlMinPrice}-${urlMaxPrice}-${urlInStock}-${urlDealQuality}-${urlSort}-${urlPage}-${urlPersonalized ? 'p' : 'g'}-${Date.now()}`;
+    activeRequestRef.current = requestId;
 
     const minPriceNum = urlMinPrice ? parseFloat(urlMinPrice) : undefined;
     const maxPriceNum = urlMaxPrice ? parseFloat(urlMaxPrice) : undefined;
 
-    apiService.discoverProducts({
+    const requestParams = {
       query: query || undefined,
       category: urlCategory !== 'All' ? urlCategory : undefined,
       brand: urlBrand !== 'All' ? urlBrand : undefined,
@@ -91,10 +112,17 @@ export const SearchPage: React.FC = () => {
       dealQuality: urlDealQuality !== 'All' ? urlDealQuality : undefined,
       sort: urlSort,
       page: urlPage,
-      size: 6
-    })
+      size: 6,
+      personalized: urlPersonalized && isAuthenticated ? true : undefined,
+    };
+
+    const fetchPromise = urlPersonalized && isAuthenticated
+      ? apiService.discoverPersonalizedProducts(requestParams)
+      : apiService.discoverProducts(requestParams);
+
+    fetchPromise
       .then((data) => {
-        if (!active) return;
+        if (activeRequestRef.current !== requestId) return;
         setProducts(data.content || []);
         setTotalPages(data.totalPages || 0);
         setTotalElements(data.totalElements || 0);
@@ -108,34 +136,38 @@ export const SearchPage: React.FC = () => {
         }
       })
       .catch((err) => {
-        console.warn("Discovery API error, falling back to standard search:", err);
-        // Fallback to legacy endpoint if discovery endpoint encountered an unexpected error
-        apiService.searchProductsWithFilters({
-          keyword: query,
-          category: urlCategory !== 'All' ? urlCategory : undefined,
-          brand: urlBrand !== 'All' ? urlBrand : undefined,
-          page: urlPage,
-          size: 6,
-          sort: urlSort
-        })
-          .then((fallbackData) => {
-            if (!active) return;
-            setProducts(fallbackData.content || []);
-            setTotalPages(fallbackData.totalPages || 0);
-            setTotalElements(fallbackData.totalElements || 0);
+        if (activeRequestRef.current !== requestId) return;
+        console.warn("Discovery API error, attempting fallback search:", err);
+        // If not personalized, attempt fallback to legacy endpoint
+        if (!urlPersonalized) {
+          apiService.searchProductsWithFilters({
+            keyword: query,
+            category: urlCategory !== 'All' ? urlCategory : undefined,
+            brand: urlBrand !== 'All' ? urlBrand : undefined,
+            page: urlPage,
+            size: 6,
+            sort: urlSort
           })
-          .catch(() => {
-            if (active) setError(true);
-          });
+            .then((fallbackData) => {
+              if (activeRequestRef.current !== requestId) return;
+              setProducts(fallbackData.content || []);
+              setTotalPages(fallbackData.totalPages || 0);
+              setTotalElements(fallbackData.totalElements || 0);
+            })
+            .catch(() => {
+              if (activeRequestRef.current === requestId) setError(true);
+            });
+        } else {
+          setError(true);
+        }
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (activeRequestRef.current === requestId) {
+          setLoading(false);
+        }
       });
+  }, [query, urlCategory, urlBrand, urlMinPrice, urlMaxPrice, urlInStock, urlDealQuality, urlPage, urlSort, urlPersonalized, isAuthenticated, retryTrigger]);
 
-    return () => {
-      active = false;
-    };
-  }, [query, urlCategory, urlBrand, urlMinPrice, urlMaxPrice, urlInStock, urlDealQuality, urlPage, urlSort, retryTrigger]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -222,21 +254,62 @@ export const SearchPage: React.FC = () => {
       {/* Sticky Glassmorphic Search Header */}
       <header className="sticky top-16 z-30 backdrop-blur-md bg-[#030303]/85 py-4 border-b border-zinc-900/60 -mx-4 px-4 sm:-mx-6 sm:px-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between transition-all">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold tracking-tight text-white m-0">
               {query ? `Search: "${query}"` : 'Intelligent Product Discovery'}
             </h1>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              AI Discovery
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-1 border ${
+              urlPersonalized && isAuthenticated
+                ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30'
+                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+            }`}>
+              {urlPersonalized && isAuthenticated ? <Sparkles className="h-2.5 w-2.5 text-indigo-400" /> : null}
+              {urlPersonalized && isAuthenticated ? 'Personalized Discovery' : 'AI Discovery'}
             </span>
           </div>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Deterministic relevance scoring and real-time deal intelligence
+            {urlPersonalized && isAuthenticated
+              ? 'Results ranked by your preferred brands, budget, and personalized shopping signals'
+              : 'Deterministic relevance scoring and real-time deal intelligence'}
           </p>
         </div>
 
-        <div className="w-full md:max-w-md flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="flex-grow">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Mode Switcher */}
+          <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-900 shrink-0">
+            <button
+              type="button"
+              onClick={() => updateParams({ personalized: null })}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                !urlPersonalized
+                  ? 'bg-zinc-850 text-white border border-zinc-750 shadow-inner font-bold'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              All Results
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  navigate('/login', { state: { from: { pathname: '/search', search: searchParams.toString() } } });
+                  return;
+                }
+                updateParams({ personalized: 'true' });
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                urlPersonalized
+                  ? 'bg-indigo-950 text-indigo-200 border border-indigo-700/60 shadow-inner font-bold'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+              title="Personalize discovery results based on your shopping preferences"
+            >
+              <Sparkles className="h-3 w-3 text-indigo-400" />
+              <span>Personalized</span>
+            </button>
+          </div>
+
+          <div className="w-full sm:w-64 md:w-80">
             <SearchBar value={query} onChange={handleKeywordChange} />
           </div>
           
@@ -255,6 +328,28 @@ export const SearchPage: React.FC = () => {
           </button>
         </div>
       </header>
+
+      {/* Unauthenticated Personalization Banner */}
+      {!isAuthenticated && urlPersonalized && (
+        <div className="bg-gradient-to-r from-indigo-950/40 via-zinc-950 to-indigo-950/20 border border-indigo-900/50 rounded-2xl p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <ShieldAlert className="w-5 h-5 text-indigo-400 shrink-0" />
+            <div className="text-xs">
+              <p className="font-semibold text-indigo-200">Sign in for personalized product discovery</p>
+              <p className="text-zinc-400">Ranks results matching your preferred brands, budget, and shopping signals.</p>
+            </div>
+          </div>
+          <Link
+            to="/login"
+            state={{ from: { pathname: '/search', search: searchParams.toString() } }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-black bg-white hover:bg-zinc-200 rounded-xl transition-all shrink-0"
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            <span>Sign In</span>
+          </Link>
+        </div>
+      )}
+
 
       {/* Query Understanding / Interpretation Banner */}
       {interpretedQuery && interpretedQuery.interpretationNotes && interpretedQuery.interpretationNotes.length > 0 && (
@@ -430,6 +525,7 @@ export const SearchPage: React.FC = () => {
               onPageChange={handlePageChange}
               savedProductIds={savedProductIds}
               onToggleSave={handleToggleSave}
+              isPersonalized={urlPersonalized && isAuthenticated}
             />
           )}
         </section>
