@@ -40,17 +40,17 @@ public class QueryNormalizerTest {
     }
 
     @Test
-    @DisplayName("Normalizes currency commas in price amounts")
+    @DisplayName("Normalizes currency commas in price amounts while preserving currency symbols")
     void testCurrencyCommaNormalization() {
-        assertEquals("under 70000", normalizer.normalize("under $70,000"));
-        assertEquals("laptop between 50000 and 80000", normalizer.normalize("Laptop between ₹50,000 and ₹80,000"));
+        assertEquals("under $70000", normalizer.normalize("under $70,000"));
+        assertEquals("laptop between ₹50000 and ₹80000", normalizer.normalize("Laptop between ₹50,000 and ₹80,000"));
     }
 
     @Test
-    @DisplayName("Normalizes currency symbols to bare numbers")
+    @DisplayName("Preserves currency symbols for downstream deterministic currency parsing")
     void testCurrencySymbols() {
-        assertEquals("under 500", normalizer.normalize("under $500"));
-        assertEquals("above 1000", normalizer.normalize("above €1000"));
-        assertEquals("around 250", normalizer.normalize("around £250"));
+        assertEquals("under $500", normalizer.normalize("under $500"));
+        assertEquals("above €1000", normalizer.normalize("above €1000"));
+        assertEquals("around £250", normalizer.normalize("around £250"));
     }
 }

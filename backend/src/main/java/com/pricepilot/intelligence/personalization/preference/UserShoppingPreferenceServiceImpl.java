@@ -94,6 +94,9 @@ public class UserShoppingPreferenceServiceImpl implements UserShoppingPreference
         if (request.getAvailabilityPreference() != null) {
             entity.setAvailabilityPreference(request.getAvailabilityPreference());
         }
+        if (request.getCurrency() != null) {
+            entity.setCurrency(request.getCurrency());
+        }
 
         UserShoppingPreferenceEntity saved = preferenceRepository.save(entity);
         return toDTO(saved);
@@ -130,6 +133,7 @@ public class UserShoppingPreferenceServiceImpl implements UserShoppingPreference
                 .dealSensitivity(entity.getDealSensitivity() != null ? entity.getDealSensitivity() : DealSensitivity.MEDIUM)
                 .priceSensitivity(entity.getPriceSensitivity() != null ? entity.getPriceSensitivity() : PriceSensitivity.MEDIUM)
                 .availabilityPreference(entity.getAvailabilityPreference() != null ? entity.getAvailabilityPreference() : AvailabilityPreference.ALL)
+                .currency(entity.getCurrency() != null ? entity.getCurrency() : com.pricepilot.currency.CurrencyCode.INR)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -143,6 +147,7 @@ public class UserShoppingPreferenceServiceImpl implements UserShoppingPreference
                 .dealSensitivity(DealSensitivity.MEDIUM)
                 .priceSensitivity(PriceSensitivity.MEDIUM)
                 .availabilityPreference(AvailabilityPreference.ALL)
+                .currency(com.pricepilot.currency.CurrencyCode.INR)
                 .build();
     }
 }

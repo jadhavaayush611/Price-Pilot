@@ -53,6 +53,7 @@ class ExplicitPreferenceAdapterTest {
                 .preferredBrands(Set.of("Apple", "Sony"))
                 .minBudget(BigDecimal.valueOf(300))
                 .maxBudget(BigDecimal.valueOf(1200))
+                .currency(com.pricepilot.currency.CurrencyCode.USD)
                 .minRating(4.5)
                 .dealSensitivity(DealSensitivity.HIGH)
                 .priceSensitivity(PriceSensitivity.LOW)
@@ -75,8 +76,8 @@ class ExplicitPreferenceAdapterTest {
         assertTrue(context.getPreferredBrands().contains("sony"));
 
         // Numerical & Enum Preferences
-        assertEquals(BigDecimal.valueOf(300), context.getMinBudget().orElse(null));
-        assertEquals(BigDecimal.valueOf(1200), context.getMaxBudget().orElse(null));
+        assertEquals(new BigDecimal("300.00"), context.getMinBudget().orElse(null));
+        assertEquals(new BigDecimal("1200.00"), context.getMaxBudget().orElse(null));
         assertEquals(4.5, context.getMinRating().orElse(0.0));
         assertEquals(DealSensitivity.HIGH, context.getDealSensitivity().orElse(null));
         assertEquals(PriceSensitivity.LOW, context.getPriceSensitivity().orElse(null));
@@ -114,6 +115,7 @@ class ExplicitPreferenceAdapterTest {
                 .preferredCategories(Set.of("Audio"))
                 .preferredBrands(Set.of("Bose"))
                 .minBudget(BigDecimal.valueOf(50))
+                .currency(com.pricepilot.currency.CurrencyCode.USD)
                 .minRating(4.0)
                 .dealSensitivity(DealSensitivity.MEDIUM)
                 .priceSensitivity(PriceSensitivity.HIGH)
@@ -222,6 +224,7 @@ class ExplicitPreferenceAdapterTest {
                 .preferredBrands(Set.of("Dell", "Sony"))
                 .minBudget(BigDecimal.valueOf(100))
                 .maxBudget(BigDecimal.valueOf(500))
+                .currency(com.pricepilot.currency.CurrencyCode.USD)
                 .minRating(4.0)
                 .build();
 
@@ -327,17 +330,18 @@ class ExplicitPreferenceAdapterTest {
     }
 
     @Test
-    @DisplayName("M. Budget boundaries: min only, max only, both, equal")
+    @DisplayName("M. Budget boundaries: min only, max only, both, equal with USD currency")
     void testBudgetBoundaries() {
         // Min only
         UserShoppingPreferenceDTO minOnly = UserShoppingPreferenceDTO.builder()
                 .id(UUID.randomUUID())
                 .userId(testUserId)
                 .minBudget(BigDecimal.valueOf(100))
+                .currency(com.pricepilot.currency.CurrencyCode.USD)
                 .build();
         when(preferenceService.getPreferences(testUserId)).thenReturn(minOnly);
         PersonalizationContext cMin = adapter.getExplicitPreferenceContext(testUserId);
-        assertEquals(BigDecimal.valueOf(100), cMin.getMinBudget().orElse(null));
+        assertEquals(new BigDecimal("100.00"), cMin.getMinBudget().orElse(null));
         assertTrue(cMin.getMaxBudget().isEmpty());
 
         // Max only
@@ -345,11 +349,12 @@ class ExplicitPreferenceAdapterTest {
                 .id(UUID.randomUUID())
                 .userId(testUserId)
                 .maxBudget(BigDecimal.valueOf(500))
+                .currency(com.pricepilot.currency.CurrencyCode.USD)
                 .build();
         when(preferenceService.getPreferences(testUserId)).thenReturn(maxOnly);
         PersonalizationContext cMax = adapter.getExplicitPreferenceContext(testUserId);
         assertTrue(cMax.getMinBudget().isEmpty());
-        assertEquals(BigDecimal.valueOf(500), cMax.getMaxBudget().orElse(null));
+        assertEquals(new BigDecimal("500.00"), cMax.getMaxBudget().orElse(null));
 
         // Equal min/max
         UserShoppingPreferenceDTO equalBudget = UserShoppingPreferenceDTO.builder()
@@ -357,11 +362,31 @@ class ExplicitPreferenceAdapterTest {
                 .userId(testUserId)
                 .minBudget(BigDecimal.valueOf(300))
                 .maxBudget(BigDecimal.valueOf(300))
+                .currency(com.pricepilot.currency.CurrencyCode.USD)
                 .build();
         when(preferenceService.getPreferences(testUserId)).thenReturn(equalBudget);
         PersonalizationContext cEq = adapter.getExplicitPreferenceContext(testUserId);
-        assertEquals(BigDecimal.valueOf(300), cEq.getMinBudget().orElse(null));
-        assertEquals(BigDecimal.valueOf(300), cEq.getMaxBudget().orElse(null));
+        assertEquals(new BigDecimal("300.00"), cEq.getMinBudget().orElse(null));
+        assertEquals(new BigDecimal("300.00"), cEq.getMaxBudget().orElse(null));
+    }
+
+    @Test
+    @DisplayName("M2. Budget conversion: INR budget maps accurately to canonical USD context")
+    void testInrBudgetConversion() {
+        UserShoppingPreferenceDTO inrBudget = UserShoppingPreferenceDTO.builder()
+                .id(UUID.randomUUID())
+                .userId(testUserId)
+                .minBudget(BigDecimal.valueOf(8000))
+                .maxBudget(BigDecimal.valueOf(40000))
+                .currency(com.pricepilot.currency.CurrencyCode.INR)
+                .build();
+
+        when(preferenceService.getPreferences(testUserId)).thenReturn(inrBudget);
+        PersonalizationContext ctx = adapter.getExplicitPreferenceContext(testUserId);
+
+        // 8000 INR / 80 = 100 USD, 40000 INR / 80 = 500 USD
+        assertEquals(new BigDecimal("100.00"), ctx.getMinBudget().orElse(null));
+        assertEquals(new BigDecimal("500.00"), ctx.getMaxBudget().orElse(null));
     }
 
     @Test
@@ -446,6 +471,7 @@ class ExplicitPreferenceAdapterTest {
                 .preferredBrands(Set.of("Nike"))
                 .minBudget(BigDecimal.valueOf(50))
                 .maxBudget(BigDecimal.valueOf(250))
+                .currency(com.pricepilot.currency.CurrencyCode.USD)
                 .dealSensitivity(DealSensitivity.HIGH)
                 .build();
         entity.setId(UUID.randomUUID());
@@ -456,8 +482,8 @@ class ExplicitPreferenceAdapterTest {
         assertEquals(testUserId, context.getUserId());
         assertTrue(context.getPreferredCategories().contains("fashion"));
         assertTrue(context.getPreferredBrands().contains("nike"));
-        assertEquals(BigDecimal.valueOf(50), context.getMinBudget().orElse(null));
-        assertEquals(BigDecimal.valueOf(250), context.getMaxBudget().orElse(null));
+        assertEquals(new BigDecimal("50.00"), context.getMinBudget().orElse(null));
+        assertEquals(new BigDecimal("250.00"), context.getMaxBudget().orElse(null));
     }
 
     @Test

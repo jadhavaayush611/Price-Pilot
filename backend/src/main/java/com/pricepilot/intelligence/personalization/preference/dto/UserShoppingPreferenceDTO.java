@@ -34,6 +34,8 @@ public class UserShoppingPreferenceDTO {
     private PriceSensitivity priceSensitivity = PriceSensitivity.MEDIUM;
     @Builder.Default
     private AvailabilityPreference availabilityPreference = AvailabilityPreference.ALL;
+    @Builder.Default
+    private com.pricepilot.currency.CurrencyCode currency = com.pricepilot.currency.CurrencyCode.INR;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

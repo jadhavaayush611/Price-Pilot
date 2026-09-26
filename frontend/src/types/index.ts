@@ -1,3 +1,5 @@
+export type CurrencyCode = 'USD' | 'INR' | 'EUR' | 'GBP' | 'JPY';
+
 export interface Product {
   id: string;
   name: string;
@@ -63,6 +65,9 @@ export interface InterpretedQuery {
   detectedCategory?: string;
   minPrice?: number;
   maxPrice?: number;
+  rawMinPrice?: number;
+  rawMaxPrice?: number;
+  sourceCurrency?: CurrencyCode | string;
   minRating?: number;
   inStockOnly?: boolean;
   dealIntent?: boolean;
@@ -475,6 +480,7 @@ export interface UserShoppingPreference {
   dealSensitivity: DealSensitivity;
   priceSensitivity: PriceSensitivity;
   availabilityPreference: AvailabilityPreference;
+  currency?: CurrencyCode | string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -488,6 +494,7 @@ export interface UpdateShoppingPreferenceRequest {
   dealSensitivity?: DealSensitivity;
   priceSensitivity?: PriceSensitivity;
   availabilityPreference?: AvailabilityPreference;
+  currency?: CurrencyCode | string;
 }
 
 // Phase 9: Intelligent Shopping Assistant & Decision Support

@@ -12,6 +12,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -26,9 +27,21 @@ public class ExplicitPreferenceAdapter implements UserPreferenceProvider, Person
     private static final Logger log = LoggerFactory.getLogger(ExplicitPreferenceAdapter.class);
 
     private final UserShoppingPreferenceService preferenceService;
+    private final com.pricepilot.currency.CurrencyConversionService currencyConversionService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ExplicitPreferenceAdapter(
+            UserShoppingPreferenceService preferenceService,
+            com.pricepilot.currency.CurrencyConversionService currencyConversionService) {
+        this.preferenceService = preferenceService;
+        this.currencyConversionService = currencyConversionService;
+    }
 
     public ExplicitPreferenceAdapter(UserShoppingPreferenceService preferenceService) {
-        this.preferenceService = preferenceService;
+        this(preferenceService, new com.pricepilot.currency.CurrencyConversionServiceImpl(
+                new com.pricepilot.currency.ConfiguredCurrencyRateProvider(new com.pricepilot.currency.CurrencyProperties()),
+                new com.pricepilot.currency.CurrencyProperties()
+        ));
     }
 
     @Override
@@ -81,12 +94,15 @@ public class ExplicitPreferenceAdapter implements UserPreferenceProvider, Person
             builder.addPreferredBrands(dto.getPreferredBrands());
         }
 
+        com.pricepilot.currency.CurrencyCode userCurrency = dto.getCurrency() != null ? dto.getCurrency() : com.pricepilot.currency.CurrencyCode.INR;
         if (dto.getMinBudget() != null) {
-            builder.minBudget(dto.getMinBudget());
+            BigDecimal canonicalMin = currencyConversionService.convertToCanonical(dto.getMinBudget(), userCurrency);
+            builder.minBudget(canonicalMin);
         }
 
         if (dto.getMaxBudget() != null) {
-            builder.maxBudget(dto.getMaxBudget());
+            BigDecimal canonicalMax = currencyConversionService.convertToCanonical(dto.getMaxBudget(), userCurrency);
+            builder.maxBudget(canonicalMax);
         }
 
         if (dto.getMinRating() != null) {
@@ -129,12 +145,15 @@ public class ExplicitPreferenceAdapter implements UserPreferenceProvider, Person
             builder.addPreferredBrands(entity.getPreferredBrands());
         }
 
+        com.pricepilot.currency.CurrencyCode userCurrency = entity.getCurrency() != null ? entity.getCurrency() : com.pricepilot.currency.CurrencyCode.INR;
         if (entity.getMinBudget() != null) {
-            builder.minBudget(entity.getMinBudget());
+            BigDecimal canonicalMin = currencyConversionService.convertToCanonical(entity.getMinBudget(), userCurrency);
+            builder.minBudget(canonicalMin);
         }
 
         if (entity.getMaxBudget() != null) {
-            builder.maxBudget(entity.getMaxBudget());
+            BigDecimal canonicalMax = currencyConversionService.convertToCanonical(entity.getMaxBudget(), userCurrency);
+            builder.maxBudget(canonicalMax);
         }
 
         if (entity.getMinRating() != null) {

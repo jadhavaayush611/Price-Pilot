@@ -1,5 +1,6 @@
 package com.pricepilot.intelligence.discovery.intent;
 
+import com.pricepilot.currency.*;
 import com.pricepilot.intelligence.discovery.normalization.QueryNormalizer;
 import org.springframework.stereotype.Component;
 
@@ -16,8 +17,8 @@ import java.util.regex.Pattern;
  *
  * Guarantees:
  * 1. Strict reproducibility across runs and environments.
- * 2. Safe currency parsing (INR / ₹ / Rs / Rs. / USD / $ / EUR / € / GBP / £, 'k' shorthand, commas, decimals).
- * 3. Structured constraint extraction (price bounds, star ratings, minimum discount, in-stock, category, brand, sort intent).
+ * 2. Safe currency parsing (INR / ₹ / Rs / Rs. / USD / $ / EUR / € / GBP / £ / JPY / ¥, 'k' shorthand, lakh, commas, decimals).
+ * 3. Structured constraint extraction (price bounds converted to canonical USD, star ratings, minimum discount, in-stock, category, brand, sort intent).
  * 4. Conflict detection (e.g. minPrice > maxPrice) without arbitrary fabrication.
  * 5. Semantic text extraction separating structured filters from residual semantic query tokens.
  */
@@ -27,10 +28,11 @@ public class DeterministicShoppingQueryInterpreter implements ShoppingQueryInter
     private static final int MAX_INPUT_LENGTH = 10000;
 
     private final QueryNormalizer queryNormalizer;
+    private final CurrencyConversionService currencyConversionService;
 
     // Currency prefix or suffix pattern
-    private static final String CURR_PREFIX = "(?:₹|rs\\.?|inr|\\$|usd|€|eur|£|gbp)?\\s*";
-    private static final String CURR_SUFFIX = "(?:\\s*(?:₹|rs\\.?|inr|\\$|usd|€|eur|£|gbp))?";
+    private static final String CURR_PREFIX = "(?:(₹|rs\\.?|inr|\\$|usd|€|eur|£|gbp|¥|jpy)\\s*)?";
+    private static final String CURR_SUFFIX = "(?:\\s*(₹|rs\\.?|inr|\\$|usd|€|eur|£|gbp|¥|jpy))?";
     private static final String NUM_VAL = "((?:\\d{1,3}(?:,\\d{3})+|\\d+)(?:\\.\\d+)?)\\s*(k|thousand|lakh|lac)?";
 
     // 1. Rating Patterns (Must strictly require star/*/+ or rated prefix)
@@ -158,19 +160,33 @@ public class DeterministicShoppingQueryInterpreter implements ShoppingQueryInter
         CATEGORY_ALIASES.put("television", "Electronics");
     }
 
-    public DeterministicShoppingQueryInterpreter(QueryNormalizer queryNormalizer) {
+    @org.springframework.beans.factory.annotation.Autowired
+    public DeterministicShoppingQueryInterpreter(
+            QueryNormalizer queryNormalizer,
+            CurrencyConversionService currencyConversionService) {
         this.queryNormalizer = queryNormalizer;
+        this.currencyConversionService = currencyConversionService;
+    }
+
+    public DeterministicShoppingQueryInterpreter(QueryNormalizer queryNormalizer) {
+        this(queryNormalizer, new CurrencyConversionServiceImpl(
+                new ConfiguredCurrencyRateProvider(new CurrencyProperties()),
+                new CurrencyProperties()
+        ));
     }
 
     @Override
-    public ShoppingQueryIntent interpret(String rawQuery) {
+    public ShoppingQueryIntent interpret(String rawQuery, CurrencyCode userCurrency) {
         if (rawQuery == null || rawQuery.trim().isEmpty()) {
             return ShoppingQueryIntent.builder()
                     .rawQuery("")
                     .semanticQuery("")
+                    .sourceCurrency(userCurrency != null ? userCurrency : CurrencyCode.INR)
                     .confidenceNotes(Collections.emptyList())
                     .build();
         }
+
+        CurrencyCode effectiveFallbackCurrency = userCurrency != null ? userCurrency : CurrencyCode.INR;
 
         // Bounded input length for safety
         String sanitized = rawQuery.length() > MAX_INPUT_LENGTH
@@ -183,6 +199,10 @@ public class DeterministicShoppingQueryInterpreter implements ShoppingQueryInter
 
         BigDecimal minPrice = null;
         BigDecimal maxPrice = null;
+        BigDecimal rawMinPrice = null;
+        BigDecimal rawMaxPrice = null;
+        CurrencyCode detectedSourceCurrency = effectiveFallbackCurrency;
+
         Double minRating = null;
         BigDecimal minDiscount = null;
         Boolean inStock = null;
@@ -231,17 +251,20 @@ public class DeterministicShoppingQueryInterpreter implements ShoppingQueryInter
         Matcher betweenMatcher = BETWEEN_PRICE_PATTERN.matcher(workingQuery);
         if (betweenMatcher.find()) {
             try {
-                BigDecimal p1 = parseNumericPrice(betweenMatcher.group(1), betweenMatcher.group(2));
-                BigDecimal p2 = parseNumericPrice(betweenMatcher.group(3), betweenMatcher.group(4));
+                ParsedPrice p1 = extractPrice(betweenMatcher.group(1), betweenMatcher.group(2), betweenMatcher.group(3), betweenMatcher.group(4), effectiveFallbackCurrency);
+                ParsedPrice p2 = extractPrice(betweenMatcher.group(5), betweenMatcher.group(6), betweenMatcher.group(7), betweenMatcher.group(8), effectiveFallbackCurrency);
                 if (p1 != null && p2 != null) {
-                    if (p1.compareTo(p2) > 0) {
+                    if (p1.canonicalAmount().compareTo(p2.canonicalAmount()) > 0) {
                         hasConflicts = true;
-                        conflictDescription = "Conflicting price range: lower bound (" + p1 + ") exceeds upper bound (" + p2 + ")";
+                        conflictDescription = "Conflicting price range: lower bound (" + p1.rawAmount() + ") exceeds upper bound (" + p2.rawAmount() + ")";
                         notes.add("Conflict detected in price range");
                     } else {
-                        minPrice = p1;
-                        maxPrice = p2;
-                        notes.add("Price range: " + minPrice + " to " + maxPrice);
+                        minPrice = p1.canonicalAmount();
+                        maxPrice = p2.canonicalAmount();
+                        rawMinPrice = p1.rawAmount();
+                        rawMaxPrice = p2.rawAmount();
+                        detectedSourceCurrency = p2.detectedCurrency();
+                        notes.add("Price range: " + p1.detectedCurrency().getSymbol() + p1.rawAmount() + " to " + p2.detectedCurrency().getSymbol() + p2.rawAmount() + " ($" + minPrice + " to $" + maxPrice + " USD)");
                     }
                 }
                 workingQuery = betweenMatcher.replaceFirst(" ");
@@ -252,15 +275,17 @@ public class DeterministicShoppingQueryInterpreter implements ShoppingQueryInter
         Matcher maxMatcher = MAX_PRICE_PATTERN.matcher(workingQuery);
         if (maxMatcher.find()) {
             try {
-                BigDecimal parsedMax = parseNumericPrice(maxMatcher.group(1), maxMatcher.group(2));
+                ParsedPrice parsedMax = extractPrice(maxMatcher.group(1), maxMatcher.group(2), maxMatcher.group(3), maxMatcher.group(4), effectiveFallbackCurrency);
                 if (parsedMax != null) {
-                    if (maxPrice != null && !maxPrice.equals(parsedMax)) {
+                    if (maxPrice != null && !maxPrice.equals(parsedMax.canonicalAmount())) {
                         hasConflicts = true;
-                        conflictDescription = "Multiple conflicting max price constraints: " + maxPrice + " vs " + parsedMax;
+                        conflictDescription = "Multiple conflicting max price constraints: " + maxPrice + " vs " + parsedMax.canonicalAmount();
                         notes.add("Conflict detected in max price constraints");
                     } else {
-                        maxPrice = parsedMax;
-                        notes.add("Maximum price: " + maxPrice);
+                        maxPrice = parsedMax.canonicalAmount();
+                        rawMaxPrice = parsedMax.rawAmount();
+                        detectedSourceCurrency = parsedMax.detectedCurrency();
+                        notes.add("Maximum price: " + parsedMax.detectedCurrency().getSymbol() + parsedMax.rawAmount() + " ($" + maxPrice + " USD)");
                     }
                 }
                 workingQuery = maxMatcher.replaceFirst(" ");
@@ -271,15 +296,17 @@ public class DeterministicShoppingQueryInterpreter implements ShoppingQueryInter
         Matcher minMatcher = MIN_PRICE_PATTERN.matcher(workingQuery);
         if (minMatcher.find()) {
             try {
-                BigDecimal parsedMin = parseNumericPrice(minMatcher.group(1), minMatcher.group(2));
+                ParsedPrice parsedMin = extractPrice(minMatcher.group(1), minMatcher.group(2), minMatcher.group(3), minMatcher.group(4), effectiveFallbackCurrency);
                 if (parsedMin != null) {
-                    if (minPrice != null && !minPrice.equals(parsedMin)) {
+                    if (minPrice != null && !minPrice.equals(parsedMin.canonicalAmount())) {
                         hasConflicts = true;
-                        conflictDescription = "Multiple conflicting min price constraints: " + minPrice + " vs " + parsedMin;
+                        conflictDescription = "Multiple conflicting min price constraints: " + minPrice + " vs " + parsedMin.canonicalAmount();
                         notes.add("Conflict detected in min price constraints");
                     } else {
-                        minPrice = parsedMin;
-                        notes.add("Minimum price: " + minPrice);
+                        minPrice = parsedMin.canonicalAmount();
+                        rawMinPrice = parsedMin.rawAmount();
+                        detectedSourceCurrency = parsedMin.detectedCurrency();
+                        notes.add("Minimum price: " + parsedMin.detectedCurrency().getSymbol() + parsedMin.rawAmount() + " ($" + minPrice + " USD)");
                     }
                 }
                 workingQuery = minMatcher.replaceFirst(" ");
@@ -363,6 +390,9 @@ public class DeterministicShoppingQueryInterpreter implements ShoppingQueryInter
                 .brand(detectedBrand)
                 .minPrice(minPrice)
                 .maxPrice(maxPrice)
+                .rawMinPrice(rawMinPrice)
+                .rawMaxPrice(rawMaxPrice)
+                .sourceCurrency(detectedSourceCurrency)
                 .minRating(minRating)
                 .minDiscount(minDiscount)
                 .inStock(inStock)
@@ -373,6 +403,30 @@ public class DeterministicShoppingQueryInterpreter implements ShoppingQueryInter
                 .confidenceNotes(notes)
                 .detectedAttributes(detectedAttributes)
                 .build();
+    }
+
+    private record ParsedPrice(BigDecimal rawAmount, CurrencyCode detectedCurrency, BigDecimal canonicalAmount) {}
+
+    private ParsedPrice extractPrice(String prefix, String numStr, String mult, String suffix, CurrencyCode fallbackCurrency) {
+        if (numStr == null || numStr.isBlank()) {
+            return null;
+        }
+        BigDecimal raw = parseNumericPrice(numStr, mult);
+        if (raw == null) {
+            return null;
+        }
+        CurrencyCode currency = null;
+        if (prefix != null && !prefix.isBlank()) {
+            currency = CurrencyCode.fromToken(prefix);
+        }
+        if (currency == null && suffix != null && !suffix.isBlank()) {
+            currency = CurrencyCode.fromToken(suffix);
+        }
+        if (currency == null) {
+            currency = fallbackCurrency != null ? fallbackCurrency : CurrencyCode.INR;
+        }
+        BigDecimal canonical = currencyConversionService.convertToCanonical(raw, currency);
+        return new ParsedPrice(raw, currency, canonical);
     }
 
     private BigDecimal parseNumericPrice(String numberStr, String multiplier) {

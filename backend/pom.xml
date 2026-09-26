@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.pricepilot</groupId>
 	<artifactId>pricepilot</artifactId>
-	<version>1.0.1</version>
+	<version>1.2.0</version>
 	<name>pricepilot</name>
 	<description>PricePilot Backend</description>
 	<url/>
@@ -79,7 +79,7 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>test</scope>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

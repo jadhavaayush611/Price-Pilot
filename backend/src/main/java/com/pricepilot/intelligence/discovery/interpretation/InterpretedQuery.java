@@ -37,6 +37,9 @@ public class InterpretedQuery {
     private String detectedCategory;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
+    private BigDecimal rawMinPrice;
+    private BigDecimal rawMaxPrice;
+    private com.pricepilot.currency.CurrencyCode sourceCurrency;
     private Double minRating;
     private BigDecimal minDiscountPercentage;
     private Boolean inStockOnly;

@@ -91,7 +91,7 @@ class NaturalLanguageDiscoveryServiceTest {
         HybridSearchRequest sentRequest = captor.getValue();
         assertThat(sentRequest.getQuery()).isEqualTo("wireless headphones");
         assertThat(sentRequest.getCategory()).isEqualTo("Headphones");
-        assertThat(sentRequest.getMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
+        assertThat(sentRequest.getMaxPrice()).isEqualByComparingTo(new BigDecimal("125.00"));
         assertThat(sentRequest.getMinRating()).isEqualTo(4.0);
 
         // Verify response and metrics

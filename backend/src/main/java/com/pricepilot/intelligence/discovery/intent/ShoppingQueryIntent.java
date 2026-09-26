@@ -29,6 +29,9 @@ public final class ShoppingQueryIntent implements Serializable {
     private final String brand;
     private final BigDecimal minPrice;
     private final BigDecimal maxPrice;
+    private final BigDecimal rawMinPrice;
+    private final BigDecimal rawMaxPrice;
+    private final com.pricepilot.currency.CurrencyCode sourceCurrency;
     private final Double minRating;
     private final BigDecimal minDiscount;
     private final Boolean inStock;
@@ -47,6 +50,9 @@ public final class ShoppingQueryIntent implements Serializable {
             String brand,
             BigDecimal minPrice,
             BigDecimal maxPrice,
+            BigDecimal rawMinPrice,
+            BigDecimal rawMaxPrice,
+            com.pricepilot.currency.CurrencyCode sourceCurrency,
             Double minRating,
             BigDecimal minDiscount,
             Boolean inStock,
@@ -63,6 +69,9 @@ public final class ShoppingQueryIntent implements Serializable {
         this.brand = brand != null && !brand.isBlank() ? brand.trim() : null;
         this.minPrice = minPrice;
         this.maxPrice = maxPrice;
+        this.rawMinPrice = rawMinPrice != null ? rawMinPrice : minPrice;
+        this.rawMaxPrice = rawMaxPrice != null ? rawMaxPrice : maxPrice;
+        this.sourceCurrency = sourceCurrency != null ? sourceCurrency : com.pricepilot.currency.CurrencyCode.INR;
         this.minRating = minRating;
         this.minDiscount = minDiscount;
         this.inStock = inStock;

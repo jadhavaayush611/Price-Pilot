@@ -1,5 +1,9 @@
 package com.pricepilot.intelligence.discovery;
 
+import com.pricepilot.currency.CurrencyCode;
+import com.pricepilot.currency.CurrencyConversionServiceImpl;
+import com.pricepilot.currency.ConfiguredCurrencyRateProvider;
+import com.pricepilot.currency.CurrencyProperties;
 import com.pricepilot.intelligence.discovery.interpretation.InterpretedQuery;
 import com.pricepilot.intelligence.discovery.interpretation.QueryInterpreter;
 import com.pricepilot.intelligence.discovery.normalization.QueryNormalizer;
@@ -17,17 +21,23 @@ public class QueryInterpreterTest {
 
     @BeforeEach
     void setUp() {
-        interpreter = new QueryInterpreter(new QueryNormalizer());
+        CurrencyProperties properties = new CurrencyProperties();
+        ConfiguredCurrencyRateProvider rateProvider = new ConfiguredCurrencyRateProvider(properties);
+        CurrencyConversionServiceImpl conversionService = new CurrencyConversionServiceImpl(rateProvider, properties);
+        interpreter = new QueryInterpreter(new QueryNormalizer(), conversionService);
     }
 
     @Test
-    @DisplayName("Extracts max price from 'iphone under 70000'")
+    @DisplayName("Extracts max price from 'iphone under 70000' and converts to canonical USD")
     void testIphoneUnder70000() {
         InterpretedQuery result = interpreter.interpret("iphone under 70000");
 
         assertNotNull(result);
         assertEquals("Smartphone", result.getDetectedCategory());
-        assertEquals(new BigDecimal("70000"), result.getMaxPrice());
+        // 70000 INR / 80 = 875.00 USD canonical
+        assertEquals(new BigDecimal("875.00"), result.getMaxPrice());
+        assertEquals(new BigDecimal("70000"), result.getRawMaxPrice());
+        assertEquals(CurrencyCode.INR, result.getSourceCurrency());
         assertNull(result.getMinPrice());
         assertTrue(result.getSearchTokens().contains("iphone"));
     }
@@ -51,7 +61,9 @@ public class QueryInterpreterTest {
 
         assertNotNull(result);
         assertEquals("Laptop", result.getDetectedCategory());
-        assertEquals(new BigDecimal("80000"), result.getMaxPrice());
+        // 80000 INR / 80 = 1000.00 USD canonical
+        assertEquals(new BigDecimal("1000.00"), result.getMaxPrice());
+        assertEquals(new BigDecimal("80000"), result.getRawMaxPrice());
         assertTrue(result.getSearchTokens().contains("16gb"));
     }
 
@@ -63,8 +75,9 @@ public class QueryInterpreterTest {
         assertNotNull(result);
         assertEquals("Sony", result.getDetectedBrand());
         assertEquals("Headphones", result.getDetectedCategory());
-        assertEquals(new BigDecimal("500"), result.getMinPrice());
-        assertEquals(new BigDecimal("1200"), result.getMaxPrice());
+        // 500 INR / 80 = 6.25 USD, 1200 INR / 80 = 15.00 USD
+        assertEquals(new BigDecimal("6.25"), result.getMinPrice());
+        assertEquals(new BigDecimal("15.00"), result.getMaxPrice());
     }
 
     @Test

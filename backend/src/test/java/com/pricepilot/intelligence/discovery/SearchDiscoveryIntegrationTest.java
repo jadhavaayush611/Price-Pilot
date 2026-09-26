@@ -121,10 +121,10 @@ public class SearchDiscoveryIntegrationTest {
     }
 
     @Test
-    @DisplayName("Discovery pipeline interprets intent 'iphone under 1200' and ranks iPhone first")
+    @DisplayName("Discovery pipeline interprets intent 'iphone under $1200' and ranks iPhone first")
     void testQueryInterpretationAndDiscoveryRanking() throws Exception {
         mockMvc.perform(get("/api/v1/discovery/products")
-                        .param("query", "iphone under 1200")
+                        .param("query", "iphone under $1200")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
@@ -132,7 +132,7 @@ public class SearchDiscoveryIntegrationTest {
                 .andExpect(jsonPath("$.content[0].currentBestPrice", is(999.0)))
                 .andExpect(jsonPath("$.content[0].discoveryBadges", hasItem("Best Match")))
                 .andExpect(jsonPath("$.interpretedQuery.detectedCategory", is("Smartphone")))
-                .andExpect(jsonPath("$.interpretedQuery.maxPrice", is(1200)));
+                .andExpect(jsonPath("$.interpretedQuery.maxPrice", is(1200.0)));
     }
 
     @Test

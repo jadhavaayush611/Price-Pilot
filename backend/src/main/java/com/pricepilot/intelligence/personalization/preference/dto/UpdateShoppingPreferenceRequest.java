@@ -34,4 +34,5 @@ public class UpdateShoppingPreferenceRequest {
     private DealSensitivity dealSensitivity;
     private PriceSensitivity priceSensitivity;
     private AvailabilityPreference availabilityPreference;
+    private com.pricepilot.currency.CurrencyCode currency;
 }

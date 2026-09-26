@@ -34,9 +34,6 @@ public class QueryNormalizer {
         // 1. Remove commas in numbers like 70,000 -> 70000
         query = CURRENCY_COMMAS.matcher(query).replaceAll("");
 
-        // 2. Standardize common currency symbols and punctuation
-        query = query.replace("$", "").replace("₹", "").replace("€", "").replace("£", "");
-
         // 3. Remove harmless noisy punctuation
         query = NOISY_PUNCTUATION.matcher(query).replaceAll(" ");
 

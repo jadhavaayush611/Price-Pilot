@@ -93,33 +93,33 @@ class NaturalLanguageDiscoveryIntegrationTest {
     @DisplayName("Integration: GET /api/v1/discovery/natural-language executes end-to-end shopping query")
     void testNaturalLanguageEndpoint() throws Exception {
         mockMvc.perform(get("/api/v1/discovery/natural-language")
-                        .param("q", "Sony wireless headphones under 300")
+                        .param("q", "Sony wireless headphones under $300")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(greaterThanOrEqualTo(1))))
                 .andExpect(jsonPath("$.content[0].name", containsString("Sony WH-1000XM4")))
                 .andExpect(jsonPath("$.interpretedQuery.detectedBrand", is("Sony")))
                 .andExpect(jsonPath("$.interpretedQuery.detectedCategory", is("Headphones")))
-                .andExpect(jsonPath("$.interpretedQuery.maxPrice", is(300)));
+                .andExpect(jsonPath("$.interpretedQuery.maxPrice", is(300.0)));
     }
 
     @Test
     @DisplayName("Integration: GET /api/v1/discovery/intent previews parsed intent")
     void testIntentEndpoint() throws Exception {
         mockMvc.perform(get("/api/v1/discovery/intent")
-                        .param("q", "Apple MacBook Pro under 4000")
+                        .param("q", "Apple MacBook Pro under $4000")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.category", is("Laptop")))
                 .andExpect(jsonPath("$.brand", is("Apple")))
-                .andExpect(jsonPath("$.maxPrice", is(4000)));
+                .andExpect(jsonPath("$.maxPrice", is(4000.0)));
     }
 
     @Test
     @DisplayName("Integration: GET /api/v1/discovery/products?nl=true routes through natural language service")
     void testProductsEndpointWithNlFlag() throws Exception {
         mockMvc.perform(get("/api/v1/discovery/products")
-                        .param("q", "wireless headphones under 250")
+                        .param("q", "wireless headphones under $250")
                         .param("nl", "true")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

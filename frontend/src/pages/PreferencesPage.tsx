@@ -15,9 +15,11 @@ import {
   AlertCircle,
   Plus,
   X,
-  Sparkles
+  Sparkles,
+  Coins
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { type CurrencyCode, CURRENCY_METADATA, getSavedCurrency, saveCurrency } from '../currency';
 
 export const PreferencesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -26,6 +28,7 @@ export const PreferencesPage: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Preference State
+  const [currency, setCurrency] = useState<CurrencyCode>(getSavedCurrency());
   const [preferredCategories, setPreferredCategories] = useState<string[]>([]);
   const [newCategoryInput, setNewCategoryInput] = useState('');
   const [preferredBrands, setPreferredBrands] = useState<string[]>([]);
@@ -45,6 +48,11 @@ export const PreferencesPage: React.FC = () => {
     setLoading(true);
     try {
       const prefs: UserShoppingPreference = await apiService.getUserPreferences();
+      if (prefs.currency && (prefs.currency as CurrencyCode) in CURRENCY_METADATA) {
+        const cur = prefs.currency as CurrencyCode;
+        setCurrency(cur);
+        saveCurrency(cur);
+      }
       setPreferredCategories(prefs.preferredCategories || []);
       setPreferredBrands(prefs.preferredBrands || []);
       setMinBudget(prefs.minBudget !== undefined && prefs.minBudget !== null ? prefs.minBudget.toString() : '');
@@ -85,7 +93,9 @@ export const PreferencesPage: React.FC = () => {
         dealSensitivity,
         priceSensitivity,
         availabilityPreference,
+        currency,
       });
+      saveCurrency(currency);
       setStatusMessage({ type: 'success', text: 'Shopping preferences saved successfully!' });
     } catch (err: unknown) {
       console.error('Failed to update preferences', err);
@@ -103,6 +113,8 @@ export const PreferencesPage: React.FC = () => {
     setStatusMessage(null);
     try {
       await apiService.resetUserPreferences();
+      setCurrency('INR');
+      saveCurrency('INR');
       setPreferredCategories([]);
       setPreferredBrands([]);
       setMinBudget('');
@@ -143,6 +155,8 @@ export const PreferencesPage: React.FC = () => {
   const removeBrand = (br: string) => {
     setPreferredBrands(preferredBrands.filter(b => b !== br));
   };
+
+  const currentCurrencySymbol = CURRENCY_METADATA[currency]?.symbol || '₹';
 
   if (loading) {
     return (
@@ -208,6 +222,39 @@ export const PreferencesPage: React.FC = () => {
       </AnimatePresence>
 
       <form onSubmit={handleSave} className="space-y-8">
+        {/* Preferred Currency */}
+        <div className="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Coins className="w-4 h-4 text-amber-400" />
+            <h2 className="text-base font-semibold text-white">Display Currency</h2>
+          </div>
+          <p className="text-xs text-zinc-400 mb-4">
+            Select your preferred display currency for product prices, budget thresholds, and queries across PricePilot.
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {(Object.keys(CURRENCY_METADATA) as CurrencyCode[]).map((code) => {
+              const meta = CURRENCY_METADATA[code];
+              const isSelected = currency === code;
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setCurrency(code)}
+                  className={`flex flex-col items-center justify-center p-3 rounded-lg border text-center transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-indigo-950/50 border-indigo-500 text-white shadow-md shadow-indigo-900/20'
+                      : 'bg-zinc-900/70 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <span className="text-base font-bold mb-0.5">{meta.symbol} {meta.code}</span>
+                  <span className="text-[10px] text-zinc-400">{meta.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Preferred Categories */}
         <div className="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-2">
@@ -325,7 +372,7 @@ export const PreferencesPage: React.FC = () => {
           <div className="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="w-4 h-4 text-cyan-400" />
-              <h2 className="text-base font-semibold text-white">Target Budget ($)</h2>
+              <h2 className="text-base font-semibold text-white">Target Budget ({currentCurrencySymbol})</h2>
             </div>
             <p className="text-xs text-zinc-400 mb-4">
               Items fitting within this price range receive positive scoring; items over max budget are penalized.
@@ -334,13 +381,13 @@ export const PreferencesPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] uppercase tracking-wider text-zinc-400 font-bold mb-1">
-                  Min Budget
+                  Min Budget ({currentCurrencySymbol})
                 </label>
                 <input
                   type="number"
-                  placeholder="Min ($)"
+                  placeholder={`Min (${currentCurrencySymbol})`}
                   min="0"
-                  step="0.01"
+                  step="1"
                   value={minBudget}
                   onChange={(e) => setMinBudget(e.target.value)}
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700"
@@ -348,13 +395,13 @@ export const PreferencesPage: React.FC = () => {
               </div>
               <div>
                 <label className="block text-[11px] uppercase tracking-wider text-zinc-400 font-bold mb-1">
-                  Max Budget
+                  Max Budget ({currentCurrencySymbol})
                 </label>
                 <input
                   type="number"
-                  placeholder="Max ($)"
+                  placeholder={`Max (${currentCurrencySymbol})`}
                   min="0"
-                  step="0.01"
+                  step="1"
                   value={maxBudget}
                   onChange={(e) => setMaxBudget(e.target.value)}
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700"

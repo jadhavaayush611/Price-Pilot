@@ -63,4 +63,9 @@ public class UserShoppingPreferenceEntity extends BaseEntity {
     @Column(name = "availability_preference", nullable = false, length = 30)
     @Builder.Default
     private AvailabilityPreference availabilityPreference = AvailabilityPreference.ALL;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "currency", nullable = false, length = 10)
+    @Builder.Default
+    private com.pricepilot.currency.CurrencyCode currency = com.pricepilot.currency.CurrencyCode.INR;
 }

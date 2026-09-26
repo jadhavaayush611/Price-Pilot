@@ -1,5 +1,9 @@
 package com.pricepilot.intelligence.discovery.intent;
 
+import com.pricepilot.currency.CurrencyCode;
+import com.pricepilot.currency.CurrencyConversionServiceImpl;
+import com.pricepilot.currency.ConfiguredCurrencyRateProvider;
+import com.pricepilot.currency.CurrencyProperties;
 import com.pricepilot.intelligence.discovery.normalization.QueryNormalizer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +22,10 @@ class DeterministicShoppingQueryInterpreterTest {
     @BeforeEach
     void setUp() {
         QueryNormalizer normalizer = new QueryNormalizer();
-        interpreter = new DeterministicShoppingQueryInterpreter(normalizer);
+        CurrencyProperties properties = new CurrencyProperties();
+        ConfiguredCurrencyRateProvider rateProvider = new ConfiguredCurrencyRateProvider(properties);
+        CurrencyConversionServiceImpl conversionService = new CurrencyConversionServiceImpl(rateProvider, properties);
+        interpreter = new DeterministicShoppingQueryInterpreter(normalizer, conversionService);
     }
 
     // ==========================================
@@ -26,22 +33,39 @@ class DeterministicShoppingQueryInterpreterTest {
     // ==========================================
 
     @Test
-    @DisplayName("Price Parsing: Should parse 'under ₹10,000'")
+    @DisplayName("Price Parsing: Should parse 'under ₹10,000' and convert to canonical USD")
     void testParseUnderRupeesWithCommas() {
         ShoppingQueryIntent intent = interpreter.interpret("wireless headphones under ₹10,000");
 
-        assertThat(intent.getMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
+        // 10,000 INR / 80.0 = 125.00 USD canonical
+        assertThat(intent.getMaxPrice()).isEqualByComparingTo(new BigDecimal("125.00"));
+        assertThat(intent.getRawMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
+        assertThat(intent.getSourceCurrency()).isEqualTo(CurrencyCode.INR);
         assertThat(intent.getCategory()).isEqualTo("Headphones");
         assertThat(intent.getSemanticQuery()).isEqualTo("wireless headphones");
         assertThat(intent.isHasConflicts()).isFalse();
     }
 
     @Test
-    @DisplayName("Price Parsing: Should parse 'below 10000'")
+    @DisplayName("Price Parsing: Should parse 'below 10000' with default user currency fallback (INR)")
     void testParseBelowPlainNumber() {
         ShoppingQueryIntent intent = interpreter.interpret("laptop below 10000");
 
-        assertThat(intent.getMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
+        // Bare number defaults to INR -> 10000 / 80 = 125.00 USD
+        assertThat(intent.getMaxPrice()).isEqualByComparingTo(new BigDecimal("125.00"));
+        assertThat(intent.getRawMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
+        assertThat(intent.getSourceCurrency()).isEqualTo(CurrencyCode.INR);
+        assertThat(intent.getCategory()).isEqualTo("Laptop");
+    }
+
+    @Test
+    @DisplayName("Price Parsing: Should parse 'under $1000' with explicit USD")
+    void testParseExplicitUsd() {
+        ShoppingQueryIntent intent = interpreter.interpret("laptop under $1000");
+
+        assertThat(intent.getMaxPrice()).isEqualByComparingTo(new BigDecimal("1000.00"));
+        assertThat(intent.getRawMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(1000));
+        assertThat(intent.getSourceCurrency()).isEqualTo(CurrencyCode.USD);
         assertThat(intent.getCategory()).isEqualTo("Laptop");
     }
 
@@ -50,8 +74,12 @@ class DeterministicShoppingQueryInterpreterTest {
     void testParsePriceRangeBetween() {
         ShoppingQueryIntent intent = interpreter.interpret("headphones between ₹5,000 and ₹10,000");
 
-        assertThat(intent.getMinPrice()).isEqualByComparingTo(BigDecimal.valueOf(5000));
-        assertThat(intent.getMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
+        // 5000 INR = 62.50 USD, 10000 INR = 125.00 USD
+        assertThat(intent.getMinPrice()).isEqualByComparingTo(new BigDecimal("62.50"));
+        assertThat(intent.getMaxPrice()).isEqualByComparingTo(new BigDecimal("125.00"));
+        assertThat(intent.getRawMinPrice()).isEqualByComparingTo(BigDecimal.valueOf(5000));
+        assertThat(intent.getRawMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
+        assertThat(intent.getSourceCurrency()).isEqualTo(CurrencyCode.INR);
         assertThat(intent.getCategory()).isEqualTo("Headphones");
         assertThat(intent.isHasConflicts()).isFalse();
     }
@@ -60,35 +88,53 @@ class DeterministicShoppingQueryInterpreterTest {
     @DisplayName("Price Parsing: Should parse currency shorthand 'under 10k' and 'under 90k'")
     void testParseKiloShorthand() {
         ShoppingQueryIntent intent1 = interpreter.interpret("headphones under 10k");
-        assertThat(intent1.getMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
+        assertThat(intent1.getMaxPrice()).isEqualByComparingTo(new BigDecimal("125.00"));
+        assertThat(intent1.getRawMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
 
         ShoppingQueryIntent intent2 = interpreter.interpret("gaming laptop under 90k");
-        assertThat(intent2.getMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(90000));
+        assertThat(intent2.getMaxPrice()).isEqualByComparingTo(new BigDecimal("1125.00"));
+        assertThat(intent2.getRawMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(90000));
         assertThat(intent2.getCategory()).isEqualTo("Laptop");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "smartphone under Rs 10000",
-            "smartphone under Rs. 10,000",
-            "smartphone under 10000 INR",
-            "smartphone under ₹10000",
-            "smartphone under $10000",
-            "smartphone under 10000 USD"
+            "smartphone under Rs 8000",
+            "smartphone under Rs. 8,000",
+            "smartphone under 8000 INR",
+            "smartphone under ₹8000"
     })
-    @DisplayName("Price Parsing: Should handle diverse currency formats consistently")
-    void testDiverseCurrencyFormats(String query) {
+    @DisplayName("Price Parsing: Should handle diverse INR currency formats consistently (8000 INR -> 100 USD)")
+    void testDiverseInrCurrencyFormats(String query) {
         ShoppingQueryIntent intent = interpreter.interpret(query);
-        assertThat(intent.getMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
+        assertThat(intent.getMaxPrice()).isEqualByComparingTo(new BigDecimal("100.00"));
+        assertThat(intent.getRawMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(8000));
+        assertThat(intent.getSourceCurrency()).isEqualTo(CurrencyCode.INR);
+        assertThat(intent.getCategory()).isEqualTo("Smartphone");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "smartphone under $100",
+            "smartphone under 100 USD"
+    })
+    @DisplayName("Price Parsing: Should handle USD currency formats consistently")
+    void testDiverseUsdCurrencyFormats(String query) {
+        ShoppingQueryIntent intent = interpreter.interpret(query);
+        assertThat(intent.getMaxPrice()).isEqualByComparingTo(new BigDecimal("100.00"));
+        assertThat(intent.getRawMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(100));
+        assertThat(intent.getSourceCurrency()).isEqualTo(CurrencyCode.USD);
         assertThat(intent.getCategory()).isEqualTo("Smartphone");
     }
 
     @Test
-    @DisplayName("Price Parsing: Should parse minimum price 'above ₹1,500.50'")
+    @DisplayName("Price Parsing: Should parse minimum price 'above ₹1,600'")
     void testParseMinPriceDecimal() {
-        ShoppingQueryIntent intent = interpreter.interpret("smartphones above ₹1,500.50");
+        ShoppingQueryIntent intent = interpreter.interpret("smartphones above ₹1,600");
 
-        assertThat(intent.getMinPrice()).isEqualByComparingTo(new BigDecimal("1500.50"));
+        // 1600 INR / 80 = 20.00 USD
+        assertThat(intent.getMinPrice()).isEqualByComparingTo(new BigDecimal("20.00"));
+        assertThat(intent.getRawMinPrice()).isEqualByComparingTo(new BigDecimal("1600"));
         assertThat(intent.getCategory()).isEqualTo("Smartphone");
     }
 
@@ -174,7 +220,7 @@ class DeterministicShoppingQueryInterpreterTest {
         ShoppingQueryIntent intent = interpreter.interpret(query);
 
         assertThat(intent.getCategory()).isEqualTo("Headphones");
-        assertThat(intent.getMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(10000));
+        assertThat(intent.getMaxPrice()).isEqualByComparingTo(new BigDecimal("125.00"));
         assertThat(intent.getMinRating()).isEqualTo(4.0);
         assertThat(intent.getSemanticQuery()).contains("wireless headphones").contains("good ANC");
         assertThat(intent.getSemanticQuery()).doesNotContain("10000").doesNotContain("4 stars");
@@ -187,7 +233,7 @@ class DeterministicShoppingQueryInterpreterTest {
         ShoppingQueryIntent intent = interpreter.interpret(query);
 
         assertThat(intent.getCategory()).isEqualTo("Laptop");
-        assertThat(intent.getMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(90000));
+        assertThat(intent.getMaxPrice()).isEqualByComparingTo(new BigDecimal("1125.00"));
         assertThat(intent.getSemanticQuery()).contains("lightweight laptop").contains("great battery life");
         assertThat(intent.getSemanticQuery()).doesNotContain("90000");
     }
@@ -241,7 +287,8 @@ class DeterministicShoppingQueryInterpreterTest {
         ShoppingQueryIntent intent = interpreter.interpret(longQuery);
 
         assertThat(intent).isNotNull();
-        assertThat(intent.getMaxPrice()).isEqualByComparingTo(BigDecimal.valueOf(5000));
+        // 5000 INR / 80 = 62.50 USD
+        assertThat(intent.getMaxPrice()).isEqualByComparingTo(new BigDecimal("62.50"));
         assertThat(intent.getCategory()).isEqualTo("Headphones");
     }
 }
