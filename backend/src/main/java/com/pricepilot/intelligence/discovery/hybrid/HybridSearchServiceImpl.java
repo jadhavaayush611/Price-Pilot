@@ -181,7 +181,7 @@ public class HybridSearchServiceImpl implements HybridSearchService {
                     request.getSellerId()
             );
 
-            int structuredLimit = request.getStructuredCandidateLimit() > 0 ? request.getStructuredCandidateLimit() : 50;
+            int structuredLimit = request.getStructuredCandidateLimit() > 0 ? request.getStructuredCandidateLimit() : 150;
             Page<ProductEntity> structuredPage = productRepository.findAll(spec, PageRequest.of(0, structuredLimit));
             List<ProductEntity> structuredCandidates = structuredPage.getContent();
             structuredCandidateSummary.record(structuredCandidates.size());
@@ -333,7 +333,7 @@ public class HybridSearchServiceImpl implements HybridSearchService {
             applySorting(scoredCandidates, sortMode);
 
             // 10. Pagination Slicing
-            long totalElements = scoredCandidates.size();
+            long totalElements = Math.max(structuredPage.getTotalElements(), (long) scoredCandidates.size());
             int totalPages = (int) Math.ceil((double) totalElements / size);
 
             int fromIndex = page * size;

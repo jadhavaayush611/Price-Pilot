@@ -42,6 +42,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final ProductAnalyticsRepository analyticsRepository;
     private final PasswordEncoder passwordEncoder;
     private final org.springframework.core.env.Environment environment;
+    private final com.pricepilot.intelligence.semantic.pipeline.ProductEmbeddingService productEmbeddingService;
 
     public DatabaseSeeder(
             ProductRepository productRepository,
@@ -52,7 +53,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             UserInteractionEventRepository interactionRepository,
             ProductAnalyticsRepository analyticsRepository,
             PasswordEncoder passwordEncoder,
-            org.springframework.core.env.Environment environment) {
+            org.springframework.core.env.Environment environment,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) com.pricepilot.intelligence.semantic.pipeline.ProductEmbeddingService productEmbeddingService) {
         this.productRepository = productRepository;
         this.sellerRepository = sellerRepository;
         this.productPriceRepository = productPriceRepository;
@@ -62,6 +64,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.analyticsRepository = analyticsRepository;
         this.passwordEncoder = passwordEncoder;
         this.environment = environment;
+        this.productEmbeddingService = productEmbeddingService;
     }
 
     @Override
@@ -81,7 +84,16 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
 
         if (productRepository.count() > 0) {
-            log.info("Database already seeded. Skipping seeder.");
+            log.info("Database already seeded. Verifying semantic embeddings index...");
+            if (productEmbeddingService != null) {
+                try {
+                    List<ProductEntity> allProducts = productRepository.findAll();
+                    productEmbeddingService.indexProductBatch(allProducts);
+                    log.info("Verified/indexed {} products into vector store.", allProducts.size());
+                } catch (Exception e) {
+                    log.warn("Non-fatal: failed to verify vector store embeddings on startup: {}", e.getMessage());
+                }
+            }
             return;
         }
 
@@ -445,6 +457,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         productInfos.add(new ProductInfo("DJI Mic 2", "DJI", "Accessory", "High-quality wireless microphone system for creators.", 349.00));
 
         Random rand = new Random();
+        List<ProductEntity> savedProducts = new ArrayList<>(productInfos.size());
 
         for (ProductInfo info : productInfos) {
             // Save Product
@@ -456,6 +469,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .archived(false)
                     .build();
             product = productRepository.save(product);
+            savedProducts.add(product);
 
             // Seed prices for 3 different sellers
             List<SellerEntity> selectedSellers = new ArrayList<>(sellers);
@@ -561,6 +575,16 @@ public class DatabaseSeeder implements CommandLineRunner {
                             .build();
                     interactionRepository.save(event);
                 }
+            }
+        }
+
+        if (productEmbeddingService != null && !savedProducts.isEmpty()) {
+            try {
+                log.info("Indexing {} seeded products into vector store...", savedProducts.size());
+                productEmbeddingService.indexProductBatch(savedProducts);
+                log.info("Successfully indexed seeded products into vector store.");
+            } catch (Exception e) {
+                log.warn("Non-fatal: failed to index seeded products into vector store: {}", e.getMessage());
             }
         }
     }

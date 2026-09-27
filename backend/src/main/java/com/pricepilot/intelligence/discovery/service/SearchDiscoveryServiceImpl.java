@@ -48,12 +48,15 @@ public class SearchDiscoveryServiceImpl implements SearchDiscoveryService {
     private final QueryInterpreter queryInterpreter;
     private final DefaultSearchRelevanceScorer relevanceScorer;
 
+    private final com.pricepilot.intelligence.discovery.hybrid.HybridSearchService hybridSearchService;
+
     // Metrics
     private final Counter requestCounter;
     private final Counter emptyResultsCounter;
     private final Counter failureCounter;
     private final Timer searchLatencyTimer;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public SearchDiscoveryServiceImpl(
             ProductRepository productRepository,
             ProductPriceRepository productPriceRepository,
@@ -61,6 +64,7 @@ public class SearchDiscoveryServiceImpl implements SearchDiscoveryService {
             QueryNormalizer queryNormalizer,
             QueryInterpreter queryInterpreter,
             DefaultSearchRelevanceScorer relevanceScorer,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) com.pricepilot.intelligence.discovery.hybrid.HybridSearchService hybridSearchService,
             MeterRegistry meterRegistry) {
         this.productRepository = productRepository;
         this.productPriceRepository = productPriceRepository;
@@ -68,6 +72,7 @@ public class SearchDiscoveryServiceImpl implements SearchDiscoveryService {
         this.queryNormalizer = queryNormalizer;
         this.queryInterpreter = queryInterpreter;
         this.relevanceScorer = relevanceScorer;
+        this.hybridSearchService = hybridSearchService;
 
         this.requestCounter = Counter.builder("pricepilot.search.requests")
                 .description("Total product discovery search requests")
@@ -83,9 +88,23 @@ public class SearchDiscoveryServiceImpl implements SearchDiscoveryService {
                 .register(meterRegistry);
     }
 
+    public SearchDiscoveryServiceImpl(
+            ProductRepository productRepository,
+            ProductPriceRepository productPriceRepository,
+            PriceAnalyticsService priceAnalyticsService,
+            QueryNormalizer queryNormalizer,
+            QueryInterpreter queryInterpreter,
+            DefaultSearchRelevanceScorer relevanceScorer,
+            MeterRegistry meterRegistry) {
+        this(productRepository, productPriceRepository, priceAnalyticsService, queryNormalizer, queryInterpreter, relevanceScorer, null, meterRegistry);
+    }
+
     @Override
     @Cacheable(value = "product-searches", key = "T(java.util.Objects).hash(#request.query, #request.category, #request.brand, #request.minPrice, #request.maxPrice, #request.inStock, #request.dealQuality, #request.sort, #request.page, #request.size)")
     public DiscoverySearchResponseDTO searchAndDiscover(DiscoverySearchRequestDTO request) {
+        if (hybridSearchService != null) {
+            return hybridSearchService.search(request);
+        }
         requestCounter.increment();
         long start = System.currentTimeMillis();
 
