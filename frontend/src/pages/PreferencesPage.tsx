@@ -84,7 +84,7 @@ export const PreferencesPage: React.FC = () => {
     }
 
     try {
-      await apiService.updateUserPreferences({
+      const savedPrefs = await apiService.updateUserPreferences({
         preferredCategories,
         preferredBrands,
         minBudget: minB,
@@ -95,7 +95,23 @@ export const PreferencesPage: React.FC = () => {
         availabilityPreference,
         currency,
       });
-      saveCurrency(currency);
+      if (savedPrefs) {
+        if (savedPrefs.currency && (savedPrefs.currency as CurrencyCode) in CURRENCY_METADATA) {
+          const cur = savedPrefs.currency as CurrencyCode;
+          setCurrency(cur);
+          saveCurrency(cur);
+        }
+        setPreferredCategories(savedPrefs.preferredCategories || []);
+        setPreferredBrands(savedPrefs.preferredBrands || []);
+        setMinBudget(savedPrefs.minBudget !== undefined && savedPrefs.minBudget !== null ? savedPrefs.minBudget.toString() : '');
+        setMaxBudget(savedPrefs.maxBudget !== undefined && savedPrefs.maxBudget !== null ? savedPrefs.maxBudget.toString() : '');
+        setMinRating(savedPrefs.minRating !== undefined && savedPrefs.minRating !== null ? savedPrefs.minRating : 0);
+        setDealSensitivity(savedPrefs.dealSensitivity || 'MEDIUM');
+        setPriceSensitivity(savedPrefs.priceSensitivity || 'MEDIUM');
+        setAvailabilityPreference(savedPrefs.availabilityPreference || 'ALL');
+      } else {
+        saveCurrency(currency);
+      }
       setStatusMessage({ type: 'success', text: 'Shopping preferences saved successfully!' });
     } catch (err: unknown) {
       console.error('Failed to update preferences', err);

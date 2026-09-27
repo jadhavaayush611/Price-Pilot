@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '../types';
 import { apiService } from '../services/api';
+import { type CurrencyCode, saveCurrency } from '../currency';
 
 interface AuthContextType {
   user: User | null;
@@ -29,11 +30,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const currentUser = await apiService.getCurrentUser();
           setUser(currentUser);
           setToken(storedToken);
+          try {
+            const prefs = await apiService.getUserPreferences();
+            if (prefs && prefs.currency && ['USD', 'INR', 'EUR', 'GBP', 'JPY'].includes(prefs.currency)) {
+              saveCurrency(prefs.currency as CurrencyCode);
+            }
+          } catch {
+            // Keep default currency if preference fetch fails
+          }
         } catch (error) {
           console.error('Failed to restore authentication session:', error);
           localStorage.removeItem('token');
           setUser(null);
           setToken(null);
+          saveCurrency('INR');
         }
       }
       setIsLoading(false);
@@ -49,6 +59,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('token', data.token);
       setToken(data.token);
       setUser(data.user);
+      try {
+        const prefs = await apiService.getUserPreferences();
+        if (prefs && prefs.currency && ['USD', 'INR', 'EUR', 'GBP', 'JPY'].includes(prefs.currency)) {
+          saveCurrency(prefs.currency as CurrencyCode);
+        }
+      } catch {
+        saveCurrency('INR');
+      }
     } catch (error) {
       logout();
       throw error;
@@ -64,6 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('token', data.token);
       setToken(data.token);
       setUser(data.user);
+      saveCurrency('INR');
     } catch (error) {
       logout();
       throw error;
@@ -76,6 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    saveCurrency('INR');
   };
 
   const isAdmin = () => {

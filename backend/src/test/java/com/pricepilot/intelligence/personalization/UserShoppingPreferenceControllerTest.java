@@ -147,4 +147,33 @@ class UserShoppingPreferenceControllerTest {
 
         verify(preferenceService).resetPreferences(testUserId);
     }
+
+    @Test
+    @DisplayName("PUT /api/v1/users/preferences preserves currency preference")
+    void testUpdatePreferencesWithCurrency() throws Exception {
+        UpdateShoppingPreferenceRequest request = UpdateShoppingPreferenceRequest.builder()
+                .currency(com.pricepilot.currency.CurrencyCode.USD)
+                .minBudget(BigDecimal.valueOf(50))
+                .maxBudget(BigDecimal.valueOf(250))
+                .build();
+
+        UserShoppingPreferenceDTO dto = UserShoppingPreferenceDTO.builder()
+                .userId(testUserId)
+                .currency(com.pricepilot.currency.CurrencyCode.USD)
+                .minBudget(BigDecimal.valueOf(50))
+                .maxBudget(BigDecimal.valueOf(250))
+                .build();
+
+        when(preferenceService.updatePreferences(eq(testUserId), any())).thenReturn(dto);
+
+        mockMvc.perform(put("/api/v1/users/preferences")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currency").value("USD"))
+                .andExpect(jsonPath("$.minBudget").value(50))
+                .andExpect(jsonPath("$.maxBudget").value(250));
+
+        verify(preferenceService).updatePreferences(eq(testUserId), any());
+    }
 }

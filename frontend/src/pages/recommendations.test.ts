@@ -103,4 +103,59 @@ describe('Personalized Recommendations & Preferences Integration Tests', () => {
     expect(result.personalizationEvidence?.[0].description).not.toContain('userId');
     expect(result.personalizationEvidence?.[0].description).not.toContain('event_id');
   });
+
+  it('persists and round-trips currency preference along with budget', async () => {
+    const updateRequest = {
+      preferredCategories: ['Headphones'],
+      minBudget: 1000,
+      maxBudget: 5000,
+      currency: 'INR' as const,
+    };
+
+    const persistedResponse: UserShoppingPreference = {
+      preferredCategories: ['Headphones'],
+      preferredBrands: [],
+      minBudget: 1000,
+      maxBudget: 5000,
+      dealSensitivity: 'MEDIUM',
+      priceSensitivity: 'MEDIUM',
+      availabilityPreference: 'ALL',
+      currency: 'INR',
+    };
+
+    const putSpy = vi.spyOn(apiClient, 'put').mockResolvedValue({ data: persistedResponse });
+    const result = await apiService.updateUserPreferences(updateRequest);
+
+    expect(putSpy).toHaveBeenCalledWith('/users/preferences', updateRequest);
+    expect(result.currency).toBe('INR');
+    expect(result.maxBudget).toBe(5000);
+  });
+
+  it('handles USD currency update and maintains currency bounds', async () => {
+    const updateRequest = {
+      preferredCategories: ['Laptops'],
+      minBudget: 500,
+      maxBudget: 2000,
+      currency: 'USD' as const,
+    };
+
+    const persistedResponse: UserShoppingPreference = {
+      preferredCategories: ['Laptops'],
+      preferredBrands: [],
+      minBudget: 500,
+      maxBudget: 2000,
+      dealSensitivity: 'MEDIUM',
+      priceSensitivity: 'MEDIUM',
+      availabilityPreference: 'ALL',
+      currency: 'USD',
+    };
+
+    const putSpy = vi.spyOn(apiClient, 'put').mockResolvedValue({ data: persistedResponse });
+    const result = await apiService.updateUserPreferences(updateRequest);
+
+    expect(putSpy).toHaveBeenCalledWith('/users/preferences', updateRequest);
+    expect(result.currency).toBe('USD');
+    expect(result.minBudget).toBe(500);
+    expect(result.maxBudget).toBe(2000);
+  });
 });

@@ -18,12 +18,22 @@ public class UserShoppingPreferenceServiceImpl implements UserShoppingPreference
 
     private final UserShoppingPreferenceRepository preferenceRepository;
     private final UserRepository userRepository;
+    private final org.springframework.beans.factory.ObjectProvider<com.pricepilot.recommendation.RecommendationCacheHelper> cacheHelperProvider;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public UserShoppingPreferenceServiceImpl(
+            UserShoppingPreferenceRepository preferenceRepository,
+            UserRepository userRepository,
+            org.springframework.beans.factory.ObjectProvider<com.pricepilot.recommendation.RecommendationCacheHelper> cacheHelperProvider) {
+        this.preferenceRepository = preferenceRepository;
+        this.userRepository = userRepository;
+        this.cacheHelperProvider = cacheHelperProvider;
+    }
 
     public UserShoppingPreferenceServiceImpl(
             UserShoppingPreferenceRepository preferenceRepository,
             UserRepository userRepository) {
-        this.preferenceRepository = preferenceRepository;
-        this.userRepository = userRepository;
+        this(preferenceRepository, userRepository, null);
     }
 
     @Override
@@ -76,15 +86,10 @@ public class UserShoppingPreferenceServiceImpl implements UserShoppingPreference
                     .collect(Collectors.toSet()));
         }
 
-        if (request.getMinBudget() != null) {
-            entity.setMinBudget(request.getMinBudget());
-        }
-        if (request.getMaxBudget() != null) {
-            entity.setMaxBudget(request.getMaxBudget());
-        }
-        if (request.getMinRating() != null) {
-            entity.setMinRating(request.getMinRating());
-        }
+        entity.setMinBudget(request.getMinBudget());
+        entity.setMaxBudget(request.getMaxBudget());
+        entity.setMinRating(request.getMinRating());
+
         if (request.getDealSensitivity() != null) {
             entity.setDealSensitivity(request.getDealSensitivity());
         }
@@ -99,6 +104,14 @@ public class UserShoppingPreferenceServiceImpl implements UserShoppingPreference
         }
 
         UserShoppingPreferenceEntity saved = preferenceRepository.save(entity);
+
+        if (cacheHelperProvider != null) {
+            com.pricepilot.recommendation.RecommendationCacheHelper helper = cacheHelperProvider.getIfAvailable();
+            if (helper != null) {
+                helper.evictUserCaches(userId);
+            }
+        }
+
         return toDTO(saved);
     }
 
@@ -110,6 +123,13 @@ public class UserShoppingPreferenceServiceImpl implements UserShoppingPreference
             throw new IllegalArgumentException("User ID cannot be null");
         }
         preferenceRepository.deleteByUserId(userId);
+
+        if (cacheHelperProvider != null) {
+            com.pricepilot.recommendation.RecommendationCacheHelper helper = cacheHelperProvider.getIfAvailable();
+            if (helper != null) {
+                helper.evictUserCaches(userId);
+            }
+        }
     }
 
     @Override

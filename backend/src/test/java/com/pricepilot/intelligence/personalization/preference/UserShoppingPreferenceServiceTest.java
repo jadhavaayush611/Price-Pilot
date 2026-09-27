@@ -142,4 +142,110 @@ class UserShoppingPreferenceServiceTest {
         preferenceService.resetPreferences(testUserId);
         verify(preferenceRepository, times(1)).deleteByUserId(testUserId);
     }
+
+    @Test
+    @DisplayName("Update preferences can clear minBudget, maxBudget, and minRating by setting them to null")
+    void testUpdatePreferencesClearsBudgetAndRating() {
+        UserShoppingPreferenceEntity existing = UserShoppingPreferenceEntity.builder()
+                .userId(testUserId)
+                .minBudget(BigDecimal.valueOf(500))
+                .maxBudget(BigDecimal.valueOf(1500))
+                .minRating(4.5)
+                .build();
+        existing.setId(UUID.randomUUID());
+
+        when(preferenceRepository.findByUserId(testUserId)).thenReturn(Optional.of(existing));
+        when(preferenceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UpdateShoppingPreferenceRequest request = UpdateShoppingPreferenceRequest.builder()
+                .minBudget(null)
+                .maxBudget(null)
+                .minRating(null)
+                .currency(com.pricepilot.currency.CurrencyCode.USD)
+                .build();
+
+        UserShoppingPreferenceDTO result = preferenceService.updatePreferences(testUserId, request);
+
+        assertNotNull(result);
+        assertNull(result.getMinBudget());
+        assertNull(result.getMaxBudget());
+        assertNull(result.getMinRating());
+        assertEquals(com.pricepilot.currency.CurrencyCode.USD, result.getCurrency());
+    }
+
+    @Test
+    @DisplayName("Update preferences invokes RecommendationCacheHelper when available")
+    void testUpdatePreferencesEvictsUserCaches() {
+        com.pricepilot.recommendation.RecommendationCacheHelper mockCacheHelper = mock(com.pricepilot.recommendation.RecommendationCacheHelper.class);
+        org.springframework.beans.factory.ObjectProvider<com.pricepilot.recommendation.RecommendationCacheHelper> provider = mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(mockCacheHelper);
+
+        UserShoppingPreferenceServiceImpl serviceWithCache = new UserShoppingPreferenceServiceImpl(
+                preferenceRepository, userRepository, provider);
+
+        when(preferenceRepository.findByUserId(testUserId)).thenReturn(Optional.empty());
+        when(preferenceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UpdateShoppingPreferenceRequest request = UpdateShoppingPreferenceRequest.builder()
+                .currency(com.pricepilot.currency.CurrencyCode.INR)
+                .build();
+
+        serviceWithCache.updatePreferences(testUserId, request);
+
+        verify(mockCacheHelper, times(1)).evictUserCaches(testUserId);
+    }
+
+    @Test
+    @DisplayName("Reset preferences invokes RecommendationCacheHelper when available")
+    void testResetPreferencesEvictsUserCaches() {
+        com.pricepilot.recommendation.RecommendationCacheHelper mockCacheHelper = mock(com.pricepilot.recommendation.RecommendationCacheHelper.class);
+        org.springframework.beans.factory.ObjectProvider<com.pricepilot.recommendation.RecommendationCacheHelper> provider = mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(mockCacheHelper);
+
+        UserShoppingPreferenceServiceImpl serviceWithCache = new UserShoppingPreferenceServiceImpl(
+                preferenceRepository, userRepository, provider);
+
+        serviceWithCache.resetPreferences(testUserId);
+
+        verify(preferenceRepository, times(1)).deleteByUserId(testUserId);
+        verify(mockCacheHelper, times(1)).evictUserCaches(testUserId);
+    }
+
+    @Test
+    @DisplayName("Update preferences persists INR with ₹5000 budget correctly")
+    void testUpdatePreferencesINR() {
+        when(preferenceRepository.findByUserId(testUserId)).thenReturn(Optional.empty());
+        when(preferenceRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UpdateShoppingPreferenceRequest request = UpdateShoppingPreferenceRequest.builder()
+                .preferredCategories(Set.of("Headphones"))
+                .preferredBrands(Set.of("Sony"))
+                .minBudget(BigDecimal.valueOf(1000))
+                .maxBudget(BigDecimal.valueOf(5000))
+                .minRating(4.0)
+                .currency(com.pricepilot.currency.CurrencyCode.INR)
+                .dealSensitivity(DealSensitivity.HIGH)
+                .priceSensitivity(PriceSensitivity.MEDIUM)
+                .availabilityPreference(AvailabilityPreference.IN_STOCK_ONLY)
+                .build();
+
+        UserShoppingPreferenceDTO result = preferenceService.updatePreferences(testUserId, request);
+
+        assertNotNull(result);
+        assertEquals(com.pricepilot.currency.CurrencyCode.INR, result.getCurrency());
+        assertEquals(BigDecimal.valueOf(5000), result.getMaxBudget());
+        assertEquals(BigDecimal.valueOf(1000), result.getMinBudget());
+        assertEquals(4.0, result.getMinRating());
+        assertEquals(DealSensitivity.HIGH, result.getDealSensitivity());
+        assertEquals(AvailabilityPreference.IN_STOCK_ONLY, result.getAvailabilityPreference());
+    }
+
+    @Test
+    @DisplayName("Null userId or request throws IllegalArgumentException")
+    void testNullValidation() {
+        assertThrows(IllegalArgumentException.class, () -> preferenceService.getPreferences(null));
+        assertThrows(IllegalArgumentException.class, () -> preferenceService.updatePreferences(null, new UpdateShoppingPreferenceRequest()));
+        assertThrows(IllegalArgumentException.class, () -> preferenceService.updatePreferences(testUserId, null));
+        assertThrows(IllegalArgumentException.class, () -> preferenceService.resetPreferences(null));
+    }
 }
