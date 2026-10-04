@@ -177,18 +177,18 @@ public class DatabaseSeeder implements CommandLineRunner {
         List<ProductInfo> productInfos = new ArrayList<>();
         
         // Smartphone (18)
-        productInfos.add(new ProductInfo("iPhone 15 Pro", "Apple", "Smartphone", "Flagship Apple smartphone with Titanium design and A17 Pro chip.", 999.00));
-        productInfos.add(new ProductInfo("Samsung Galaxy S24 Ultra", "Samsung", "Smartphone", "Premium Samsung flagship with S-Pen, Titanium build, and AI features.", 1299.00));
-        productInfos.add(new ProductInfo("Google Pixel 8 Pro", "Google", "Smartphone", "Google flagship smartphone with Tensor G3 and advanced AI photography.", 999.00));
+        productInfos.add(new ProductInfo("iPhone 15 Pro", "Apple", "Smartphone", "Flagship Apple smartphone with Titanium design and A17 Pro chip.", 999.00, "https://upload.wikimedia.org/wikipedia/commons/c/c3/Apple_iPhone_15_Pro.jpg"));
+        productInfos.add(new ProductInfo("Samsung Galaxy S24 Ultra", "Samsung", "Smartphone", "Premium Samsung flagship with S-Pen, Titanium build, and AI features.", 1299.00, "https://upload.wikimedia.org/wikipedia/commons/5/5e/SAMSUNG_Galaxy_S24_Ultra.jpg"));
+        productInfos.add(new ProductInfo("Google Pixel 8 Pro", "Google", "Smartphone", "Google flagship smartphone with Tensor G3 and advanced AI photography.", 999.00, "https://upload.wikimedia.org/wikipedia/commons/4/4c/Google_Pixel_8_Pro.jpg"));
         productInfos.add(new ProductInfo("OnePlus 12", "OnePlus", "Smartphone", "High performance phone with Snapdragon 8 Gen 3 and super fast charging.", 799.00));
         productInfos.add(new ProductInfo("Xiaomi 14 Ultra", "Xiaomi", "Smartphone", "Pro photography phone with Leica quad-camera system.", 1099.00));
-        productInfos.add(new ProductInfo("iPhone 15", "Apple", "Smartphone", "Standard Apple smartphone with Dynamic Island and A16 Bionic.", 799.00));
+        productInfos.add(new ProductInfo("iPhone 15", "Apple", "Smartphone", "Standard Apple smartphone with Dynamic Island and A16 Bionic.", 799.00, "https://upload.wikimedia.org/wikipedia/commons/4/47/Back_of_iPhone_15.jpg"));
         productInfos.add(new ProductInfo("Samsung Galaxy S24", "Samsung", "Smartphone", "Compact flagship with Galaxy AI capabilities.", 799.00));
         productInfos.add(new ProductInfo("Google Pixel 8", "Google", "Smartphone", "Compact Google phone with pure Android experience.", 699.00));
         productInfos.add(new ProductInfo("Motorola Edge 50 Ultra", "Motorola", "Smartphone", "Sleek smartphone with wooden back design and fast charging.", 899.00));
-        productInfos.add(new ProductInfo("Nothing Phone 2", "Nothing", "Smartphone", "Unique phone with transparent back and glyph interface.", 599.00));
+        productInfos.add(new ProductInfo("Nothing Phone 2", "Nothing", "Smartphone", "Unique phone with transparent back and glyph interface.", 599.00, "https://upload.wikimedia.org/wikipedia/commons/d/d0/Nothing_phone_%282%29_%28Booredatwork.com%29_001.png"));
         productInfos.add(new ProductInfo("Sony Xperia 1 VI", "Sony", "Smartphone", "Professional photography and cinema-oriented smartphone.", 1199.00));
-        productInfos.add(new ProductInfo("iPhone 14 Pro", "Apple", "Smartphone", "Apple flagship from previous generation with Dynamic Island.", 899.00));
+        productInfos.add(new ProductInfo("iPhone 14 Pro", "Apple", "Smartphone", "Apple flagship from previous generation with Dynamic Island.", 899.00, "https://upload.wikimedia.org/wikipedia/commons/2/29/Back_of_the_iPhone_14_Pro.jpg"));
         productInfos.add(new ProductInfo("Samsung Galaxy Z Fold 5", "Samsung", "Smartphone", "Premium folding phone with expansive inner display.", 1799.00));
         productInfos.add(new ProductInfo("Samsung Galaxy Z Flip 5", "Samsung", "Smartphone", "Compact pocketable folding phone with large cover screen.", 999.00));
         productInfos.add(new ProductInfo("OnePlus 12R", "OnePlus", "Smartphone", "Performance focused flagship killer with excellent battery.", 499.00));
@@ -200,7 +200,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         productInfos.add(new ProductInfo("MacBook Pro 16 M3", "Apple", "Laptop", "Professional workstation with M3 Pro/Max chip and Liquid Retina XDR display.", 2499.00));
         productInfos.add(new ProductInfo("MacBook Air 13 M3", "Apple", "Laptop", "Thin, light laptop with M3 chip and long battery life.", 1099.00));
         productInfos.add(new ProductInfo("Dell XPS 15", "Dell", "Laptop", "Premium Windows laptop with InfinityEdge display and Intel Core i9.", 1899.00));
-        productInfos.add(new ProductInfo("Lenovo ThinkPad X1 Carbon", "Lenovo", "Laptop", "Business laptop with carbon fiber chassis and outstanding keyboard.", 1599.00));
+        productInfos.add(new ProductInfo("Lenovo ThinkPad X1 Carbon", "Lenovo", "Laptop", "Business laptop with carbon fiber chassis and outstanding keyboard.", 1599.00, "https://upload.wikimedia.org/wikipedia/commons/4/48/Lenovo_ThinkPad_X1_Carbon_Ultrabook.jpg"));
         productInfos.add(new ProductInfo("HP Spectre x360", "HP", "Laptop", "Convertible 2-in-1 laptop with premium gem-cut design.", 1399.00));
         productInfos.add(new ProductInfo("ASUS ROG Zephyrus G14", "ASUS", "Laptop", "Compact gaming laptop with AMD Ryzen 9 and RTX 4070.", 1599.00));
         productInfos.add(new ProductInfo("Acer Predator Helios", "Acer", "Laptop", "Heavy duty gaming laptop with high refresh rate screen.", 1299.00));
@@ -208,7 +208,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         productInfos.add(new ProductInfo("Razer Blade 16", "Razer", "Laptop", "Premium gaming laptop with dual-mode Mini-LED display.", 2999.00));
         productInfos.add(new ProductInfo("Lenovo Legion Pro 7i", "Lenovo", "Laptop", "High performance gaming laptop with RTX 4090.", 2499.00));
         productInfos.add(new ProductInfo("HP Omen 16", "HP", "Laptop", "Understated gaming laptop with great cooling.", 1199.00));
-        productInfos.add(new ProductInfo("MacBook Pro 14 M3", "Apple", "Laptop", "Powerful professional laptop in a compact 14-inch chassis.", 1599.00));
+        productInfos.add(new ProductInfo("MacBook Pro 14 M3", "Apple", "Laptop", "Powerful professional laptop in a compact 14-inch chassis.", 1599.00, "https://upload.wikimedia.org/wikipedia/commons/4/40/Apple_MacBook_Pro_%28M3%29.jpg"));
         productInfos.add(new ProductInfo("Dell XPS 13 Plus", "Dell", "Laptop", "Futuristic design compact premium laptop.", 1499.00));
         productInfos.add(new ProductInfo("Lenovo Yoga Book 9i", "Lenovo", "Laptop", "Dual-screen OLED laptop for multitasking.", 1999.00));
         productInfos.add(new ProductInfo("ASUS Zenbook 14 OLED", "ASUS", "Laptop", "Sleek, lightweight laptop with stunning OLED display.", 899.00));
@@ -217,8 +217,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         productInfos.add(new ProductInfo("Acer Swift Go 14", "Acer", "Laptop", "Thin and light laptop with Intel Core Ultra.", 749.00));
 
         // Tablet (18)
-        productInfos.add(new ProductInfo("iPad Pro 11 M4", "Apple", "Tablet", "Ultra thin iPad with Tandem OLED display and powerful M4 chip.", 999.00));
-        productInfos.add(new ProductInfo("iPad Air M2", "Apple", "Tablet", "Versatile iPad with M2 chip and Apple Pencil Pro support.", 599.00));
+        productInfos.add(new ProductInfo("iPad Pro 11 M4", "Apple", "Tablet", "Ultra thin iPad with Tandem OLED display and powerful M4 chip.", 999.00, "https://upload.wikimedia.org/wikipedia/commons/1/12/IPad_Pro_M4_11-inch.jpeg"));
+        productInfos.add(new ProductInfo("iPad Air M2", "Apple", "Tablet", "Versatile iPad with M2 chip and Apple Pencil Pro support.", 599.00, "https://upload.wikimedia.org/wikipedia/commons/2/26/IPad_Air_11-inch_%28M2%29_front_side_%2820250525_154539%29.jpg"));
         productInfos.add(new ProductInfo("iPad Mini 6", "Apple", "Tablet", "Compact iPad with A15 Bionic and Apple Pencil 2 support.", 499.00));
         productInfos.add(new ProductInfo("Samsung Galaxy Tab S9 Ultra", "Samsung", "Tablet", "Massive 14.6-inch AMOLED display tablet with S-Pen included.", 1199.00));
         productInfos.add(new ProductInfo("Samsung Galaxy Tab S9 FE", "Samsung", "Tablet", "Fan edition tablet with S-Pen and water resistance.", 449.00));
@@ -228,9 +228,9 @@ public class DatabaseSeeder implements CommandLineRunner {
         productInfos.add(new ProductInfo("Amazon Fire HD 10", "Amazon", "Tablet", "Affordable tablet for media streaming and basic tasks.", 149.00));
         productInfos.add(new ProductInfo("Google Pixel Tablet", "Google", "Tablet", "Tablet that doubles as a smart home display with charging dock.", 499.00));
         productInfos.add(new ProductInfo("Microsoft Surface Pro 11", "Microsoft", "Tablet", "2-in-1 Windows tablet with Snapdragon processor.", 999.00));
-        productInfos.add(new ProductInfo("iPad Pro 13 M4", "Apple", "Tablet", "Massive Tandem OLED display flagship tablet.", 1299.00));
+        productInfos.add(new ProductInfo("iPad Pro 13 M4", "Apple", "Tablet", "Massive Tandem OLED display flagship tablet.", 1299.00, "https://upload.wikimedia.org/wikipedia/commons/7/75/IPad_Pro_13-inch_backside.jpg"));
         productInfos.add(new ProductInfo("iPad 10th Gen", "Apple", "Tablet", "Colorful standard iPad for everyday tasks.", 349.00));
-        productInfos.add(new ProductInfo("Samsung Galaxy Tab S9", "Samsung", "Tablet", "Premium water-resistant Android tablet.", 799.00));
+        productInfos.add(new ProductInfo("Samsung Galaxy Tab S9", "Samsung", "Tablet", "Premium water-resistant Android tablet.", 799.00, "https://upload.wikimedia.org/wikipedia/commons/0/05/Samsung_Galaxy_Tab_S9.png"));
         productInfos.add(new ProductInfo("Lenovo Tab Extreme", "Lenovo", "Tablet", "Large format entertainment tablet with dual USB-C.", 999.00));
         productInfos.add(new ProductInfo("OnePlus Pad Go", "OnePlus", "Tablet", "Affordable 2K display tablet for streaming.", 249.00));
         productInfos.add(new ProductInfo("Amazon Fire Max 11", "Amazon", "Tablet", "Premium built affordable tablet with stylus support.", 229.00));
@@ -239,7 +239,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         // Headphones (18)
         productInfos.add(new ProductInfo("Sony WH-1000XM5", "Sony", "Headphones", "Industry leading active noise canceling over-ear headphones.", 399.00));
         productInfos.add(new ProductInfo("Bose QuietComfort Ultra", "Bose", "Headphones", "Noise canceling headphones with spatial audio technology.", 429.00));
-        productInfos.add(new ProductInfo("Apple AirPods Max", "Apple", "Headphones", "Premium over-ear headphones with custom spatial audio and mesh headband.", 549.00));
+        productInfos.add(new ProductInfo("Apple AirPods Max", "Apple", "Headphones", "Premium over-ear headphones with custom spatial audio and mesh headband.", 549.00, "https://upload.wikimedia.org/wikipedia/commons/8/8e/Apple_AirPods_Max.jpg"));
         productInfos.add(new ProductInfo("Sennheiser Momentum 4", "Sennheiser", "Headphones", "Audiophile grade headphones with incredible 60-hour battery life.", 379.00));
         productInfos.add(new ProductInfo("Beats Studio Pro", "Beats", "Headphones", "Over-ear headphones with customized spatial audio and USB-C audio support.", 349.00));
         productInfos.add(new ProductInfo("Sony WH-1000XM4", "Sony", "Headphones", "Classic noise canceling headphones with foldaway design.", 299.00));
@@ -260,12 +260,12 @@ public class DatabaseSeeder implements CommandLineRunner {
         productInfos.add(new ProductInfo("Apple AirPods Pro 2", "Apple", "Earbuds", "Active noise canceling earbuds with MagSafe USB-C case and H2 chip.", 249.00));
         productInfos.add(new ProductInfo("Sony WF-1000XM5", "Sony", "Earbuds", "Premium active noise canceling wireless earbuds with high-res audio.", 299.00));
         productInfos.add(new ProductInfo("Bose QuietComfort Ultra Earbuds", "Bose", "Earbuds", "World class noise cancellation in a compact earbud format.", 299.00));
-        productInfos.add(new ProductInfo("Samsung Galaxy Buds2 Pro", "Samsung", "Earbuds", "Seamless integration with Samsung devices and 24-bit audio.", 229.00));
+        productInfos.add(new ProductInfo("Samsung Galaxy Buds2 Pro", "Samsung", "Earbuds", "Seamless integration with Samsung devices and 24-bit audio.", 229.00, "https://upload.wikimedia.org/wikipedia/commons/b/b7/Pair_of_lavender_Samsung_Galaxy_Buds2_Pro.jpg"));
         productInfos.add(new ProductInfo("Google Pixel Buds Pro", "Google", "Earbuds", "ANC earbuds with multipoint connectivity and hands-free Assistant.", 199.00));
         productInfos.add(new ProductInfo("Beats Fit Pro", "Beats", "Earbuds", "Fitness oriented earbuds with secure-fit wingtips and spatial audio.", 199.00));
         productInfos.add(new ProductInfo("Sennheiser Momentum True Wireless 4", "Sennheiser", "Earbuds", "True wireless earbuds with lossless audio support.", 299.00));
         productInfos.add(new ProductInfo("Jabra Elite 10", "Jabra", "Earbuds", "Comfortable work and music earbuds with Dolby Atmos support.", 249.00));
-        productInfos.add(new ProductInfo("Nothing Ear 2", "Nothing", "Earbuds", "Lightweight transparent earbuds with personalized sound profiles.", 149.00));
+        productInfos.add(new ProductInfo("Nothing Ear 2", "Nothing", "Earbuds", "Lightweight transparent earbuds with personalized sound profiles.", 149.00, "https://upload.wikimedia.org/wikipedia/commons/d/d5/Nothing_ear2.jpg"));
         productInfos.add(new ProductInfo("Anker Soundcore Liberty 4 NC", "Anker", "Earbuds", "Affordable earbuds with high performance noise cancellation.", 99.00));
         productInfos.add(new ProductInfo("Sony LinkBuds S", "Sony", "Earbuds", "Compact, lightweight wireless earbuds with excellent ambient sound.", 199.00));
         productInfos.add(new ProductInfo("Apple AirPods 3", "Apple", "Earbuds", "Standard wireless earbuds with spatial audio.", 169.00));
@@ -278,41 +278,41 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         // Smartwatch (18)
         productInfos.add(new ProductInfo("Apple Watch Ultra 2", "Apple", "Smartwatch", "Rugged titanium smartwatch with bright display and double tap gesture.", 799.00));
-        productInfos.add(new ProductInfo("Apple Watch Series 9", "Apple", "Smartwatch", "Flagship Apple watch with S9 chip and health tracking features.", 399.00));
+        productInfos.add(new ProductInfo("Apple Watch Series 9", "Apple", "Smartwatch", "Flagship Apple watch with S9 chip and health tracking features.", 399.00, "https://upload.wikimedia.org/wikipedia/commons/5/54/Apple_Watch_Series_9_%28cropped%29.jpg"));
         productInfos.add(new ProductInfo("Samsung Galaxy Watch 6 Classic", "Samsung", "Smartwatch", "Smartwatch with classic rotating bezel and comprehensive sleep coaching.", 399.00));
         productInfos.add(new ProductInfo("Garmin Fenix 7 Pro", "Garmin", "Smartwatch", "Premium multisport GPS watch with solar charging and built-in flashlight.", 799.00));
         productInfos.add(new ProductInfo("Pixel Watch 2", "Google", "Smartwatch", "Fitbit health tracking combined with Google AI smart features.", 349.00));
         productInfos.add(new ProductInfo("Fitbit Sense 2", "Fitbit", "Smartwatch", "Advanced health and fitness smartwatch with stress monitoring.", 299.00));
         productInfos.add(new ProductInfo("Amazfit GTR 4", "Amazfit", "Smartwatch", "Smartwatch with 14-day battery life and GPS tracking.", 199.00));
-        productInfos.add(new ProductInfo("Garmin Venu 3", "Garmin", "Smartwatch", "GPS smartwatch with bright AMOLED display and fitness features.", 449.00));
+        productInfos.add(new ProductInfo("Garmin Venu 3", "Garmin", "Smartwatch", "GPS smartwatch with bright AMOLED display and fitness features.", 449.00, "https://upload.wikimedia.org/wikipedia/commons/d/d0/Garmin_Venu_3_%28a%29.JPG"));
         productInfos.add(new ProductInfo("Apple Watch SE", "Apple", "Smartwatch", "Affordable Apple watch with core fitness and safety features.", 249.00));
         productInfos.add(new ProductInfo("OnePlus Watch 2", "OnePlus", "Smartwatch", "Dual-engine architecture smartwatch with 100-hour battery life.", 299.00));
-        productInfos.add(new ProductInfo("Withings ScanWatch 2", "Withings", "Smartwatch", "Hybrid smartwatch with body temperature tracking and ECG.", 349.00));
+        productInfos.add(new ProductInfo("Withings ScanWatch 2", "Withings", "Smartwatch", "Hybrid smartwatch with body temperature tracking and ECG.", 349.00, "https://upload.wikimedia.org/wikipedia/commons/4/4f/Withings_ScanWatch_2_black.jpg"));
         productInfos.add(new ProductInfo("Samsung Galaxy Watch 6", "Samsung", "Smartwatch", "Sleek health-focused smartwatch with bright AMOLED.", 299.00));
         productInfos.add(new ProductInfo("Garmin Epix Gen 2", "Garmin", "Smartwatch", "Premium active outdoor smartwatch with brilliant screen.", 899.00));
         productInfos.add(new ProductInfo("Fitbit Versa 4", "Fitbit", "Smartwatch", "Fitness smartwatch with built-in Google maps and wallet.", 199.00));
         productInfos.add(new ProductInfo("Amazfit T-Rex 2", "Amazfit", "Smartwatch", "Rugged outdoor GPS smartwatch with military testing.", 229.00));
-        productInfos.add(new ProductInfo("Coros Pace 3", "Coros", "Smartwatch", "Ultra-lightweight sports watch for runners.", 229.00));
-        productInfos.add(new ProductInfo("Apple Watch Series 8", "Apple", "Smartwatch", "Previous gen Apple Watch with temperature sensing.", 329.00));
+        productInfos.add(new ProductInfo("Coros Pace 3", "Coros", "Smartwatch", "Ultra-lightweight sports watch for runners.", 229.00, "https://upload.wikimedia.org/wikipedia/commons/b/b4/Coros_Pace_3.jpeg"));
+        productInfos.add(new ProductInfo("Apple Watch Series 8", "Apple", "Smartwatch", "Previous gen Apple Watch with temperature sensing.", 329.00, "https://upload.wikimedia.org/wikipedia/commons/6/65/Apple_Watch_Series_8.jpg"));
         productInfos.add(new ProductInfo("Garmin Forerunner 265", "Garmin", "Smartwatch", "GPS running smartwatch with AMOLED display.", 449.00));
 
         // Gaming Console (18)
         productInfos.add(new ProductInfo("PlayStation 5 Slim", "Sony", "Gaming Console", "Next-gen gaming console with ultra-high speed SSD and ray tracing.", 499.00));
-        productInfos.add(new ProductInfo("Xbox Series X", "Microsoft", "Gaming Console", "Fastest, most powerful Xbox ever with 12 teraflops of power.", 499.00));
+        productInfos.add(new ProductInfo("Xbox Series X", "Microsoft", "Gaming Console", "Fastest, most powerful Xbox ever with 12 teraflops of power.", 499.00, "https://upload.wikimedia.org/wikipedia/commons/2/2c/Xbox_Series_X_mit_Controller.jpg"));
         productInfos.add(new ProductInfo("Xbox Series S", "Microsoft", "Gaming Console", "All-digital next-gen gaming performance in the smallest Xbox ever.", 299.00));
-        productInfos.add(new ProductInfo("Nintendo Switch OLED", "Nintendo", "Gaming Console", "Handheld console with a vibrant 7-inch OLED screen and wide kickstand.", 349.00));
-        productInfos.add(new ProductInfo("Steam Deck OLED", "Valve", "Gaming Console", "Powerful handheld PC gaming machine with HDR OLED screen.", 549.00));
+        productInfos.add(new ProductInfo("Nintendo Switch OLED", "Nintendo", "Gaming Console", "Handheld console with a vibrant 7-inch OLED screen and wide kickstand.", 349.00, "https://upload.wikimedia.org/wikipedia/commons/8/80/Nintendo_Switch_%E2%80%93_OLED-Modell%2C_Konsole_und_Dock_20230506.png"));
+        productInfos.add(new ProductInfo("Steam Deck OLED", "Valve", "Gaming Console", "Powerful handheld PC gaming machine with HDR OLED screen.", 549.00, "https://upload.wikimedia.org/wikipedia/commons/a/a7/Steam_Deck_OLED_framsida_hemsk%C3%A4rm.jpg"));
         productInfos.add(new ProductInfo("ASUS ROG Ally", "ASUS", "Gaming Console", "Handheld gaming PC running Windows 11 with Ryzen Z1 Extreme.", 699.00));
-        productInfos.add(new ProductInfo("Lenovo Legion Go", "Lenovo", "Gaming Console", "Windows handheld gaming PC with detachable controllers.", 699.00));
-        productInfos.add(new ProductInfo("PlayStation VR2", "Sony", "Gaming Console", "Virtual reality headset with 4K HDR displays and feedback.", 549.00));
+        productInfos.add(new ProductInfo("Lenovo Legion Go", "Lenovo", "Gaming Console", "Windows handheld gaming PC with detachable controllers.", 699.00, "https://upload.wikimedia.org/wikipedia/commons/d/d2/Lenovo_Legion_Go.jpg"));
+        productInfos.add(new ProductInfo("PlayStation VR2", "Sony", "Gaming Console", "Virtual reality headset with 4K HDR displays and feedback.", 549.00, "https://upload.wikimedia.org/wikipedia/commons/1/16/PlayStation_VR2.jpg"));
         productInfos.add(new ProductInfo("Meta Quest 3", "Meta", "Gaming Console", "Breakthrough mixed reality headset with high-res passthrough.", 499.00));
-        productInfos.add(new ProductInfo("PlayStation Portal", "Sony", "Gaming Console", "Remote play handheld device streaming PS5 games over Wi-Fi.", 199.00));
-        productInfos.add(new ProductInfo("Nintendo Switch Lite", "Nintendo", "Gaming Console", "Dedicated handheld gaming system compatible with Switch games.", 199.00));
-        productInfos.add(new ProductInfo("PlayStation 5 Pro", "Sony", "Gaming Console", "Enhanced performance console with advanced ray tracing.", 699.00));
+        productInfos.add(new ProductInfo("PlayStation Portal", "Sony", "Gaming Console", "Remote play handheld device streaming PS5 games over Wi-Fi.", 199.00, "https://upload.wikimedia.org/wikipedia/commons/4/45/PlayStation_Portal.jpg"));
+        productInfos.add(new ProductInfo("Nintendo Switch Lite", "Nintendo", "Gaming Console", "Dedicated handheld gaming system compatible with Switch games.", 199.00, "https://upload.wikimedia.org/wikipedia/commons/e/e4/Nintendo_Switch_Lite_Grey_-_01.jpg"));
+        productInfos.add(new ProductInfo("PlayStation 5 Pro", "Sony", "Gaming Console", "Enhanced performance console with advanced ray tracing.", 699.00, "https://upload.wikimedia.org/wikipedia/commons/8/82/PlayStation_5_Pro_no_disc_drive.jpg"));
         productInfos.add(new ProductInfo("Xbox Series X Digital", "Microsoft", "Gaming Console", "All-digital Xbox Series X in white chassis.", 449.00));
-        productInfos.add(new ProductInfo("Analogue Pocket", "Analogue", "Gaming Console", "Premium retro gaming multi-cartridge handheld.", 219.00));
+        productInfos.add(new ProductInfo("Analogue Pocket", "Analogue", "Gaming Console", "Premium retro gaming multi-cartridge handheld.", 219.00, "https://upload.wikimedia.org/wikipedia/commons/e/ed/Analogue_Pocket.jpg"));
         productInfos.add(new ProductInfo("Steam Deck LCD", "Valve", "Gaming Console", "Entry-level handheld PC gaming machine.", 399.00));
-        productInfos.add(new ProductInfo("Meta Quest 2", "Meta", "Gaming Console", "Affordable standalone VR headset.", 299.00));
+        productInfos.add(new ProductInfo("Meta Quest 2", "Meta", "Gaming Console", "Affordable standalone VR headset.", 299.00, "https://upload.wikimedia.org/wikipedia/commons/8/86/Meta_quest_2_06.jpg"));
         productInfos.add(new ProductInfo("PlayStation VR", "Sony", "Gaming Console", "Original VR headset for PS4.", 199.00));
         productInfos.add(new ProductInfo("Asus ROG Ally X", "ASUS", "Gaming Console", "Enhanced ROG Ally with double the battery capacity.", 799.00));
 
@@ -357,11 +357,11 @@ public class DatabaseSeeder implements CommandLineRunner {
         productInfos.add(new ProductInfo("Ducky One 2 Mini", "Ducky", "Keyboard", "Compact 60% mechanical gaming keyboard.", 99.00));
 
         // Mouse (18)
-        productInfos.add(new ProductInfo("Logitech MX Master 3S", "Logitech", "Mouse", "Ergonomic wireless mouse with MagSpeed scroll wheel and 8K DPI.", 99.00));
+        productInfos.add(new ProductInfo("Logitech MX Master 3S", "Logitech", "Mouse", "Ergonomic wireless mouse with MagSpeed scroll wheel and 8K DPI.", 99.00, "https://upload.wikimedia.org/wikipedia/commons/9/90/Logitech_MX_Master_3S_HS01.jpg"));
         productInfos.add(new ProductInfo("Logitech G502 X", "Logitech", "Mouse", "Iconic gaming mouse with hybrid optical-mechanical switches.", 79.00));
         productInfos.add(new ProductInfo("Razer DeathAdder V3 Pro", "Razer", "Mouse", "Ultra-lightweight wireless gaming mouse designed for esports.", 149.00));
         productInfos.add(new ProductInfo("SteelSeries Aerox 3", "SteelSeries", "Mouse", "Water-resistant lightweight honeycomb wireless gaming mouse.", 99.00));
-        productInfos.add(new ProductInfo("Razer Basilisk V3", "Razer", "Mouse", "Customizable ergonomic gaming mouse with hyperscroll wheel.", 69.00));
+        productInfos.add(new ProductInfo("Razer Basilisk V3", "Razer", "Mouse", "Customizable ergonomic gaming mouse with hyperscroll wheel.", 69.00, "https://upload.wikimedia.org/wikipedia/commons/5/5b/Razer_Basilisk_V3_1.jpg"));
         productInfos.add(new ProductInfo("Logitech G Pro X Superlight 2", "Logitech", "Mouse", "Esports champion wireless gaming mouse weighing only 60 grams.", 159.00));
         productInfos.add(new ProductInfo("Pulsar X2 V2", "Pulsar", "Mouse", "Symmetrical lightweight wireless gaming mouse.", 99.00));
         productInfos.add(new ProductInfo("Glorious Model O 2", "Glorious", "Mouse", "Honeycomb lightweight wireless gaming mouse.", 99.00));
@@ -378,7 +378,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         // Storage (18)
         productInfos.add(new ProductInfo("Samsung 990 Pro 2TB", "Samsung", "Storage", "Ultra fast PCIe 4.0 NVMe M.2 SSD for gaming and content creation.", 179.00));
-        productInfos.add(new ProductInfo("SanDisk Extreme Portable SSD 1TB", "SanDisk", "Storage", "Rugged portable SSD with USB 3.2 Gen 2 performance.", 99.00));
+        productInfos.add(new ProductInfo("SanDisk Extreme Portable SSD 1TB", "SanDisk", "Storage", "Rugged portable SSD with USB 3.2 Gen 2 performance.", 99.00, "https://upload.wikimedia.org/wikipedia/commons/0/03/SanDisk_Extreme_Portable_SSD_-_1TB%2C_USB-C_%2841036158305%29.jpg"));
         productInfos.add(new ProductInfo("WD Black SN850X 2TB", "WD", "Storage", "High performance PCIe Gen 4 gaming SSD with optional heatsink.", 159.00));
         productInfos.add(new ProductInfo("Crucial X9 Pro 2TB", "Crucial", "Storage", "Compact high speed portable SSD for backups.", 129.00));
         productInfos.add(new ProductInfo("Seagate Backup Plus 5TB", "Seagate", "Storage", "High capacity external portable hard drive for backups.", 119.00));
@@ -417,18 +417,18 @@ public class DatabaseSeeder implements CommandLineRunner {
         productInfos.add(new ProductInfo("GL.iNet GL-AXT1800", "GL.iNet", "Networking", "Powerful slate WiFi 6 travel router.", 129.00));
 
         // Camera (18)
-        productInfos.add(new ProductInfo("Sony Alpha 7 IV", "Sony", "Camera", "Full-frame mirrorless camera with 33MP sensor and 4K 60p video.", 2499.00));
-        productInfos.add(new ProductInfo("Canon EOS R6 Mark II", "Canon", "Camera", "Versatile full-frame mirrorless camera with high speed shooting.", 2299.00));
-        productInfos.add(new ProductInfo("Fujifilm X-T5", "Fujifilm", "Camera", "Classic retro mirrorless camera with 40MP APS-C sensor.", 1699.00));
-        productInfos.add(new ProductInfo("Nikon Z6 II", "Nikon", "Camera", "Full-frame mirrorless camera with dual processors and dual card slots.", 1599.00));
+        productInfos.add(new ProductInfo("Sony Alpha 7 IV", "Sony", "Camera", "Full-frame mirrorless camera with 33MP sensor and 4K 60p video.", 2499.00, "https://upload.wikimedia.org/wikipedia/commons/f/ff/Sony.alpha.7IV.G-Master.24-105mm.DSC00141.jpg"));
+        productInfos.add(new ProductInfo("Canon EOS R6 Mark II", "Canon", "Camera", "Versatile full-frame mirrorless camera with high speed shooting.", 2299.00, "https://upload.wikimedia.org/wikipedia/commons/f/f8/Canon_EOS_R6_Mark_II_-_by_Henry_S%C3%B6derlund_%2852546794891%29.jpg"));
+        productInfos.add(new ProductInfo("Fujifilm X-T5", "Fujifilm", "Camera", "Classic retro mirrorless camera with 40MP APS-C sensor.", 1699.00, "https://upload.wikimedia.org/wikipedia/commons/e/ef/Fujifilm-X-T5.jpg"));
+        productInfos.add(new ProductInfo("Nikon Z6 II", "Nikon", "Camera", "Full-frame mirrorless camera with dual processors and dual card slots.", 1599.00, "https://upload.wikimedia.org/wikipedia/commons/c/c7/Nikon_Z_6II_11.jpg"));
         productInfos.add(new ProductInfo("GoPro Hero 12 Black", "GoPro", "Camera", "Ultimate action camera with HyperSmooth stabilization and HDR video.", 399.00));
         productInfos.add(new ProductInfo("DJI Osmo Pocket 3", "DJI", "Camera", "Gimbal stabilized camera with large 1-inch CMOS sensor.", 519.00));
-        productInfos.add(new ProductInfo("Panasonic Lumix S5 II", "Panasonic", "Camera", "Full-frame mirrorless camera with phase hybrid autofocus.", 1799.00));
-        productInfos.add(new ProductInfo("Sony ZV-E10", "Sony", "Camera", "Vlogging mirrorless camera with interchangeable lens mount.", 699.00));
+        productInfos.add(new ProductInfo("Panasonic Lumix S5 II", "Panasonic", "Camera", "Full-frame mirrorless camera with phase hybrid autofocus.", 1799.00, "https://upload.wikimedia.org/wikipedia/commons/7/79/Panasonic_LUMIX_S5_II_%2852682131682%29.jpg"));
+        productInfos.add(new ProductInfo("Sony ZV-E10", "Sony", "Camera", "Vlogging mirrorless camera with interchangeable lens mount.", 699.00, "https://upload.wikimedia.org/wikipedia/commons/c/c5/Sony_ZV-E10_Camera_%2B_16-50mm_Lens.jpg"));
         productInfos.add(new ProductInfo("Canon EOS R100", "Canon", "Camera", "Affordable entry-level APS-C mirrorless camera.", 479.00));
-        productInfos.add(new ProductInfo("Nikon Z30", "Nikon", "Camera", "APS-C mirrorless camera designed for creators and vloggers.", 659.00));
+        productInfos.add(new ProductInfo("Nikon Z30", "Nikon", "Camera", "APS-C mirrorless camera designed for creators and vloggers.", 659.00, "https://upload.wikimedia.org/wikipedia/commons/f/fe/Nikon_Z30.jpg"));
         productInfos.add(new ProductInfo("Insta360 X3", "Insta360", "Camera", "360-degree action camera with active HDR and invisible selfie stick.", 449.00));
-        productInfos.add(new ProductInfo("Fujifilm X100VI", "Fujifilm", "Camera", "Compact premium street photography camera with 40MP.", 1599.00));
+        productInfos.add(new ProductInfo("Fujifilm X100VI", "Fujifilm", "Camera", "Compact premium street photography camera with 40MP.", 1599.00, "https://upload.wikimedia.org/wikipedia/commons/0/06/Fujifilm_X100VI_25_may_2024a.jpg"));
         productInfos.add(new ProductInfo("Sony Alpha 7R V", "Sony", "Camera", "Ultra-high resolution full-frame camera with 61MP.", 3899.00));
         productInfos.add(new ProductInfo("Canon EOS R5", "Canon", "Camera", "Professional mirrorless camera with 8K video.", 3399.00));
         productInfos.add(new ProductInfo("Nikon Z8", "Nikon", "Camera", "Flagship hybrid camera in a compact build.", 3799.00));
@@ -449,7 +449,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         productInfos.add(new ProductInfo("Twelve South Curve", "Twelve South", "Accessory", "Ergonomic aluminum stand for MacBooks and laptops.", 59.00));
         productInfos.add(new ProductInfo("Peak Design Everyday Backpack 20L", "Peak Design", "Accessory", "Premium everyday carry and photography gear backpack.", 279.00));
         productInfos.add(new ProductInfo("Anker Nano Power Bank", "Anker", "Accessory", "Compact pocket power bank with built-in connector.", 29.00));
-        productInfos.add(new ProductInfo("Elgato Wave 3", "Elgato", "Accessory", "Premium USB microphone for streaming and podcasting.", 149.00));
+        productInfos.add(new ProductInfo("Elgato Wave 3", "Elgato", "Accessory", "Premium USB microphone for streaming and podcasting.", 149.00, "https://upload.wikimedia.org/wikipedia/commons/d/d7/Elgato_Wave-3.jpg"));
         productInfos.add(new ProductInfo("Logitech MX Brio 4K", "Logitech", "Accessory", "Next-gen ultra HD streaming webcam.", 199.00));
         productInfos.add(new ProductInfo("Peak Design Tech Pouch", "Peak Design", "Accessory", "Organized pouch for cables and chargers.", 59.00));
         productInfos.add(new ProductInfo("Satechi Dual Dock Stand", "Satechi", "Accessory", "Laptop stand with NVMe SSD enclosure slot.", 149.00));
@@ -466,6 +466,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .brand(info.brand)
                     .category(info.category)
                     .description(info.description)
+                    .imageUrl(info.imageUrl)
                     .archived(false)
                     .build();
             product = productRepository.save(product);
@@ -595,13 +596,19 @@ public class DatabaseSeeder implements CommandLineRunner {
         String category;
         String description;
         double basePrice;
+        String imageUrl;
 
         ProductInfo(String name, String brand, String category, String description, double basePrice) {
+            this(name, brand, category, description, basePrice, null);
+        }
+
+        ProductInfo(String name, String brand, String category, String description, double basePrice, String imageUrl) {
             this.name = name;
             this.brand = brand;
             this.category = category;
             this.description = description;
             this.basePrice = basePrice;
+            this.imageUrl = imageUrl;
         }
     }
 }

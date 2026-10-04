@@ -57,7 +57,12 @@ class CurrencyConversionServiceTest {
             "125.00, INR, 10000.00",
             "100.00, EUR, 90.00",
             "100.00, GBP, 80.00",
-            "100.00, JPY, 15000"
+            "100.00, JPY, 15000",
+            "604.975, USD, 604.98",
+            "604.975, INR, 48398.00",
+            "604.975, EUR, 544.48",
+            "604.975, GBP, 483.98",
+            "604.975, JPY, 90746"
     })
     @DisplayName("Convert from canonical USD to target display currency")
     void testConvertFromCanonical(String usdAmount, String targetCode, String expectedTarget) {

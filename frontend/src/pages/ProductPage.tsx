@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductWithPrices, Watchlist, ProductAnalytics, AlternativeResponse, AlternativeType } from '../types';
@@ -23,6 +23,19 @@ export const ProductPage: React.FC = () => {
   useEffect(() => {
     saveCurrency(currency);
   }, [currency]);
+
+  // Canonical USD sorted offers
+  const sortedPrices = useMemo(() => {
+    if (!product?.prices || product.prices.length === 0) return [];
+    return [...product.prices].sort((a, b) => a.currentPrice - b.currentPrice);
+  }, [product?.prices]);
+
+  const lowestPriceUsd = sortedPrices[0]?.currentPrice || 0;
+  const highestPriceUsd = sortedPrices[sortedPrices.length - 1]?.currentPrice || 0;
+  const lowestPriceId = sortedPrices[0]?.id;
+
+  const lowestPriceLocal = getDisplayPrice(lowestPriceUsd, currency);
+  const highestPriceLocal = getDisplayPrice(highestPriceUsd, currency);
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -161,7 +174,7 @@ export const ProductPage: React.FC = () => {
     if (watchlistEntry) {
       setTargetPriceInput(watchlistEntry.targetPrice.toString());
     } else {
-      const best = lowestPrice || (product && product.prices && product.prices[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0);
+      const best = lowestPriceLocal || (product && product.prices && product.prices[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0);
       setTargetPriceInput(Math.floor(best * 0.9).toString());
     }
     setTrackingError(null);
@@ -176,7 +189,7 @@ export const ProductPage: React.FC = () => {
       return;
     }
 
-    const bestLocal = lowestPrice || (product && product.prices && product.prices[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0);
+    const bestLocal = lowestPriceLocal || (product && product.prices && product.prices[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0);
     if (target >= bestLocal) {
       setTrackingError(`Target price must be strictly less than the current best price (${formatPrice(bestLocal, currency)})`);
       return;
@@ -246,10 +259,7 @@ export const ProductPage: React.FC = () => {
     }
   };
 
-  // Helper to check original currency and display correctly using the utils helper
-  const getDisplayPriceVal = (val: number) => {
-    return getDisplayPrice(val, currency);
-  };
+  // Motion animation config
 
   if (loading) {
     return (
@@ -330,19 +340,6 @@ export const ProductPage: React.FC = () => {
       </div>
     );
   }
-
-  // Process prices dynamically for display scaling
-  const processedPrices = product.prices
-    ? product.prices.map((p) => ({
-        ...p,
-        currentPrice: getDisplayPriceVal(p.currentPrice),
-        originalPrice: getDisplayPriceVal(p.originalPrice),
-      })).sort((a, b) => a.currentPrice - b.currentPrice)
-    : [];
-
-  const lowestPrice = processedPrices[0]?.currentPrice || 0;
-  const highestPrice = processedPrices[processedPrices.length - 1]?.currentPrice || 0;
-  const lowestPriceId = processedPrices[0]?.id;
 
   return (
     <motion.div 
@@ -473,18 +470,18 @@ export const ProductPage: React.FC = () => {
           </div>
 
           {/* Quick Stats & Unified Intelligence Badges */}
-          {processedPrices.length > 0 && (
+          {sortedPrices.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-zinc-950/40 border border-zinc-900/80 backdrop-blur-sm">
               <div className="flex flex-col">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Best Price</span>
                 <span className="text-lg font-extrabold text-emerald-400">
-                  {formatPrice(lowestPrice, currency)}
+                  {formatPrice(lowestPriceLocal, currency)}
                 </span>
               </div>
               <div className="flex flex-col">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Market Range</span>
                 <span className="text-xs font-bold text-zinc-300 mt-1 truncate">
-                  {formatPrice(lowestPrice, currency)} - {formatPrice(highestPrice, currency)}
+                  {formatPrice(lowestPriceLocal, currency)} - {formatPrice(highestPriceLocal, currency)}
                 </span>
               </div>
               <div className="flex flex-col">
@@ -510,7 +507,7 @@ export const ProductPage: React.FC = () => {
               <div className="flex flex-col">
                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Availability</span>
                 <span className="text-xs font-semibold text-zinc-200 mt-1">
-                  {processedPrices.length} {processedPrices.length === 1 ? 'Offer' : 'Offers'} Available
+                  {sortedPrices.length} {sortedPrices.length === 1 ? 'Offer' : 'Offers'} Available
                 </span>
               </div>
             </div>
@@ -578,7 +575,7 @@ export const ProductPage: React.FC = () => {
           </div>
         </div>
 
-        {processedPrices.length > 0 ? (
+        {sortedPrices.length > 0 ? (
           <AnimatePresence mode="wait">
             {viewMode === 'card' ? (
               <motion.div
@@ -589,12 +586,12 @@ export const ProductPage: React.FC = () => {
                 transition={{ duration: 0.2 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in"
               >
-                {processedPrices.map((price) => (
+                {sortedPrices.map((price) => (
                   <SellerCard
                     key={price.id}
                     price={price}
                     isBestDeal={price.id === lowestPriceId}
-                    lowestPrice={lowestPrice}
+                    lowestPrice={lowestPriceUsd}
                     currency={currency}
                   />
                 ))}
@@ -620,12 +617,14 @@ export const ProductPage: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-900/60 text-sm">
-                      {processedPrices.map((price) => {
+                      {sortedPrices.map((price) => {
                         const isLowest = price.id === lowestPriceId;
-                        const savings = price.originalPrice > price.currentPrice 
-                          ? price.originalPrice - price.currentPrice 
+                        const currentPriceLocal = getDisplayPrice(price.currentPrice, currency);
+                        const originalPriceLocal = getDisplayPrice(price.originalPrice, currency);
+                        const savings = originalPriceLocal > currentPriceLocal 
+                          ? originalPriceLocal - currentPriceLocal 
                           : 0;
-                        const diffFromLowest = price.currentPrice - lowestPrice;
+                        const diffFromLowest = currentPriceLocal - lowestPriceLocal;
 
                         return (
                           <tr
@@ -659,11 +658,11 @@ export const ProductPage: React.FC = () => {
                             <td className="px-6 py-4.5">
                               <div className="flex items-baseline gap-2">
                                 <span className="font-extrabold text-white text-base">
-                                  {formatPrice(price.currentPrice, currency)}
+                                  {formatPrice(currentPriceLocal, currency)}
                                 </span>
                                 {price.originalPrice > price.currentPrice && (
                                   <span className="text-xs text-zinc-500 line-through font-normal">
-                                    {formatPrice(price.originalPrice, currency)}
+                                    {formatPrice(originalPriceLocal, currency)}
                                   </span>
                                 )}
                               </div>
@@ -880,10 +879,10 @@ export const ProductPage: React.FC = () => {
             <div className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-3">
               <span className="text-[11px] text-zinc-500 font-medium block">Current Best Price</span>
               <span className="text-lg font-bold font-mono text-zinc-100">
-                {analytics.currentPrice
+                {analytics?.currentPrice
                   ? formatPrice(getDisplayPrice(analytics.currentPrice, currency), currency)
-                  : lowestPrice
-                  ? formatPrice(lowestPrice, currency)
+                  : lowestPriceUsd > 0
+                  ? formatPrice(lowestPriceLocal, currency)
                   : 'N/A'}
               </span>
             </div>
@@ -1037,7 +1036,7 @@ export const ProductPage: React.FC = () => {
                 <div className="flex flex-col text-right shrink-0">
                   <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Best Price</span>
                   <span className="text-sm font-extrabold text-emerald-400 mt-0.5">
-                    {formatPrice(lowestPrice || product.prices?.[0]?.currentPrice || 0, currency)}
+                    {formatPrice(lowestPriceLocal || (product.prices?.[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0), currency)}
                   </span>
                 </div>
               </div>
@@ -1068,7 +1067,7 @@ export const ProductPage: React.FC = () => {
                   <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Quick Select Target</span>
                   <div className="grid grid-cols-3 gap-2">
                     {[0.95, 0.9, 0.85].map((factor) => {
-                      const best = lowestPrice || (product.prices?.[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0);
+                      const best = lowestPriceLocal || (product.prices?.[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0);
                       const discounted = Math.floor(best * factor);
                       const pct = Math.round((1 - factor) * 100);
                       return (
