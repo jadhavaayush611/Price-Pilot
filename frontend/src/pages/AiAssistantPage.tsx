@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiService } from '../services/api';
-import { getSavedCurrency, formatPrice, getDisplayPrice } from '../currency';
+import { getSavedCurrency, formatPrice, getDisplayPrice, resolveAssistantDisplayPrice } from '../currency';
 import { useAuth } from '../context/AuthContext';
 import { ProductImage } from '../components/common/ProductImage';
 import type { 
@@ -327,24 +327,184 @@ export const AiAssistantPage: React.FC = () => {
     { text: "Set an alert when Sony WH-1000XM5 drops in price", label: "Watchlist Alerts" }
   ];
 
+  const getDealBadgeClass = (dealQuality?: string) => {
+    if (!dealQuality) return 'bg-zinc-800 text-zinc-400 border-zinc-700/60';
+    const q = dealQuality.toUpperCase();
+    switch (q) {
+      case 'EXCELLENT_DEAL':
+      case 'EXCELLENT':
+        return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+      case 'GOOD_DEAL':
+      case 'GOOD':
+        return 'bg-blue-500/15 text-blue-400 border-blue-500/30';
+      case 'FAIR_PRICE':
+      case 'FAIR':
+        return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+      case 'POOR_DEAL':
+      case 'POOR':
+      case 'OVERPRICED':
+        return 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+      case 'AVAILABLE':
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      default:
+        return 'bg-zinc-800 text-zinc-400 border-zinc-700/60';
+    }
+  };
+
+  const formatDealQuality = (quality?: string): string => {
+    if (!quality) return 'Verified Price';
+    const q = quality.toUpperCase();
+    switch (q) {
+      case 'EXCELLENT_DEAL':
+      case 'EXCELLENT':
+        return 'Excellent Deal';
+      case 'GOOD_DEAL':
+      case 'GOOD':
+        return 'Good Deal';
+      case 'FAIR_PRICE':
+      case 'FAIR':
+        return 'Fair Price';
+      case 'POOR_DEAL':
+      case 'POOR':
+        return 'Poor Deal';
+      case 'OVERPRICED':
+        return 'Overpriced';
+      case 'AVAILABLE':
+        return 'Verified Price';
+      case 'UNKNOWN':
+        return 'Catalog Price';
+      default:
+        return quality.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+  };
+
+  const formatPurchaseSignal = (signal?: string): string => {
+    if (!signal) return '';
+    const s = signal.toUpperCase();
+    switch (s) {
+      case 'BUY_NOW':
+        return 'Buy Now';
+      case 'GOOD_TIME':
+        return 'Good Time to Buy';
+      case 'WAIT':
+        return 'Wait for Drop';
+      case 'NEUTRAL':
+        return 'Neutral Timing';
+      case 'UNKNOWN':
+        return '';
+      default:
+        return signal.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+  };
+
+  const getSignalTextColor = (signal?: string): string => {
+    if (!signal) return 'text-zinc-300';
+    const s = signal.toUpperCase();
+    switch (s) {
+      case 'BUY_NOW':
+        return 'text-emerald-400 font-semibold';
+      case 'GOOD_TIME':
+        return 'text-emerald-300 font-medium';
+      case 'WAIT':
+        return 'text-amber-400 font-medium';
+      case 'NEUTRAL':
+        return 'text-zinc-300';
+      default:
+        return 'text-zinc-300';
+    }
+  };
+
+  const formatPriceTrend = (trend?: string): string => {
+    if (!trend) return '';
+    const t = trend.toUpperCase();
+    switch (t) {
+      case 'STABLE':
+        return 'Stable Price';
+      case 'FALLING':
+        return 'Falling Price';
+      case 'RISING':
+        return 'Rising Price';
+      case 'VOLATILE':
+        return 'Volatile Price';
+      default:
+        return trend.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+  };
+
+  const cleanRawEnums = (text: string): string => {
+    return text
+      .replace(/\bEXCELLENT_DEAL\b/g, 'Excellent Deal')
+      .replace(/\bGOOD_DEAL\b/g, 'Good Deal')
+      .replace(/\bFAIR_PRICE\b/g, 'Fair Price')
+      .replace(/\bPOOR_DEAL\b/g, 'Poor Deal')
+      .replace(/\bOVERPRICED\b/g, 'Overpriced')
+      .replace(/\bBUY_NOW\b/g, 'Buy Now')
+      .replace(/\bGOOD_TIME\b/g, 'Good Time to Buy')
+      .replace(/\bWAIT_FOR_DROP\b/g, 'Wait for Drop');
+  };
+
   const renderFormattedMarkdown = (text: string) => {
+    const dealRatingRegex = /^(?:[-•*]\s*)?Deal Rating:\s*([A-Za-z0-9_]+)(?:\s*\((?:Signal:\s*([A-Za-z0-9_]+))?(?:,?\s*Trend:\s*([A-Za-z0-9_]+))?\))?/i;
+
     return text.split('\n').map((line, idx) => {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        return <div key={idx} className="h-1" />;
+      }
+
+      // Check for Deal Rating / Signal / Trend summary line
+      const dealMatch = trimmed.match(dealRatingRegex);
+      if (dealMatch) {
+        const dealQualityRaw = dealMatch[1];
+        const signalRaw = dealMatch[2];
+        const trendRaw = dealMatch[3];
+
+        return (
+          <div 
+            key={idx} 
+            className="my-2.5 p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/90 shadow-sm flex flex-wrap items-center justify-between gap-2.5"
+          >
+            <div className="flex items-center gap-2">
+              <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${getDealBadgeClass(dealQualityRaw)}`}>
+                {formatDealQuality(dealQualityRaw)}
+              </span>
+              {signalRaw && signalRaw !== 'UNKNOWN' && (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="text-zinc-500 font-medium">Decision:</span>
+                  <span className={getSignalTextColor(signalRaw)}>
+                    {formatPurchaseSignal(signalRaw)}
+                  </span>
+                </div>
+              )}
+            </div>
+            {trendRaw && trendRaw !== 'UNKNOWN' && (
+              <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+                <span className="text-zinc-500 font-medium">Trend:</span>
+                <span className="font-medium text-zinc-300">
+                  {formatPriceTrend(trendRaw)}
+                </span>
+              </div>
+            )}
+          </div>
+        );
+      }
+
       if (line.startsWith('### ')) {
-        return <h3 key={idx} className="text-sm font-bold text-white mt-2 mb-1">{line.substring(4)}</h3>;
+        return <h3 key={idx} className="text-sm font-bold text-white mt-2 mb-1">{cleanRawEnums(line.substring(4))}</h3>;
       }
       if (line.startsWith('## ')) {
-        return <h2 key={idx} className="text-base font-bold text-white mt-3 mb-1.5">{line.substring(3)}</h2>;
+        return <h2 key={idx} className="text-base font-bold text-white mt-3 mb-1.5">{cleanRawEnums(line.substring(3))}</h2>;
       }
       if (line.startsWith('• ') || line.startsWith('- ') || line.startsWith('* ')) {
         return (
           <li key={idx} className="ml-4 list-disc text-zinc-300 py-0.5 text-xs">
-            {renderLineWithBold(line.substring(2))}
+            {renderLineWithBold(cleanRawEnums(line.substring(2)))}
           </li>
         );
       }
       return (
         <p key={idx} className="text-zinc-200 leading-relaxed mb-2 text-xs sm:text-sm">
-          {renderLineWithBold(line)}
+          {renderLineWithBold(cleanRawEnums(line))}
         </p>
       );
     });
@@ -360,20 +520,6 @@ export const AiAssistantPage: React.FC = () => {
     });
   };
 
-  const getDealBadgeClass = (dealQuality?: string) => {
-    switch (dealQuality) {
-      case 'EXCELLENT_DEAL':
-      case 'EXCELLENT':
-        return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-      case 'GOOD_DEAL':
-      case 'GOOD':
-        return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
-      case 'FAIR':
-        return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
-      default:
-        return 'bg-zinc-800 text-zinc-400 border-zinc-700';
-    }
-  };
 
   return (
     <div className="max-w-6xl mx-auto flex h-[calc(100vh-10rem)] bg-[#09090b] border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
@@ -567,39 +713,43 @@ export const AiAssistantPage: React.FC = () => {
                                       Verified Product Details
                                     </h4>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                      {bundle.groundedProducts.map((p: GroundedEvidenceItem) => (
-                                        <div
-                                          key={p.productId}
-                                          className="p-2.5 bg-zinc-900/80 border border-zinc-800 rounded-lg flex flex-col justify-between space-y-2 hover:border-zinc-700 transition-all"
-                                        >
-                                          <div>
-                                            <div className="flex items-center justify-between gap-1">
-                                              <span className="font-bold text-white truncate">{p.productName}</span>
-                                              {p.dealQuality && (
-                                                <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border ${getDealBadgeClass(p.dealQuality)}`}>
-                                                  {p.dealQuality.replace('_', ' ')}
+                                      {bundle.groundedProducts.map((p: GroundedEvidenceItem) => {
+                                        const displayCurrentPrice = resolveAssistantDisplayPrice(p.currentPrice, p.currency, userCurrency);
+                                        const displayOrigPrice = p.originalPrice ? resolveAssistantDisplayPrice(p.originalPrice, p.currency, userCurrency) : undefined;
+
+                                        return (
+                                          <div
+                                            key={p.productId}
+                                            className="p-2.5 bg-zinc-900/80 border border-zinc-800 rounded-lg flex flex-col justify-between space-y-2 hover:border-zinc-700 transition-all"
+                                          >
+                                            <div>
+                                              <div className="flex items-center justify-between gap-1">
+                                                <span className="font-bold text-white truncate">{p.productName}</span>
+                                                {p.dealQuality && (
+                                                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border ${getDealBadgeClass(p.dealQuality)}`}>
+                                                    {formatDealQuality(p.dealQuality)}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <div className="text-[10px] text-zinc-400 mt-0.5">
+                                                {p.brand} {p.category && `· ${p.category}`}
+                                              </div>
+                                              <div className="flex items-baseline gap-2 mt-1.5">
+                                                <span className="font-bold text-white text-sm">
+                                                  {formatPrice(displayCurrentPrice, userCurrency)}
                                                 </span>
-                                              )}
+                                                {displayOrigPrice && displayOrigPrice > displayCurrentPrice && (
+                                                  <span className="text-[10px] text-zinc-500 line-through">
+                                                    {formatPrice(displayOrigPrice, userCurrency)}
+                                                  </span>
+                                                )}
+                                                {p.discountPercentage != null && p.discountPercentage > 0 && (
+                                                  <span className="text-[10px] font-semibold text-emerald-400">
+                                                    {p.discountPercentage.toFixed(0)}% off
+                                                  </span>
+                                                )}
+                                              </div>
                                             </div>
-                                            <div className="text-[10px] text-zinc-400 mt-0.5">
-                                              {p.brand} {p.category && `· ${p.category}`}
-                                            </div>
-                                            <div className="flex items-baseline gap-2 mt-1.5">
-                                              <span className="font-bold text-white text-sm">
-                                                {formatPrice(getDisplayPrice(p.currentPrice, userCurrency), userCurrency)}
-                                              </span>
-                                              {p.originalPrice && p.originalPrice > p.currentPrice && (
-                                                <span className="text-[10px] text-zinc-500 line-through">
-                                                  {formatPrice(getDisplayPrice(p.originalPrice, userCurrency), userCurrency)}
-                                                </span>
-                                              )}
-                                              {p.discountPercentage != null && p.discountPercentage > 0 && (
-                                                <span className="text-[10px] font-semibold text-emerald-400">
-                                                  {p.discountPercentage.toFixed(0)}% off
-                                                </span>
-                                              )}
-                                            </div>
-                                          </div>
 
                                           {/* Action Buttons */}
                                           <div className="flex items-center gap-1.5 pt-1 border-t border-zinc-800/60">
@@ -617,7 +767,8 @@ export const AiAssistantPage: React.FC = () => {
                                             </button>
                                           </div>
                                         </div>
-                                      ))}
+                                      );
+                                    })}
                                     </div>
                                   </div>
                                 )}

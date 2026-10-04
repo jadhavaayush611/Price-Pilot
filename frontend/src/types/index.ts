@@ -512,7 +512,11 @@ export interface GroundedEvidenceItem {
   buyRecommendation?: string;
   sourceUrl?: string;
   notes?: string;
+  imageUrl?: string;
+  currency?: string;
+  currencySymbol?: string;
 }
+
 
 export interface PersonalizationReasoningItem {
   factor: string;

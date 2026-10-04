@@ -3,6 +3,7 @@ import {
   convertToUsd,
   convertFromUsd,
   getDisplayPrice,
+  resolveAssistantDisplayPrice,
   formatPrice,
   formatCompactPrice,
   getSavedCurrency,
@@ -59,6 +60,27 @@ describe('Currency Subsystem Tests', () => {
       expect(getDisplayPrice(100, 'EUR')).toBe(90);
       // 100 USD converted to INR (rate 80) -> 8000 INR
       expect(getDisplayPrice(100, 'INR')).toBe(8000);
+    });
+
+    it('should resolve assistant display price without double conversion', () => {
+      // Backend already converted canonical $796.73 to INR 63738.40 with sourceCurrency 'INR'
+      // Active user currency is 'INR' -> must return 63738.40, NOT 63738.40 * 80 = 5099072
+      expect(resolveAssistantDisplayPrice(63738.40, 'INR', 'INR')).toBe(63738.40);
+
+      // Backend provided canonical USD $796.73 with sourceCurrency 'USD'
+      // Active user currency is 'INR' -> converts to 63738.40
+      expect(resolveAssistantDisplayPrice(796.73, 'USD', 'INR')).toBeCloseTo(63738.40, 2);
+
+      // Backend provided INR 63738.40 and user switches to EUR
+      // INR 63738.40 -> USD 796.73 -> EUR 717.057
+      expect(resolveAssistantDisplayPrice(63738.40, 'INR', 'EUR')).toBeCloseTo(717.057, 2);
+
+      // Backend provided canonical USD $100 with undefined sourceCurrency
+      expect(resolveAssistantDisplayPrice(100, undefined, 'USD')).toBe(100);
+      expect(resolveAssistantDisplayPrice(100, undefined, 'INR')).toBe(8000);
+      expect(resolveAssistantDisplayPrice(100, undefined, 'EUR')).toBe(90);
+      expect(resolveAssistantDisplayPrice(100, undefined, 'GBP')).toBe(80);
+      expect(resolveAssistantDisplayPrice(100, undefined, 'JPY')).toBe(15000);
     });
   });
 

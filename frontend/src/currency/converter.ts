@@ -17,3 +17,23 @@ export function getDisplayPrice(val: number, targetCurrency: CurrencyCode): numb
   }
   return convertFromUsd(val, targetCurrency);
 }
+
+export function resolveAssistantDisplayPrice(
+  price: number | undefined | null,
+  sourceCurrency: string | undefined,
+  targetCurrency: CurrencyCode
+): number {
+  if (price === undefined || price === null || isNaN(price)) {
+    return 0;
+  }
+  if (sourceCurrency) {
+    const srcUpper = sourceCurrency.toUpperCase() as CurrencyCode;
+    if (srcUpper === targetCurrency) {
+      return price;
+    }
+    const usdPrice = convertToUsd(price, srcUpper);
+    return getDisplayPrice(usdPrice, targetCurrency);
+  }
+  return getDisplayPrice(price, targetCurrency);
+}
+
