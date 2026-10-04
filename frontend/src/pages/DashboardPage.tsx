@@ -350,8 +350,8 @@ export const DashboardPage: React.FC = () => {
               Admin
             </span>
           )}
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400 font-mono font-bold uppercase tracking-wider">
-            Phase 2 Active
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-mono font-bold uppercase tracking-wider">
+            Live Monitoring
           </span>
         </div>
       </div>

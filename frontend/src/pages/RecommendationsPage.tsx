@@ -135,7 +135,7 @@ export const RecommendationsPage: React.FC = () => {
           <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-900 space-y-1.5">
             <h3 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />
-              Grounded Evidence
+              Verified Matching
             </h3>
             <p className="text-[11px] text-zinc-500">
               Clear factual explanations for why each product matches your profile.
@@ -258,7 +258,7 @@ export const RecommendationsPage: React.FC = () => {
                 2. Tailored Deterministic Ranking
               </h3>
               <p className="text-zinc-400 leading-relaxed">
-                Products rank higher for you when they match your configured target budget, preferred manufacturers, and shopping interests. Grounded evidence badges explain every match.
+                Products rank higher for you when they match your configured target budget, preferred manufacturers, and shopping interests. Evidence badges explain every match.
               </p>
             </div>
           </div>

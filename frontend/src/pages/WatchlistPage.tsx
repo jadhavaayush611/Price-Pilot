@@ -699,7 +699,7 @@ export const WatchlistPage: React.FC = () => {
                     <label className="flex items-center justify-between p-3 rounded-xl bg-zinc-900/30 border border-zinc-850 cursor-pointer hover:bg-zinc-900/50 transition-colors">
                       <div className="space-y-0.5">
                         <span className="text-xs font-semibold text-zinc-200 block">Good Deal Detection</span>
-                        <span className="text-[10px] text-zinc-400">Alert when Phase 4 analytics classifies as Good or Excellent Deal</span>
+                        <span className="text-[10px] text-zinc-400">Alert when price analytics classifies as a Good or Excellent Deal</span>
                       </div>
                       <input
                         type="checkbox"

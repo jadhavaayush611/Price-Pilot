@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductAnalytics, ProductWithPrices, Product } from '../types';
-import { formatPrice, type CurrencyCode } from '../currency';
+import { formatPrice, getSavedCurrency, getDisplayPrice, type CurrencyCode } from '../currency';
 import { HistoricalPriceChart } from '../components/analytics/HistoricalPriceChart';
 import { ProductImage } from '../components/common/ProductImage';
 import {
@@ -42,7 +42,7 @@ export const AnalyticsPage: React.FC = () => {
   const [catalogLoading, setCatalogLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
-  const currency: CurrencyCode = 'USD';
+  const currency: CurrencyCode = getSavedCurrency();
 
   // Load catalog products for selection when no productId is present
   const loadCatalog = useCallback(async (query?: string) => {
@@ -189,13 +189,13 @@ export const AnalyticsPage: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-mono mb-2">
               <Activity className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Price Intelligence & Historical Analytics</span>
+              <span>Price History & Deal Analytics</span>
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-white">
-              Product Price Intelligence
+              Price Analytics
             </h1>
             <p className="text-xs text-zinc-400 mt-1">
-              Select any verified catalog product to inspect historical trajectory, volatility coefficients, and purchase timing signals.
+              Select any verified catalog product to inspect historical price trends, market stability, and purchase timing signals.
             </p>
           </div>
         </div>
@@ -214,7 +214,7 @@ export const AnalyticsPage: React.FC = () => {
           </div>
           <button
             type="submit"
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition-colors"
+            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
           >
             Search
           </button>
@@ -238,7 +238,7 @@ export const AnalyticsPage: React.FC = () => {
                   setSearchTerm('');
                   loadCatalog();
                 }}
-                className="text-xs text-emerald-400 hover:underline"
+                className="text-xs text-emerald-400 hover:underline cursor-pointer"
               >
                 Reset Search
               </button>
@@ -270,7 +270,7 @@ export const AnalyticsPage: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t border-zinc-900">
                     <span className="text-xs font-mono font-bold text-emerald-400">
-                      {(prod as ProductWithPrices).lowestPrice ? `$${(prod as ProductWithPrices).lowestPrice}` : 'View Prices'}
+                      {(prod as ProductWithPrices).lowestPrice !== undefined ? formatPrice(getDisplayPrice((prod as ProductWithPrices).lowestPrice!, currency), currency) : 'View Prices'}
                     </span>
                     <span className="text-xs text-zinc-400 group-hover:text-emerald-400 font-semibold flex items-center gap-1 transition-colors">
                       Analyze <ArrowRight className="w-3.5 h-3.5" />
@@ -329,13 +329,13 @@ export const AnalyticsPage: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-mono mb-2">
             <Activity className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Price Intelligence & Historical Analytics</span>
+            <span>Price History & Deal Analytics</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-white">
-            {product ? product.name : 'Product Price Intelligence'}
+            {product ? product.name : 'Price Analytics'}
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
-            Deterministic price positioning, volatility assessment, and purchase timing signals.
+            Historical price trends, deal quality ratings, and purchase timing recommendations.
           </p>
         </div>
 
@@ -432,7 +432,7 @@ export const AnalyticsPage: React.FC = () => {
                 {analytics.supportingEvidence && analytics.supportingEvidence.length > 0 && (
                   <div className="pt-2 border-t border-zinc-900 space-y-1.5">
                     <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                      Observable Historical Evidence:
+                      Price Intelligence Evidence:
                     </span>
                     <ul className="space-y-1 text-xs text-zinc-300">
                       {analytics.supportingEvidence.map((ev, idx) => (
@@ -454,22 +454,22 @@ export const AnalyticsPage: React.FC = () => {
             <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-1">
               <span className="text-xs text-zinc-500 font-medium">Current Best Offer</span>
               <p className="text-2xl font-bold font-mono text-white">
-                {analytics.currentPrice ? formatPrice(analytics.currentPrice, currency) : 'N/A'}
+                {analytics.currentPrice ? formatPrice(getDisplayPrice(analytics.currentPrice, currency), currency) : 'N/A'}
               </p>
-              <span className="text-[10px] text-zinc-500">Live lowest active merchant</span>
+              <span className="text-[10px] text-zinc-500">Live lowest active offer</span>
             </div>
 
             {/* Historical Low */}
             <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-1">
               <span className="text-xs text-zinc-500 font-medium">All-Time Recorded Low</span>
               <p className="text-2xl font-bold font-mono text-emerald-400">
-                {analytics.historicalMin ? formatPrice(analytics.historicalMin, currency) : 'N/A'}
+                {analytics.historicalMin ? formatPrice(getDisplayPrice(analytics.historicalMin, currency), currency) : 'N/A'}
               </p>
               {analytics.historicalLowDistance !== undefined && analytics.historicalMin ? (
                 <span className="text-[10px] text-zinc-400">
                   {analytics.historicalLowDistance === 0
                     ? 'Currently at all-time low'
-                    : `+$${analytics.historicalLowDistance} above low`}
+                    : `+${formatPrice(getDisplayPrice(analytics.historicalLowDistance, currency), currency)} above low`}
                 </span>
               ) : (
                 <span className="text-[10px] text-zinc-600">Pending history</span>
@@ -480,11 +480,11 @@ export const AnalyticsPage: React.FC = () => {
             <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-1">
               <span className="text-xs text-zinc-500 font-medium">Historical Average</span>
               <p className="text-2xl font-bold font-mono text-indigo-400">
-                {analytics.historicalAvg ? formatPrice(analytics.historicalAvg, currency) : 'N/A'}
+                {analytics.historicalAvg ? formatPrice(getDisplayPrice(analytics.historicalAvg, currency), currency) : 'N/A'}
               </p>
               {analytics.historicalMedian && (
                 <span className="text-[10px] text-zinc-400">
-                  Median: {formatPrice(analytics.historicalMedian, currency)}
+                  Median: {formatPrice(getDisplayPrice(analytics.historicalMedian, currency), currency)}
                 </span>
               )}
             </div>
@@ -493,11 +493,11 @@ export const AnalyticsPage: React.FC = () => {
             <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-1">
               <span className="text-xs text-zinc-500 font-medium">All-Time Peak Price</span>
               <p className="text-2xl font-bold font-mono text-amber-400">
-                {analytics.historicalMax ? formatPrice(analytics.historicalMax, currency) : 'N/A'}
+                {analytics.historicalMax ? formatPrice(getDisplayPrice(analytics.historicalMax, currency), currency) : 'N/A'}
               </p>
               {analytics.priceRange !== undefined && (
                 <span className="text-[10px] text-zinc-500">
-                  Range spread: ${analytics.priceRange}
+                  Range spread: {formatPrice(getDisplayPrice(analytics.priceRange, currency), currency)}
                 </span>
               )}
             </div>
@@ -507,11 +507,11 @@ export const AnalyticsPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Price Trajectory Trend</span>
+                <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Price Trend</span>
                 {getTrendIcon(analytics.trend, analytics.trendPercentage)}
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Calculated by comparing the recent pricing window against earlier historical baselines.
+                Calculated by comparing recent prices against historical baselines.
               </p>
             </div>
 
@@ -526,7 +526,7 @@ export const AnalyticsPage: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Statistical coefficient of variation (standard deviation relative to mean) over recorded timeline.
+                Measures price stability across recorded seller listings over time.
               </p>
             </div>
           </div>
@@ -535,7 +535,7 @@ export const AnalyticsPage: React.FC = () => {
           <section aria-label="Interactive Price Chart" className="space-y-3">
             <h2 className="text-base font-bold text-zinc-200 flex items-center gap-2">
               <History className="w-4 h-4 text-emerald-400" />
-              Chronological Price Trajectory
+              Price History
             </h2>
             <HistoricalPriceChart
               priceSeries={analytics.priceSeries}
@@ -550,7 +550,7 @@ export const AnalyticsPage: React.FC = () => {
           {/* Historical Milestone Events */}
           {analytics.historicalEvents && analytics.historicalEvents.length > 0 && (
             <section aria-label="Price Milestone Events" className="space-y-4 pt-4 border-t border-zinc-900">
-              <h2 className="text-base font-bold text-zinc-200">Historical Price Milestones & Drop Events</h2>
+              <h2 className="text-base font-bold text-zinc-200">Price Drop History & Milestones</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {analytics.historicalEvents.map((evt, idx) => (
                   <div key={idx} className="bg-zinc-950 border border-zinc-900 rounded-lg p-3.5 space-y-1">
@@ -569,7 +569,7 @@ export const AnalyticsPage: React.FC = () => {
                     </div>
                     <p className="text-xs text-zinc-300">{evt.description}</p>
                     <div className="text-[11px] font-mono text-zinc-500 pt-1">
-                      Resulting: {formatPrice(evt.resultingPrice, currency)}
+                      Resulting: {formatPrice(getDisplayPrice(evt.resultingPrice, currency), currency)}
                     </div>
                   </div>
                 ))}

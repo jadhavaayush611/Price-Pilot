@@ -115,7 +115,7 @@ export const DashboardV2Page: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-mono mb-2">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
-            <span>PricePilot v1.1 Live Intelligence</span>
+            <span>Real-Time Shopping Intelligence</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-white">
             {user?.firstName ? `Welcome back, ${user.firstName}` : 'Shopping Intelligence Dashboard'}

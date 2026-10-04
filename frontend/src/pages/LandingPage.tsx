@@ -97,7 +97,7 @@ export const LandingPage: React.FC = () => {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span className="font-medium tracking-wide">Dynamic Price Engine 2.0 Live</span>
+          <span className="font-medium tracking-wide">Real-Time Price Intelligence</span>
           <ChevronRight className="h-3.5 w-3.5 text-zinc-600" />
         </motion.div>
 
@@ -170,9 +170,9 @@ export const LandingPage: React.FC = () => {
       {/* Features Section */}
       <section className="relative max-w-6xl mx-auto px-6 z-10 w-full">
         <div className="flex flex-col items-center text-center gap-4 mb-16">
-          <h2 className="text-xs font-bold tracking-widest text-zinc-500 uppercase">Engine Architecture</h2>
+          <h2 className="text-xs font-bold tracking-widest text-zinc-500 uppercase">Shopping Intelligence</h2>
           <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Designed for Speed and Accuracy.
+            Designed for Clarity, Speed, and Savings
           </p>
         </div>
 
@@ -194,7 +194,7 @@ export const LandingPage: React.FC = () => {
             </div>
             <h3 className="font-semibold text-zinc-100 text-lg">Instant Aggregator</h3>
             <p className="text-sm text-zinc-400 leading-relaxed">
-              Query multiple suppliers concurrently. Our optimized pipeline aggregates prices in real-time to eliminate latency.
+              Compare offers from top verified retailers concurrently to instantly secure the best market price.
             </p>
           </motion.div>
 
@@ -209,7 +209,7 @@ export const LandingPage: React.FC = () => {
             </div>
             <h3 className="font-semibold text-zinc-100 text-lg">Smart Deal Discovery</h3>
             <p className="text-sm text-zinc-400 leading-relaxed">
-              Instantly spots and labels the lowest prices, calculates discounts, and guides you to the highest saving opportunities.
+              Instantly spots verified lowest prices, calculates true discount percentages, and highlights best savings.
             </p>
           </motion.div>
 
@@ -222,9 +222,9 @@ export const LandingPage: React.FC = () => {
             <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-zinc-900 text-zinc-300 border border-zinc-800 shadow-inner group-hover:text-white transition-colors">
               <Layers className="h-5 w-5" />
             </div>
-            <h3 className="font-semibold text-zinc-100 text-lg">Clean Interface</h3>
+            <h3 className="font-semibold text-zinc-100 text-lg">Transparent & Clean</h3>
             <p className="text-sm text-zinc-400 leading-relaxed">
-              No pop-ups, no spam, no tracking. Just clean, developer-grade UI that allows you to compare and find what you need.
+              No pop-ups, no tracking cookies, no sponsored distortion. Just pure, accurate price intelligence.
             </p>
           </motion.div>
         </motion.div>
@@ -425,17 +425,17 @@ export const LandingPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 w-full justify-center">
               <button
                 onClick={() => navigate('/search')}
-                className="w-full sm:w-auto px-6 py-3 bg-zinc-100 text-black hover:bg-white text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 group shadow-lg"
+                className="w-full sm:w-auto px-6 py-3 bg-zinc-100 text-black hover:bg-white text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 group shadow-lg active:scale-95"
               >
-                Launch Search Engine
+                Search Catalog
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
               
               <button
-                onClick={() => navigate('/admin/products')}
-                className="w-full sm:w-auto px-6 py-3 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white text-sm font-semibold rounded-xl transition-all cursor-pointer"
+                onClick={() => navigate('/compare')}
+                className="w-full sm:w-auto px-6 py-3 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white text-sm font-semibold rounded-xl transition-all cursor-pointer active:scale-95"
               >
-                Manage Inventory
+                Compare Products
               </button>
             </div>
           </div>

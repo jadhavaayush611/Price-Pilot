@@ -8,11 +8,13 @@ import { SearchResults } from '../components/SearchResults';
 import { SlidersHorizontal, Sparkles, X, Filter, ShieldAlert, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { getSavedCurrency, CURRENCY_SYMBOLS } from '../currency';
 
 export const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const currency = getSavedCurrency();
   
   // Extract state from URL query parameters (supports 'keyword' or legacy 'q')
   const query = searchParams.get('keyword') || searchParams.get('q') || '';
@@ -390,7 +392,7 @@ export const SearchPage: React.FC = () => {
           )}
           {urlMinPrice && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-300">
-              Min ${urlMinPrice}
+              Min {CURRENCY_SYMBOLS[currency]}{urlMinPrice}
               <button type="button" onClick={() => handleMinPriceChange('')} className="text-zinc-500 hover:text-white" aria-label="Remove min price filter">
                 <X className="h-3 w-3" />
               </button>
@@ -398,7 +400,7 @@ export const SearchPage: React.FC = () => {
           )}
           {urlMaxPrice && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-zinc-300">
-              Max ${urlMaxPrice}
+              Max {CURRENCY_SYMBOLS[currency]}{urlMaxPrice}
               <button type="button" onClick={() => handleMaxPriceChange('')} className="text-zinc-500 hover:text-white" aria-label="Remove max price filter">
                 <X className="h-3 w-3" />
               </button>

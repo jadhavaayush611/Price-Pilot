@@ -175,7 +175,13 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
           const badges = product.discoveryBadges || [];
           const reasons = product.discoveryReasons || [];
 
-          const isItemPersonalized = isPersonalized || product.personalizedScore !== undefined || (product.personalizedEvidence && ((product.personalizedEvidence.reasons && product.personalizedEvidence.reasons.length > 0) || Boolean(product.personalizedEvidence.summary)));
+          const isItemPersonalized = Boolean(
+            isPersonalized && (
+              Boolean(product.personalizedEvidence?.summary) || 
+              (product.personalizedEvidence?.reasons && product.personalizedEvidence.reasons.length > 0) || 
+              (product.personalizedScore !== undefined && product.personalizedScore > 0)
+            )
+          );
 
           return (
             <motion.article
@@ -237,7 +243,7 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
                       Personalized
                     </span>
                   )}
-                  {product.personalizedScore !== undefined && (
+                  {isItemPersonalized && product.personalizedScore !== undefined && product.personalizedScore > 0 && (
                     <span 
                       title={product.personalizationAdjustment ? `Personalized Match Score: ${Math.round(product.personalizedScore)}/100 (Adjustment: +${product.personalizationAdjustment.toFixed(1)})` : `Match Score: ${Math.round(product.personalizedScore)}/100`}
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-900 border border-zinc-800 text-indigo-300"

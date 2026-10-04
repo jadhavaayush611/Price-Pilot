@@ -2,7 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
+import { 
+  Menu, 
+  X, 
+  Search, 
+  Layers, 
+  Sparkles, 
+  TrendingUp, 
+  Activity, 
+  Bot, 
+  LayoutDashboard, 
+  Bookmark, 
+  Bell, 
+  Sliders, 
+  Shield 
+} from 'lucide-react';
 import { NotificationCenter } from './notifications/NotificationCenter';
 
 interface LayoutProps {
@@ -12,6 +26,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const [healthStatus, setHealthStatus] = useState<'LOADING' | 'UP' | 'DOWN'>('LOADING');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     apiService.checkHealth()
@@ -27,70 +42,101 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       });
   }, []);
 
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `transition-colors text-xs font-medium ${
+      isActive 
+        ? 'text-white font-semibold' 
+        : 'text-zinc-400 hover:text-zinc-100'
+    }`;
+
+  const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+      isActive 
+        ? 'bg-zinc-900 text-white font-semibold' 
+        : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50'
+    }`;
+
   return (
     <div className="min-h-screen bg-[#030303] text-zinc-100 flex flex-col antialiased">
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#030303]/80 border-b border-zinc-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2">
-              <span className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent text-xl font-bold tracking-tight">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#030303]/85 border-b border-zinc-900/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-8">
+            <Link to="/" className="flex items-center gap-2 group shrink-0">
+              <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent text-xl font-extrabold tracking-tight group-hover:from-white group-hover:to-white transition-all">
                 PricePilot
               </span>
             </Link>
-            <nav className="hidden md:flex items-center gap-6 text-sm">
-              <NavLink to="/" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Discover</NavLink>
-              <NavLink to="/compare" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Compare Matrix</NavLink>
-              <NavLink to="/recommendations" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Recommendations</NavLink>
-              <NavLink to="/analytics" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Analytics</NavLink>
-              <NavLink to="/trending" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Trending</NavLink>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center gap-5">
+              {/* Primary Shopping */}
+              <div className="flex items-center gap-4">
+                <NavLink to="/" className={navLinkClass}>Discover</NavLink>
+                <NavLink to="/compare" className={navLinkClass}>Compare</NavLink>
+                <NavLink to="/recommendations" className={navLinkClass}>Recommendations</NavLink>
+                <NavLink to="/trending" className={navLinkClass}>Trending</NavLink>
+              </div>
+
+              {/* Visual separator */}
+              <div className="h-3.5 w-px bg-zinc-800" />
+
+              {/* Tools & Decision Intelligence */}
+              <div className="flex items-center gap-4">
+                <NavLink to="/analytics" className={navLinkClass}>Analytics</NavLink>
+                {isAuthenticated && (
+                  <NavLink to="/assistant" className={navLinkClass}>AI Assistant</NavLink>
+                )}
+              </div>
+
+              {/* Personal Section */}
               {isAuthenticated && (
-                <NavLink to="/assistant" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>AI Assistant</NavLink>
+                <>
+                  <div className="h-3.5 w-px bg-zinc-800" />
+                  <div className="flex items-center gap-4">
+                    <NavLink to="/watchlist" className={navLinkClass}>Watchlist</NavLink>
+                    <NavLink to="/saved-products" className={navLinkClass}>Saved</NavLink>
+                    <NavLink to="/dashboard/v2" className={navLinkClass}>Dashboard</NavLink>
+                    <NavLink to="/settings/preferences" className={navLinkClass}>Preferences</NavLink>
+                  </div>
+                </>
               )}
-              {isAuthenticated && (
-                <NavLink to="/dashboard/v2" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Dashboard v2</NavLink>
-              )}
-              {isAuthenticated && (
-                <NavLink to="/saved-products" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Saved Products</NavLink>
-              )}
-              {isAuthenticated && (
-                <NavLink to="/watchlist" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Watchlist</NavLink>
-              )}
-              {isAuthenticated && (
-                <NavLink to="/settings/preferences" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Preferences</NavLink>
-              )}
+
+              {/* Admin Section */}
               {isAuthenticated && isAdmin() && (
                 <>
-                  <NavLink to="/admin/products" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Manage Products</NavLink>
-                  <NavLink to="/admin/sellers" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Manage Sellers</NavLink>
-                  <NavLink to="/admin/prices" className={({ isActive }) => `transition-colors ${isActive ? 'text-zinc-100 font-semibold border-b border-zinc-100 pb-0.5' : 'text-zinc-400 hover:text-zinc-100'}`}>Manage Prices</NavLink>
+                  <div className="h-3.5 w-px bg-zinc-800" />
+                  <div className="flex items-center gap-3">
+                    <NavLink to="/admin/products" className={({ isActive }) => `text-[11px] font-mono px-2 py-0.5 rounded border ${isActive ? 'bg-amber-950/60 border-amber-700 text-amber-300 font-bold' : 'border-zinc-800 text-zinc-400 hover:text-amber-300'}`}>Admin</NavLink>
+                  </div>
                 </>
               )}
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-950 border border-zinc-900 text-xs">
+          <div className="flex items-center gap-3.5">
+            {/* Status Indicator */}
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-zinc-950/80 border border-zinc-900 text-[11px]">
               <span className={`h-1.5 w-1.5 rounded-full ${
                 healthStatus === 'UP' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
                 healthStatus === 'DOWN' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-amber-500'
               }`} />
               <span className="text-zinc-400 font-medium">
                 {healthStatus === 'LOADING' && 'Connecting...'}
-                {healthStatus === 'UP' && 'Engine Connected'}
-                {healthStatus === 'DOWN' && 'Local Offline'}
+                {healthStatus === 'UP' && 'Catalog Live'}
+                {healthStatus === 'DOWN' && 'Offline'}
               </span>
             </div>
 
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
                 <NotificationCenter />
-                <span className="text-xs text-zinc-400 hidden sm:inline">
-                  Welcome, <span className="text-white font-semibold">{user.firstName}</span> <span className="text-[10px] uppercase tracking-wider bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded text-zinc-500 font-mono font-bold ml-1">{user.role}</span>
+                <span className="text-xs text-zinc-400 hidden xl:inline">
+                  Hi, <span className="text-white font-semibold">{user.firstName}</span>
                 </span>
                 <button
                   onClick={logout}
-                  className="px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-lg hover:border-zinc-700 active:scale-[0.98] transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   Logout
                 </button>
@@ -99,20 +145,95 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-lg hover:border-zinc-700 active:scale-[0.98] transition-all"
+                  className="px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 active:scale-[0.98] transition-all"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="px-3 py-1.5 text-xs font-semibold text-black bg-white rounded-lg hover:bg-zinc-200 active:scale-[0.98] transition-all animate-pulse-slow"
+                  className="px-3.5 py-1.5 text-xs font-semibold text-black bg-white rounded-xl hover:bg-zinc-200 active:scale-[0.98] transition-all shadow-sm"
                 >
                   Register
                 </Link>
               </div>
             )}
+
+            {/* Mobile Navigation Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"
+              aria-label="Toggle Navigation Menu"
+            >
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-zinc-900 bg-zinc-950/95 backdrop-blur-xl px-4 py-4 space-y-4">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 px-3 block">Shopping</span>
+              <NavLink to="/" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                <Search size={16} /> Discover
+              </NavLink>
+              <NavLink to="/compare" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                <Layers size={16} /> Compare
+              </NavLink>
+              <NavLink to="/recommendations" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                <Sparkles size={16} /> Recommendations
+              </NavLink>
+              <NavLink to="/trending" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                <TrendingUp size={16} /> Trending
+              </NavLink>
+            </div>
+
+            <div className="space-y-1 pt-2 border-t border-zinc-900">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 px-3 block">Tools & Intelligence</span>
+              <NavLink to="/analytics" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                <Activity size={16} /> Analytics
+              </NavLink>
+              {isAuthenticated && (
+                <NavLink to="/assistant" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                  <Bot size={16} /> AI Assistant
+                </NavLink>
+              )}
+            </div>
+
+            {isAuthenticated && (
+              <div className="space-y-1 pt-2 border-t border-zinc-900">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 px-3 block">Personal</span>
+                <NavLink to="/watchlist" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                  <Bell size={16} /> Watchlist
+                </NavLink>
+                <NavLink to="/saved-products" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                  <Bookmark size={16} /> Saved Products
+                </NavLink>
+                <NavLink to="/dashboard/v2" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                  <LayoutDashboard size={16} /> Dashboard
+                </NavLink>
+                <NavLink to="/settings/preferences" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                  <Sliders size={16} /> Preferences
+                </NavLink>
+              </div>
+            )}
+
+            {isAuthenticated && isAdmin() && (
+              <div className="space-y-1 pt-2 border-t border-zinc-900">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 px-3 block">Admin</span>
+                <NavLink to="/admin/products" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                  <Shield size={16} /> Manage Products
+                </NavLink>
+                <NavLink to="/admin/sellers" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                  <Shield size={16} /> Manage Sellers
+                </NavLink>
+                <NavLink to="/admin/prices" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
+                  <Shield size={16} /> Manage Prices
+                </NavLink>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
@@ -121,15 +242,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-900 bg-[#030303] py-8 text-zinc-600">
+      <footer className="border-t border-zinc-900/80 bg-[#030303] py-8 text-zinc-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-zinc-400 font-semibold tracking-tight">PricePilot</span>
             <span className="text-xs text-zinc-700">|</span>
-            <p className="text-xs">Your personal shopping search engine.</p>
+            <p className="text-xs">Your personal shopping intelligence and price comparison engine.</p>
           </div>
           <p className="text-xs text-zinc-500">
-            &copy; {new Date().getFullYear()} PricePilot. Developed with precision.
+            &copy; {new Date().getFullYear()} PricePilot. Built for smart shoppers.
           </p>
         </div>
       </footer>

@@ -319,12 +319,12 @@ export const AiAssistantPage: React.FC = () => {
   };
 
   const INITIAL_SUGGESTIONS = [
-    { text: "Find gaming laptops under $1000", label: "Product Discovery" },
-    { text: "Compare iPhone 15 Pro Max and Samsung Galaxy S24 Ultra", label: "Evidence Comparison" },
+    { text: "Find top-rated laptops for coding and gaming", label: "Product Discovery" },
+    { text: "Compare iPhone 15 Pro Max and Samsung Galaxy S24 Ultra", label: "Product Comparison" },
     { text: "What products should I buy based on my saved preferences?", label: "Personalized Advice" },
-    { text: "Is now a good time to buy, or should I wait for price drop?", label: "Buy Confidence" },
+    { text: "Is now a good time to buy, or should I wait for a price drop?", label: "Purchase Timing" },
     { text: "What are my current shopping preferences and budget limits?", label: "Preferences" },
-    { text: "Set an alert when Sony WH-1000XM5 drops below $300", label: "Watchlist Alerts" }
+    { text: "Set an alert when Sony WH-1000XM5 drops in price", label: "Watchlist Alerts" }
   ];
 
   const renderFormattedMarkdown = (text: string) => {
@@ -550,7 +550,7 @@ export const AiAssistantPage: React.FC = () => {
                             >
                               <div className="flex items-center gap-2">
                                 <Layers size={13} className="text-zinc-400" />
-                                <span>Grounded Evidence & Decision Context</span>
+                                <span>Verified Evidence & Decision Context</span>
                                 {bundle.groundedProducts?.length > 0 && (
                                   <span className="text-[10px] bg-zinc-800 px-1.5 py-0.2 rounded text-zinc-400 font-mono">
                                     {bundle.groundedProducts.length} items
@@ -567,7 +567,7 @@ export const AiAssistantPage: React.FC = () => {
                                 {bundle.groundedProducts && bundle.groundedProducts.length > 0 && (
                                   <div>
                                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-2">
-                                      Verified Catalog Evidence
+                                      Verified Product Details
                                     </h4>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                       {bundle.groundedProducts.map((p: GroundedEvidenceItem) => (
@@ -834,7 +834,7 @@ export const AiAssistantPage: React.FC = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
-              placeholder={loading ? "Analyzing shopping context..." : "Ask a shopping question (e.g. 'Compare top laptops under $1000' or 'Should I buy now?')"}
+              placeholder={loading ? "Analyzing shopping context..." : "Ask a shopping question (e.g. 'Compare top noise-canceling headphones' or 'Should I buy now?')"}
               className="flex-grow bg-transparent text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none py-1.5"
             />
             <button

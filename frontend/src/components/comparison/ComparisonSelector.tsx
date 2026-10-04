@@ -63,7 +63,7 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-zinc-200">Select Products for Matrix Comparison</h3>
+            <h3 className="text-sm font-semibold text-zinc-200">Select Products to Compare</h3>
             <span
               className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
                 selectedIds.length >= 2 && selectedIds.length <= 5

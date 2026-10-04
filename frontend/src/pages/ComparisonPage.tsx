@@ -183,11 +183,11 @@ export const ComparisonPage: React.FC = () => {
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 font-mono">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Shopping Intelligence v1.2 Matrix</span>
+            <span>Side-by-Side Analysis</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Product Comparison Engine</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-white">Product Comparison</h1>
           <p className="text-zinc-400 text-sm max-w-2xl">
-            Side-by-side comparison of 2–5 products across pricing competitiveness, ratings, seller availability, and specifications.
+            Compare 2 to 5 products side-by-side across pricing competitiveness, ratings, seller availability, and specifications.
           </p>
         </div>
 
@@ -198,7 +198,7 @@ export const ComparisonPage: React.FC = () => {
             className="px-4 py-2 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 rounded-xl transition-all flex items-center gap-2 shadow-lg"
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Saved Matrices</span>
+            <span>Saved Comparisons</span>
             {savedComparisons.length > 0 && (
               <span className="px-1.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-mono">
                 {savedComparisons.length}
@@ -215,7 +215,7 @@ export const ComparisonPage: React.FC = () => {
                 : 'bg-zinc-900 border border-zinc-800 text-zinc-500 cursor-not-allowed'
             }`}
           >
-            <span>💾 Save Comparison</span>
+            <span>Save Comparison</span>
           </button>
         </div>
       </div>
@@ -248,7 +248,7 @@ export const ComparisonPage: React.FC = () => {
           </div>
 
           {savedComparisons.length === 0 ? (
-            <p className="text-xs text-zinc-500 py-4 text-center">No saved comparisons found. Create and save matrix comparisons above.</p>
+            <p className="text-xs text-zinc-500 py-4 text-center">No saved comparisons found. Create and save comparisons above.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {savedComparisons.map((saved) => (
@@ -271,7 +271,7 @@ export const ComparisonPage: React.FC = () => {
                       onClick={() => handleLoadSaved(saved)}
                       className="px-2.5 py-1 bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/60 rounded text-[11px] font-semibold transition-colors"
                     >
-                      Load Matrix
+                      Load Comparison
                     </button>
                     <button
                       onClick={() => handleDeleteSaved(saved.id)}
@@ -294,19 +294,19 @@ export const ComparisonPage: React.FC = () => {
         onSelect={handleSelectionChange}
       />
 
-      {/* Matrix Table / Skeleton / Empty State */}
+      {/* Table / Skeleton / Empty State */}
       {loading ? (
         <ComparisonSkeleton />
       ) : comparisonData ? (
         <ComparisonTable comparison={comparisonData} />
       ) : selectedIds.length === 1 ? (
         <div className="p-12 text-center bg-zinc-950 border border-zinc-900 rounded-xl text-zinc-400 space-y-2">
-          <p className="text-zinc-200 font-semibold text-sm">1 product selected.</p>
-          <p className="text-xs text-zinc-500">Select at least 1 more product from the catalog above to render side-by-side comparison matrix.</p>
+          <p className="text-zinc-200 font-semibold text-sm">1 product selected</p>
+          <p className="text-xs text-zinc-500">Select at least 1 more product from the catalog above to view side-by-side comparison.</p>
         </div>
       ) : (
         <div className="p-12 text-center bg-zinc-950 border border-zinc-900 rounded-xl text-zinc-500 space-y-2">
-          <p className="text-zinc-300 font-semibold">Select 2 to 5 products above to initiate comparison matrix.</p>
+          <p className="text-zinc-300 font-semibold">Select 2 to 5 products above to compare features and prices.</p>
         </div>
       )}
 
@@ -314,12 +314,12 @@ export const ComparisonPage: React.FC = () => {
       {showSaveModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-zinc-950 border border-zinc-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-zinc-100">Save Product Comparison Matrix</h3>
-            <p className="text-xs text-zinc-400">Save this comparison configuration to access it anytime in your saved matrices.</p>
+            <h3 className="text-base font-bold text-zinc-100">Save Product Comparison</h3>
+            <p className="text-xs text-zinc-400">Save this comparison configuration to access it anytime in your saved comparisons.</p>
 
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">Matrix Title</label>
+                <label className="text-xs font-semibold text-zinc-300 block mb-1">Comparison Title</label>
                 <input
                   type="text"
                   placeholder="e.g. Flagship Headphones Comparison"

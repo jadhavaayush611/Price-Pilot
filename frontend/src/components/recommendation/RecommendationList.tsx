@@ -85,7 +85,7 @@ export const RecommendationList: React.FC<RecommendationListProps> = ({
               {recommendations.confidence !== undefined && (
                 <span className="text-[11px] text-zinc-400 flex items-center gap-1 font-mono">
                   <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-                  Grounded Confidence: {Math.round(recommendations.confidence * 100)}%
+                  Confidence: {Math.round(recommendations.confidence * 100)}%
                 </span>
               )}
             </div>
