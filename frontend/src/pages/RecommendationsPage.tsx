@@ -164,15 +164,11 @@ export const RecommendationsPage: React.FC = () => {
       {/* Page Header */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-900/80 pb-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-950/40 border border-indigo-800/40 text-xs text-indigo-300 font-mono mb-2">
-            <Sparkles className="h-3 w-3 text-indigo-400" />
-            <span>Personalized Intelligence</span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-white">
             Recommended for You
           </h1>
-          <p className="text-zinc-400 text-sm mt-1">
-            Personalized using your shopping preferences, budget constraints, and activity.
+          <p className="text-zinc-400 text-xs mt-1">
+            Tailored to your saved brands, budget bounds, and shopping activity.
           </p>
         </div>
 

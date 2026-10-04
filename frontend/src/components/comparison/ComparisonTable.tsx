@@ -12,7 +12,7 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({ comparison }) 
     return (
       <div className="p-12 text-center bg-zinc-950 border border-zinc-900 rounded-xl text-zinc-500 space-y-2">
         <p className="text-zinc-300 font-semibold">No products selected for comparison.</p>
-        <p className="text-xs text-zinc-500">Select 2 to 5 products above to render comparison matrix.</p>
+        <p className="text-xs text-zinc-500">Select 2 to 5 products above to view side-by-side comparison.</p>
       </div>
     );
   }

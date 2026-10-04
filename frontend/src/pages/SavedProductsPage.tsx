@@ -106,12 +106,12 @@ export const SavedProductsPage: React.FC = () => {
         </button>
         <div className="flex items-center justify-between mt-4">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-              <Heart className="h-8 w-8 text-rose-500 fill-current" />
+            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+              <Heart className="h-6 w-6 text-rose-500 fill-current" />
               Saved Products
             </h1>
-            <p className="text-xs text-zinc-500 mt-1">
-              Track prices and manage your interest in catalog items
+            <p className="text-xs text-zinc-400 mt-1">
+              Products you have bookmarked for price monitoring and quick access.
             </p>
           </div>
           <span className="px-3 py-1.5 rounded-full bg-zinc-950 border border-zinc-900 text-xs font-mono text-zinc-400 font-bold">

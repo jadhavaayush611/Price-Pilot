@@ -34,7 +34,6 @@ export const SearchPage: React.FC = () => {
   const [retryTrigger, setRetryTrigger] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
-  const [executionTimeMs, setExecutionTimeMs] = useState<number | null>(null);
   const [interpretedQuery, setInterpretedQuery] = useState<InterpretedQuery | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [savedProductIds, setSavedProductIds] = useState<string[]>([]);
@@ -128,7 +127,6 @@ export const SearchPage: React.FC = () => {
         setProducts(data.content || []);
         setTotalPages(data.totalPages || 0);
         setTotalElements(data.totalElements || 0);
-        setExecutionTimeMs(data.executionTimeMs || null);
         setInterpretedQuery(data.interpretedQuery || null);
         if (data.availableCategories && data.availableCategories.length > 0) {
           setAvailableCategories(data.availableCategories);
@@ -253,26 +251,16 @@ export const SearchPage: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-6 py-2">
-      {/* Sticky Glassmorphic Search Header */}
-      <header className="sticky top-16 z-30 backdrop-blur-md bg-[#030303]/85 py-4 border-b border-zinc-900/60 -mx-4 px-4 sm:-mx-6 sm:px-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between transition-all">
+      {/* Sticky Search Header */}
+      <header className="sticky top-16 z-30 backdrop-blur-md bg-[#030303]/85 py-3.5 border-b border-zinc-900/60 -mx-4 px-4 sm:-mx-6 sm:px-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between transition-all">
         <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold tracking-tight text-white m-0">
-              {query ? `Search: "${query}"` : 'Intelligent Product Discovery'}
-            </h1>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-1 border ${
-              urlPersonalized && isAuthenticated
-                ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30'
-                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-            }`}>
-              {urlPersonalized && isAuthenticated ? <Sparkles className="h-2.5 w-2.5 text-indigo-400" /> : null}
-              {urlPersonalized && isAuthenticated ? 'Personalized Discovery' : 'AI Discovery'}
-            </span>
-          </div>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <h1 className="text-lg font-bold tracking-tight text-white m-0">
+            {query ? `Search: "${query}"` : 'Discover Products'}
+          </h1>
+          <p className="text-xs text-zinc-500 mt-0.5">
             {urlPersonalized && isAuthenticated
-              ? 'Results ranked by your preferred brands, budget, and personalized shopping signals'
-              : 'Deterministic relevance scoring and real-time deal intelligence'}
+              ? 'Personalized for your preferred brands and budget'
+              : 'Find products and compare real-time retailer prices'}
           </p>
         </div>
 
@@ -492,17 +480,12 @@ export const SearchPage: React.FC = () => {
 
         {/* Search Results Display */}
         <section className="lg:col-span-3" aria-label="Search Results">
-          {/* Result Count and Latency Banner */}
+          {/* Result Count Banner */}
           {!loading && !error && (
             <div className="flex items-center justify-between pb-3 text-xs text-zinc-400 border-b border-zinc-900/60 mb-6">
               <div>
                 Found <span className="font-semibold text-white">{totalElements}</span> matching {totalElements === 1 ? 'product' : 'products'}
               </div>
-              {executionTimeMs !== null && (
-                <div className="text-[11px] text-zinc-500">
-                  Discovery latency: <span className="font-mono text-zinc-400">{executionTimeMs}ms</span>
-                </div>
-              )}
             </div>
           )}
 

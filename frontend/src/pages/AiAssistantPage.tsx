@@ -441,13 +441,10 @@ export const AiAssistantPage: React.FC = () => {
               <Bot size={18} className="animate-pulse" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
-                PricePilot Shopping Decision Support
-                <span className="text-[9px] tracking-wider uppercase bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 font-mono font-bold">
-                  VERIFIED SHOPPING ASSISTANT
-                </span>
+              <h1 className="text-sm font-bold text-white tracking-tight">
+                Shopping Assistant
               </h1>
-              <p className="text-[11px] text-zinc-400">Deterministic pricing, comparisons & preference-aware recommendations</p>
+              <p className="text-[11px] text-zinc-400">Ask questions, compare products, and evaluate purchase timing</p>
             </div>
           </div>
           

@@ -238,12 +238,12 @@ export const WatchlistPage: React.FC = () => {
         </button>
         <div className="flex items-center justify-between mt-4">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-              <Bell className="h-8 w-8 text-emerald-400 fill-current" />
+            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+              <Bell className="h-6 w-6 text-emerald-400 fill-current" />
               Price Watchlist
             </h1>
-            <p className="text-xs text-zinc-500 mt-1">
-              Monitor active price drops, target matching levels, and trigger analytics.
+            <p className="text-xs text-zinc-400 mt-1">
+              Track price drops and receive alerts when products meet your target price.
             </p>
           </div>
           <span className="px-3 py-1.5 rounded-full bg-zinc-950 border border-zinc-900 text-xs font-mono text-zinc-400 font-bold">

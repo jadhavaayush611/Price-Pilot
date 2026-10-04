@@ -113,15 +113,11 @@ export const DashboardV2Page: React.FC = () => {
       {/* Header & Greetings */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-mono mb-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
-            <span>Real-Time Shopping Intelligence</span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
-            {user?.firstName ? `Welcome back, ${user.firstName}` : 'Shopping Intelligence Dashboard'}
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            {user?.firstName ? `Welcome back, ${user.firstName}` : 'Shopping Dashboard'}
           </h1>
-          <p className="text-zinc-400 text-sm mt-1">
-            Personalized purchasing control center aggregating deterministic price analytics and alerts.
+          <p className="text-zinc-400 text-xs mt-1">
+            Personal overview of your watchlists, price drops, and recommendations.
           </p>
         </div>
 

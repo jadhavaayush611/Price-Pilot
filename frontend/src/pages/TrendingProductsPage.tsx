@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flame, Bell, Heart, TrendingDown, ChevronRight, Inbox, RefreshCw, Sparkles } from 'lucide-react';
+import { Flame, Bell, Heart, TrendingDown, ChevronRight, Inbox, RefreshCw } from 'lucide-react';
 import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
 import { formatPrice, getDisplayPrice, getSavedCurrency } from '../currency';
@@ -68,16 +68,12 @@ export const TrendingProductsPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto w-full py-6">
       {/* Header */}
-      <div className="flex flex-col gap-2">
-        <span className="text-xs font-bold tracking-widest text-zinc-500 uppercase flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-zinc-400" />
-          Product Intelligence
-        </span>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-          Market Rankings
+      <div className="flex flex-col gap-1 border-b border-zinc-900 pb-5">
+        <h1 className="text-2xl font-bold tracking-tight text-white">
+          Trending Products & Rankings
         </h1>
-        <p className="text-xs text-zinc-500">
-          Discover high-demand products, community favorites, and substantial discounts
+        <p className="text-xs text-zinc-400">
+          Discover high-demand products, community favorites, and substantial discounts across retailers.
         </p>
       </div>
 

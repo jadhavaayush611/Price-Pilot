@@ -327,11 +327,7 @@ export const AnalyticsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-900 pb-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-mono mb-2">
-            <Activity className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Price History & Deal Analytics</span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-white">
             {product ? product.name : 'Price Analytics'}
           </h1>
           <p className="text-xs text-zinc-400 mt-1">

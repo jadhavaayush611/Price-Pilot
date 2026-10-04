@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
   Menu, 
@@ -25,22 +24,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, isAuthenticated, logout, isAdmin } = useAuth();
-  const [healthStatus, setHealthStatus] = useState<'LOADING' | 'UP' | 'DOWN'>('LOADING');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    apiService.checkHealth()
-      .then((res) => {
-        if (res.status === 'UP') {
-          setHealthStatus('UP');
-        } else {
-          setHealthStatus('DOWN');
-        }
-      })
-      .catch(() => {
-        setHealthStatus('DOWN');
-      });
-  }, []);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `transition-colors text-xs font-medium ${
@@ -69,7 +53,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-5">
+            <nav className="hidden lg:flex items-center gap-6">
               {/* Primary Shopping */}
               <div className="flex items-center gap-4">
                 <NavLink to="/" className={navLinkClass}>Discover</NavLink>
@@ -78,26 +62,22 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <NavLink to="/trending" className={navLinkClass}>Trending</NavLink>
               </div>
 
-              {/* Visual separator */}
-              <div className="h-3.5 w-px bg-zinc-800" />
-
-              {/* Tools & Decision Intelligence */}
-              <div className="flex items-center gap-4">
-                <NavLink to="/analytics" className={navLinkClass}>Analytics</NavLink>
-                {isAuthenticated && (
-                  <NavLink to="/assistant" className={navLinkClass}>AI Assistant</NavLink>
-                )}
-              </div>
-
-              {/* Personal Section */}
-              {isAuthenticated && (
+              {/* Tools & Personal Navigation */}
+              {isAuthenticated ? (
                 <>
                   <div className="h-3.5 w-px bg-zinc-800" />
                   <div className="flex items-center gap-4">
+                    <NavLink to="/assistant" className={navLinkClass}>AI Assistant</NavLink>
+                    <NavLink to="/analytics" className={navLinkClass}>Analytics</NavLink>
                     <NavLink to="/watchlist" className={navLinkClass}>Watchlist</NavLink>
                     <NavLink to="/saved-products" className={navLinkClass}>Saved</NavLink>
-                    <NavLink to="/dashboard/v2" className={navLinkClass}>Dashboard</NavLink>
-                    <NavLink to="/settings/preferences" className={navLinkClass}>Preferences</NavLink>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="h-3.5 w-px bg-zinc-800" />
+                  <div className="flex items-center gap-4">
+                    <NavLink to="/analytics" className={navLinkClass}>Analytics</NavLink>
                   </div>
                 </>
               )}
@@ -115,25 +95,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
 
           <div className="flex items-center gap-3.5">
-            {/* Status Indicator */}
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-zinc-950/80 border border-zinc-900 text-[11px]">
-              <span className={`h-1.5 w-1.5 rounded-full ${
-                healthStatus === 'UP' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-                healthStatus === 'DOWN' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-amber-500'
-              }`} />
-              <span className="text-zinc-400 font-medium">
-                {healthStatus === 'LOADING' && 'Connecting...'}
-                {healthStatus === 'UP' && 'Catalog Live'}
-                {healthStatus === 'DOWN' && 'Offline'}
-              </span>
-            </div>
-
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
                 <NotificationCenter />
-                <span className="text-xs text-zinc-400 hidden xl:inline">
-                  Hi, <span className="text-white font-semibold">{user.firstName}</span>
-                </span>
+                <NavLink to="/dashboard/v2" className={navLinkClass} title="Shopping Dashboard">
+                  Dashboard
+                </NavLink>
+                <NavLink to="/settings/preferences" className={navLinkClass} title="Shopping Preferences">
+                  Preferences
+                </NavLink>
                 <button
                   onClick={logout}
                   className="px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 active:scale-[0.98] transition-all cursor-pointer"

@@ -122,7 +122,7 @@ export const ComparisonPage: React.FC = () => {
       })
       .catch((err) => {
         setComparisonData(null);
-        setError(err?.response?.data?.message || 'Failed to generate comparison matrix for the selected products.');
+        setError(err?.response?.data?.message || 'Failed to generate comparison for the selected products.');
       })
       .finally(() => setLoading(false));
   }, [selectedIds, sessionParam]);
@@ -178,16 +178,12 @@ export const ComparisonPage: React.FC = () => {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 py-6">
-      {/* Top Banner Header */}
+      {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-900 pb-6">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 font-mono">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Side-by-Side Analysis</span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Product Comparison</h1>
-          <p className="text-zinc-400 text-sm max-w-2xl">
-            Compare 2 to 5 products side-by-side across pricing competitiveness, ratings, seller availability, and specifications.
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Compare Products</h1>
+          <p className="text-zinc-400 text-xs mt-1">
+            Compare 2 to 5 products side-by-side across pricing, ratings, seller availability, and specifications.
           </p>
         </div>
 

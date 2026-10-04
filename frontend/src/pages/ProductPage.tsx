@@ -749,87 +749,51 @@ export const ProductPage: React.FC = () => {
           </div>
 
           {analyticsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-1 h-36 rounded-2xl bg-zinc-950/40 border border-zinc-900 animate-pulse" />
-              <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map(n => (
-                  <div key={n} className="h-16 rounded-xl bg-zinc-950/40 border border-zinc-900 animate-pulse" />
-                ))}
-              </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(n => (
+                <div key={n} className="h-20 rounded-xl bg-zinc-950/40 border border-zinc-900 animate-pulse" />
+              ))}
             </div>
           ) : !analytics ? (
-            <div className="flex flex-col items-center justify-center py-6 px-4 border border-zinc-900 border-dashed rounded-2xl bg-zinc-950/10 text-center">
-              <p className="text-xs text-zinc-500">Analytics data is currently unavailable for this product.</p>
+            <div className="p-4 border border-zinc-900 rounded-xl bg-zinc-950/10 text-center text-xs text-zinc-500">
+              Analytics data is currently unavailable for this product.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Trending Score Card */}
-              <div className="md:col-span-1 p-6 rounded-2xl bg-gradient-to-b from-zinc-900/40 to-zinc-950/80 border border-zinc-900 flex flex-col justify-between gap-4 relative overflow-hidden group shadow-lg">
-                <div className="absolute top-[-20%] right-[-20%] w-32 h-32 bg-zinc-800/10 rounded-full blur-xl pointer-events-none" />
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
-                    <Sparkles className="h-3 w-3 text-amber-500" />
-                    Trending Score
-                  </span>
-                  <p className="text-xs text-zinc-500 leading-relaxed mt-1">
-                    A higher Trending Score indicates stronger customer interest and recent marketplace activity.
-                  </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {/* Views */}
+              <div className="p-4 rounded-xl bg-zinc-950/40 border border-zinc-900 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider block">Views</span>
+                  <span className="text-xl font-bold text-zinc-100 font-mono">{analytics.viewCount}</span>
                 </div>
-                <div className="flex items-baseline gap-2.5 mt-2">
-                  <span className="text-4xl font-black text-white tracking-tight font-mono">
-                    {analytics.trendingScore}
-                  </span>
-                  <span className="text-[10px] font-bold text-zinc-400 bg-zinc-900/80 border border-zinc-800 px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">
-                    Score
-                  </span>
-                </div>
+                <Eye className="h-4 w-4 text-zinc-500" />
               </div>
 
-              {/* Metrics Grid */}
-              <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Views Card */}
-                <div className="p-5 rounded-xl bg-zinc-950/40 border border-zinc-900/80 hover:border-zinc-850 flex items-center justify-between gap-4 transition-all duration-300">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Product Views</span>
-                    <span className="text-2xl font-black text-zinc-100 font-mono">{analytics.viewCount}</span>
-                  </div>
-                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-zinc-400">
-                    <Eye className="h-5 w-5" />
-                  </div>
+              {/* Saves */}
+              <div className="p-4 rounded-xl bg-zinc-950/40 border border-zinc-900 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider block">Saves</span>
+                  <span className="text-xl font-bold text-rose-400 font-mono">{analytics.saveCount}</span>
                 </div>
+                <Heart className="h-4 w-4 text-rose-500/80" />
+              </div>
 
-                {/* Saves Card */}
-                <div className="p-5 rounded-xl bg-zinc-950/40 border border-zinc-900/80 hover:border-zinc-850 flex items-center justify-between gap-4 transition-all duration-300">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Saved Count</span>
-                    <span className="text-2xl font-black text-rose-400 font-mono">{analytics.saveCount}</span>
-                  </div>
-                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-rose-500/80">
-                    <Heart className="h-5 w-5" />
-                  </div>
+              {/* Watchlists */}
+              <div className="p-4 rounded-xl bg-zinc-950/40 border border-zinc-900 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider block">Watchlists</span>
+                  <span className="text-xl font-bold text-emerald-400 font-mono">{analytics.watchlistCount}</span>
                 </div>
+                <Bell className="h-4 w-4 text-emerald-500/80" />
+              </div>
 
-                {/* Watchlists Card */}
-                <div className="p-5 rounded-xl bg-zinc-950/40 border border-zinc-900/80 hover:border-zinc-850 flex items-center justify-between gap-4 transition-all duration-300">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Active Watchlists</span>
-                    <span className="text-2xl font-black text-emerald-400 font-mono">{analytics.watchlistCount}</span>
-                  </div>
-                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-emerald-500/80">
-                    <Bell className="h-5 w-5" />
-                  </div>
+              {/* Trending */}
+              <div className="p-4 rounded-xl bg-zinc-950/40 border border-zinc-900 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider block">Trending Score</span>
+                  <span className="text-xl font-bold text-amber-400 font-mono">{analytics.trendingScore}</span>
                 </div>
-
-                {/* Price Changes Card */}
-                <div className="p-5 rounded-xl bg-zinc-950/40 border border-zinc-900/80 hover:border-zinc-850 flex items-center justify-between gap-4 transition-all duration-300">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Price Updates</span>
-                    <span className="text-2xl font-black text-amber-500 font-mono">{analytics.priceChangeCount}</span>
-                  </div>
-                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-amber-500/80">
-                    <Clock className="h-5 w-5" />
-                  </div>
-                </div>
+                <Sparkles className="h-4 w-4 text-amber-500/80" />
               </div>
             </div>
           )}

@@ -91,14 +91,10 @@ export const LandingPage: React.FC = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, type: 'spring' }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/60 border border-zinc-800/80 text-xs text-zinc-400 hover:border-zinc-700 transition-colors cursor-pointer mb-8 shadow-inner"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/60 border border-zinc-800/80 text-xs text-zinc-400 mb-8"
         >
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
+          <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
           <span className="font-medium tracking-wide">Real-Time Price Intelligence</span>
-          <ChevronRight className="h-3.5 w-3.5 text-zinc-600" />
         </motion.div>
 
         <motion.div
