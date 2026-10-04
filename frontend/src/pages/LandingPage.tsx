@@ -79,7 +79,7 @@ export const LandingPage: React.FC = () => {
   };
 
   return (
-    <div className="relative flex flex-col gap-24 md:gap-32 py-12 md:py-20 overflow-hidden">
+    <div className="relative flex flex-col gap-16 md:gap-24 py-12 md:py-20 overflow-hidden">
       {/* Background Orbs */}
       <div className="absolute top-[-10%] left-[50%] translate-x-[-50%] w-[600px] h-[300px] bg-gradient-to-r from-zinc-800/10 to-zinc-700/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute top-[20%] right-[-10%] w-[300px] h-[300px] bg-zinc-800/5 rounded-full blur-[120px] pointer-events-none" />
@@ -188,9 +188,9 @@ export const LandingPage: React.FC = () => {
             <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-zinc-900 text-zinc-300 border border-zinc-800 shadow-inner group-hover:text-white transition-colors">
               <Zap className="h-5 w-5" />
             </div>
-            <h3 className="font-semibold text-zinc-100 text-lg">Instant Aggregator</h3>
+            <h3 className="font-semibold text-zinc-100 text-lg">Understand True Pricing</h3>
             <p className="text-sm text-zinc-400 leading-relaxed">
-              Compare offers from top verified retailers concurrently to instantly secure the best market price.
+              Compare offers across verified retailers concurrently to instantly see real live market prices with zero markup.
             </p>
           </motion.div>
 
@@ -201,11 +201,11 @@ export const LandingPage: React.FC = () => {
             className="flex flex-col gap-4 p-6 rounded-2xl bg-zinc-950/40 border border-zinc-900/80 backdrop-blur-md transition-all duration-300 group"
           >
             <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-zinc-900 text-zinc-300 border border-zinc-800 shadow-inner group-hover:text-white transition-colors">
-              <TrendingDown className="h-5 w-5" />
+              <Layers className="h-5 w-5" />
             </div>
-            <h3 className="font-semibold text-zinc-100 text-lg">Smart Deal Discovery</h3>
+            <h3 className="font-semibold text-zinc-100 text-lg">Compare Without Bias</h3>
             <p className="text-sm text-zinc-400 leading-relaxed">
-              Instantly spots verified lowest prices, calculates true discount percentages, and highlights best savings.
+              Side-by-side specs, direct store links, and true seller pricing without sponsored distortion or affiliate ranking bias.
             </p>
           </motion.div>
 
@@ -216,11 +216,11 @@ export const LandingPage: React.FC = () => {
             className="flex flex-col gap-4 p-6 rounded-2xl bg-zinc-950/40 border border-zinc-900/80 backdrop-blur-md transition-all duration-300 group"
           >
             <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-zinc-900 text-zinc-300 border border-zinc-800 shadow-inner group-hover:text-white transition-colors">
-              <Layers className="h-5 w-5" />
+              <TrendingDown className="h-5 w-5" />
             </div>
-            <h3 className="font-semibold text-zinc-100 text-lg">Transparent & Clean</h3>
+            <h3 className="font-semibold text-zinc-100 text-lg">Decide When to Buy</h3>
             <p className="text-sm text-zinc-400 leading-relaxed">
-              No pop-ups, no tracking cookies, no sponsored distortion. Just pure, accurate price intelligence.
+              Price history trends, discount tracking, and purchase timing signals help you buy with complete confidence.
             </p>
           </motion.div>
         </motion.div>

@@ -10,6 +10,7 @@ import { apiService } from '../services/api';
 import { getSavedCurrency, formatPrice, getDisplayPrice, resolveAssistantDisplayPrice } from '../currency';
 import { useAuth } from '../context/AuthContext';
 import { ProductImage } from '../components/common/ProductImage';
+import { generateConversationTitle } from '../services/assistantTitle.ts';
 import type { 
   AssistantConversationDTO, 
   AssistantEvidenceBundle, 
@@ -180,8 +181,8 @@ export const AiAssistantPage: React.FC = () => {
 
   const handleCreateNewConversation = async () => {
     try {
-      const newConv = await apiService.createAssistantConversation('New Shopping Inquiry');
-      setConversations(prev => [newConv, ...prev]);
+      const newConv = await apiService.createAssistantConversation('New Inquiry');
+      setConversations(prev => [{ ...newConv, title: 'New Inquiry' }, ...prev]);
       setActiveConversationId(newConv.id);
       setMessages([]);
       setError(null);
@@ -247,13 +248,23 @@ export const AiAssistantPage: React.FC = () => {
 
     try {
       let targetConvId = activeConversationId;
+      const derivedTitle = generateConversationTitle(userMessageText);
+
       if (!targetConvId) {
-        const newConv = await apiService.createAssistantConversation(userMessageText.slice(0, 30));
+        const newConv = await apiService.createAssistantConversation(derivedTitle);
         targetConvId = newConv.id;
         if (currentReqId === activeRequestRef.current && activeUserIdRef.current === requestUserId) {
           setActiveConversationId(newConv.id);
-          setConversations(prev => [newConv, ...prev]);
+          setConversations(prev => [{ ...newConv, title: derivedTitle }, ...prev]);
         }
+      } else {
+        // If current thread has a generic initial title, update it with derived title from user's message
+        setConversations(prev => prev.map(c => {
+          if (c.id === targetConvId && (!c.title || c.title === 'New Inquiry' || c.title === 'New Shopping Inquiry' || c.title === 'Shopping Thread')) {
+            return { ...c, title: derivedTitle };
+          }
+          return c;
+        }));
       }
 
       // Send message carrying activeProductId if active
@@ -558,7 +569,7 @@ export const AiAssistantPage: React.FC = () => {
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <MessageSquare size={13} className={isActive ? 'text-white' : 'text-zinc-500'} />
-                  <span className="truncate font-medium">{conv.title || 'Shopping Thread'}</span>
+                  <span className="truncate font-medium">{generateConversationTitle(conv.title)}</span>
                 </div>
                 <button
                   onClick={(e) => handleDeleteConversation(e, conv.id)}
@@ -574,7 +585,7 @@ export const AiAssistantPage: React.FC = () => {
 
         <div className="p-3 border-t border-zinc-800/80 bg-zinc-950 text-[10px] text-zinc-500 flex items-center gap-1.5">
           <ShieldCheck size={12} className="text-emerald-400" />
-          <span>Verified catalog data · Deterministic recommendations</span>
+          <span>Verified catalog data · Clear shopping decisions</span>
         </div>
       </div>
 
@@ -582,15 +593,20 @@ export const AiAssistantPage: React.FC = () => {
       <div className="flex-1 flex flex-col h-full bg-[#09090b] relative">
         {/* Top Header */}
         <div className="px-6 py-3.5 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 rounded-xl bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.1)] shrink-0">
               <Bot size={18} className="animate-pulse" />
             </div>
-            <div>
-              <h1 className="text-sm font-bold text-white tracking-tight">
-                Shopping Assistant
+            <div className="min-w-0">
+              <h1 className="text-sm font-bold text-white tracking-tight truncate max-w-[200px] sm:max-w-md">
+                {(() => {
+                  const activeConv = conversations.find(c => c.id === activeConversationId);
+                  return activeConv 
+                    ? generateConversationTitle(activeConv.title) 
+                    : (messages.length > 0 && messages[0].role === 'user' ? generateConversationTitle(messages[0].content) : 'Shopping Assistant');
+                })()}
               </h1>
-              <p className="text-[11px] text-zinc-400">Ask questions, compare products, and evaluate purchase timing</p>
+              <p className="text-[11px] text-zinc-400 truncate">Ask questions, compare products, and evaluate purchase timing</p>
             </div>
           </div>
           

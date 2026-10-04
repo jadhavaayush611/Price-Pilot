@@ -202,6 +202,38 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </NavLink>
               </div>
             )}
+
+            {/* Mobile Auth Actions */}
+            <div className="pt-3 border-t border-zinc-900 flex flex-col gap-2">
+              {isAuthenticated ? (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logout();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl transition-colors cursor-pointer"
+                >
+                  Logout
+                </button>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center px-4 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl transition-colors text-center"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center px-4 py-2.5 text-xs font-semibold text-black bg-white rounded-xl hover:bg-zinc-200 transition-colors text-center shadow-sm"
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </header>
@@ -214,10 +246,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Footer */}
       <footer className="border-t border-zinc-900/80 bg-[#030303] py-8 text-zinc-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-zinc-400 font-semibold tracking-tight">PricePilot</span>
-            <span className="text-xs text-zinc-700">|</span>
-            <p className="text-xs">Your personal shopping intelligence and price comparison engine.</p>
+          <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
+            <span className="text-zinc-300 font-semibold tracking-tight">PricePilot</span>
+            <span className="hidden sm:inline text-xs text-zinc-700">|</span>
+            <p className="text-xs text-zinc-400">Shopping intelligence and price comparison engine.</p>
+          </div>
+          <div className="flex items-center gap-4 text-xs text-zinc-400">
+            <Link to="/" className="hover:text-zinc-200 transition-colors">Discover</Link>
+            <Link to="/compare" className="hover:text-zinc-200 transition-colors">Compare</Link>
+            <Link to="/recommendations" className="hover:text-zinc-200 transition-colors">Recommendations</Link>
+            <Link to="/trending" className="hover:text-zinc-200 transition-colors">Trending</Link>
+            <Link to="/analytics" className="hover:text-zinc-200 transition-colors">Analytics</Link>
           </div>
           <p className="text-xs text-zinc-500">
             &copy; {new Date().getFullYear()} PricePilot. Built for smart shoppers.

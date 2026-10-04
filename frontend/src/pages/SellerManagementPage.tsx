@@ -317,9 +317,9 @@ export const SellerManagementPage: React.FC = () => {
         {isError ? (
           <div className="rounded-xl border border-rose-950 bg-rose-950/10 p-6 text-center text-rose-400">
             <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-80" />
-            <p className="font-semibold text-sm">Failed to connect to the backend engine.</p>
+            <p className="font-semibold text-sm">Unable to connect to the service.</p>
             <p className="text-xs text-rose-500/80 mt-1">
-              Please verify that the Spring Boot server is running and database configuration is healthy.
+              Please check your network connection or try again in a few moments.
             </p>
           </div>
         ) : (
