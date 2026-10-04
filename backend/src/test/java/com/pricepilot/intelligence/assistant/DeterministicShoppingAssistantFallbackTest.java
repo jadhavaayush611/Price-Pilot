@@ -8,10 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -93,9 +90,10 @@ class DeterministicShoppingAssistantFallbackTest {
     }
 
     @Test
-    @DisplayName("Generate preference query response")
-    void testPreferenceQueryFallback() {
+    @DisplayName("Generate preference query response for USD user")
+    void testPreferenceQueryFallbackUsd() {
         UserShoppingPreferenceDTO prefs = UserShoppingPreferenceDTO.builder()
+                .currency(com.pricepilot.currency.CurrencyCode.USD)
                 .minBudget(BigDecimal.valueOf(500))
                 .maxBudget(BigDecimal.valueOf(1200))
                 .preferredCategories(Set.of("Laptops"))
@@ -107,9 +105,147 @@ class DeterministicShoppingAssistantFallbackTest {
         String response = fallback.generateFallbackResponse(AssistantIntent.PREFERENCE_QUERY, null, prefs);
 
         assertTrue(response.contains("Your Current Shopping Preferences"));
-        assertTrue(response.contains("$500 - $1200"));
+        assertTrue(response.contains("$500.00 - $1200.00"));
         assertTrue(response.contains("Laptops"));
         assertTrue(response.contains("Apple"));
         assertTrue(response.contains("HIGH"));
+    }
+
+    @Test
+    @DisplayName("Generate preference query response for INR user")
+    void testPreferenceQueryFallbackInr() {
+        UserShoppingPreferenceDTO prefs = UserShoppingPreferenceDTO.builder()
+                .currency(com.pricepilot.currency.CurrencyCode.INR)
+                .minBudget(BigDecimal.valueOf(40000))
+                .maxBudget(BigDecimal.valueOf(96000))
+                .preferredCategories(Set.of("Laptops"))
+                .preferredBrands(Set.of("Dell", "Apple"))
+                .build();
+
+        String response = fallback.generateFallbackResponse(AssistantIntent.PREFERENCE_QUERY, null, prefs);
+
+        assertTrue(response.contains("Your Current Shopping Preferences"));
+        assertTrue(response.contains("₹40000.00 - ₹96000.00"));
+    }
+
+    @Test
+    @DisplayName("Generate preference query response for JPY user with 0 decimal places")
+    void testPreferenceQueryFallbackJpy() {
+        UserShoppingPreferenceDTO prefs = UserShoppingPreferenceDTO.builder()
+                .currency(com.pricepilot.currency.CurrencyCode.JPY)
+                .minBudget(BigDecimal.valueOf(75000))
+                .maxBudget(BigDecimal.valueOf(180000))
+                .build();
+
+        String response = fallback.generateFallbackResponse(AssistantIntent.PREFERENCE_QUERY, null, prefs);
+
+        assertTrue(response.contains("Your Current Shopping Preferences"));
+        assertTrue(response.contains("¥75000 - ¥180000"));
+        assertFalse(response.contains("¥75000.00"), "JPY must not have decimal places");
+    }
+
+    @Test
+    @DisplayName("Generate discovery response with custom currency formatted items")
+    void testDiscoveryResponseCurrencyFormatting() {
+        for (com.pricepilot.currency.CurrencyCode cur : com.pricepilot.currency.CurrencyCode.values()) {
+            UserShoppingPreferenceDTO prefs = UserShoppingPreferenceDTO.builder()
+                    .currency(cur)
+                    .build();
+
+            Map<String, Object> product = new HashMap<>();
+            product.put("productName", "Test Laptop");
+            product.put("price", 1000.0);
+            product.put("currency", cur.name());
+            product.put("currencySymbol", cur.getSymbol());
+
+            AssistantEvidenceBundle bundle = AssistantEvidenceBundle.builder()
+                    .intent(AssistantIntent.DISCOVERY)
+                    .groundedProducts(List.of(product))
+                    .build();
+
+            String response = fallback.generateFallbackResponse(AssistantIntent.DISCOVERY, bundle, prefs);
+
+            assertTrue(response.contains("Test Laptop"));
+            assertTrue(response.contains(cur.getSymbol()), "Must contain symbol " + cur.getSymbol());
+            if (cur == com.pricepilot.currency.CurrencyCode.JPY) {
+                assertTrue(response.contains("¥1000"));
+                assertFalse(response.contains("¥1000.00"));
+            } else {
+                assertTrue(response.contains(cur.getSymbol() + "1000.00"));
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("Exact match fallback response states 'Exact match found in the verified catalog:'")
+    void testExactMatchFallbackResponse() {
+        Map<String, Object> product = new HashMap<>();
+        product.put("productName", "iPhone 15");
+        product.put("brand", "Apple");
+        product.put("price", 799.0);
+        product.put("currency", "USD");
+        product.put("currencySymbol", "$");
+
+        AssistantEvidenceBundle bundle = AssistantEvidenceBundle.builder()
+                .intent(AssistantIntent.DISCOVERY)
+                .matchClassification(AssistantMatchClassification.EXACT_MATCH)
+                .requestedEntity("iPhone 15")
+                .groundedProducts(List.of(product))
+                .build();
+
+        String response = fallback.generateFallbackResponse(AssistantIntent.DISCOVERY, bundle, null);
+
+        assertTrue(response.contains("Exact match found in the verified catalog:"));
+        assertTrue(response.contains("iPhone 15"));
+        assertFalse(response.contains("matching products"));
+    }
+
+    @Test
+    @DisplayName("Close match fallback response states 'No exact iPhone 16 was found' and 'Closest available matches:'")
+    void testCloseMatchFallbackResponse() {
+        Map<String, Object> p1 = new HashMap<>();
+        p1.put("productName", "iPhone 15");
+        p1.put("brand", "Apple");
+        p1.put("price", 63556.0);
+        p1.put("currency", "INR");
+        p1.put("currencySymbol", "₹");
+
+        Map<String, Object> p2 = new HashMap<>();
+        p2.put("productName", "iPhone 15 Pro");
+        p2.put("brand", "Apple");
+        p2.put("price", 124900.0);
+        p2.put("currency", "INR");
+        p2.put("currencySymbol", "₹");
+
+        AssistantEvidenceBundle bundle = AssistantEvidenceBundle.builder()
+                .intent(AssistantIntent.DISCOVERY)
+                .matchClassification(AssistantMatchClassification.CLOSE_MATCHES)
+                .requestedEntity("iPhone 16")
+                .groundedProducts(List.of(p1, p2))
+                .build();
+
+        String response = fallback.generateFallbackResponse(AssistantIntent.DISCOVERY, bundle, null);
+
+        assertTrue(response.contains("No exact iPhone 16 was found in the verified catalog."));
+        assertTrue(response.contains("Closest available matches:"));
+        assertTrue(response.contains("iPhone 15"));
+        assertTrue(response.contains("iPhone 15 Pro"));
+        assertFalse(response.contains("I found the following matching products"));
+    }
+
+    @Test
+    @DisplayName("No match fallback response states 'I couldn't find an exact match or sufficiently close product'")
+    void testNoMatchFallbackResponse() {
+        AssistantEvidenceBundle bundle = AssistantEvidenceBundle.builder()
+                .intent(AssistantIntent.DISCOVERY)
+                .matchClassification(AssistantMatchClassification.NO_MATCH)
+                .requestedEntity("Electric Toothbrush")
+                .groundedProducts(Collections.emptyList())
+                .build();
+
+        String response = fallback.generateFallbackResponse(AssistantIntent.DISCOVERY, bundle, null);
+
+        assertTrue(response.contains("I couldn't find an exact match or sufficiently close product in the verified catalog."));
+        assertFalse(response.contains("matching products"));
     }
 }

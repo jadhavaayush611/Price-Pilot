@@ -16,6 +16,8 @@ import java.util.Map;
 public class AssistantEvidenceBundle {
 
     private AssistantIntent intent;
+    private AssistantMatchClassification matchClassification;
+    private String requestedEntity;
 
     @Builder.Default
     private List<GroundedEvidenceItem> factualEvidence = new ArrayList<>();

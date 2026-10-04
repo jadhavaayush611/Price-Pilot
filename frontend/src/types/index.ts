@@ -533,12 +533,20 @@ export interface AssistantAction {
   actionUrl?: string;
 }
 
+export type AssistantMatchClassification =
+  | 'EXACT_MATCH'
+  | 'CLOSE_MATCHES'
+  | 'NO_MATCH'
+  | 'CATEGORY_RESULTS';
+
 export interface AssistantEvidenceBundle {
   groundedProducts: GroundedEvidenceItem[];
   personalizationFactors: PersonalizationReasoningItem[];
   tradeOffs: TradeOffItem[];
   unknownOrInsufficientDataNotes: string[];
   suggestedActions: AssistantAction[];
+  matchClassification?: AssistantMatchClassification;
+  requestedEntity?: string;
 }
 
 export interface AssistantMessageDTO {
@@ -566,6 +574,8 @@ export interface AssistantResponseDTO {
   messageId: string;
   response: string;
   intent: string;
+  matchClassification?: AssistantMatchClassification;
+  requestedEntity?: string;
   evidenceBundle: AssistantEvidenceBundle;
   suggestedPrompts: string[];
   actions: AssistantAction[];

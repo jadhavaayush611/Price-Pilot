@@ -273,8 +273,9 @@ export const AiAssistantPage: React.FC = () => {
         content: data.response || "I couldn't process that query.",
         intent: data.intent,
         evidenceBundle: data.evidenceBundle,
+        products: (data.products as unknown as ProductCardDTO[]) || (data.evidenceBundle?.groundedProducts as unknown as ProductCardDTO[]) || [],
         suggestedPrompts: data.suggestedPrompts || [],
-        actions: data.actions || [],
+        actions: data.actions || data.evidenceBundle?.suggestedActions || [],
         timestamp: new Date()
       };
 
@@ -426,7 +427,7 @@ export const AiAssistantPage: React.FC = () => {
 
         <div className="p-3 border-t border-zinc-800/80 bg-zinc-950 text-[10px] text-zinc-500 flex items-center gap-1.5">
           <ShieldCheck size={12} className="text-emerald-400" />
-          <span>Strictly Grounded · No LLM Truth</span>
+          <span>Verified catalog data · Deterministic recommendations</span>
         </div>
       </div>
 
@@ -442,7 +443,7 @@ export const AiAssistantPage: React.FC = () => {
               <h1 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
                 PricePilot Shopping Decision Support
                 <span className="text-[9px] tracking-wider uppercase bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded text-zinc-400 font-mono font-bold">
-                  Phase 9 Grounded
+                  VERIFIED SHOPPING ASSISTANT
                 </span>
               </h1>
               <p className="text-[11px] text-zinc-400">Deterministic pricing, comparisons & preference-aware recommendations</p>
@@ -706,7 +707,9 @@ export const AiAssistantPage: React.FC = () => {
                         {/* Suggested Follow-up Prompts */}
                         {isAssistant && msg.suggestedPrompts && msg.suggestedPrompts.length > 0 && !loading && (
                           <div className="flex flex-wrap gap-1.5 mt-1">
-                            {msg.suggestedPrompts.map((pText, pIdx) => (
+                            {msg.suggestedPrompts
+                              .filter(pText => !msg.actions?.some(a => a.label?.toLowerCase() === pText?.toLowerCase()))
+                              .map((pText, pIdx) => (
                               <button
                                 key={pIdx}
                                 onClick={() => handleSend(pText)}

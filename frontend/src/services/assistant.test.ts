@@ -179,4 +179,93 @@ describe('apiService Assistant Gateway Client', () => {
 
     expect(deleteSpy).toHaveBeenCalledWith('/assistant/conversations/c2');
   });
+
+  it('should correctly receive and parse EXACT_MATCH classification in assistant response', async () => {
+    const mockResponse = {
+      data: {
+        conversationId: 'c-exact',
+        messageId: 'm-exact',
+        response: 'Exact match found in the verified catalog:\n\n1. iPhone 15 — $799.00',
+        intent: 'DISCOVERY',
+        matchClassification: 'EXACT_MATCH',
+        requestedEntity: 'iPhone 15',
+        products: [
+          { productId: 'p-1', productName: 'Apple iPhone 15', currentPrice: 799.0 }
+        ],
+        evidenceBundle: {
+          groundedProducts: [{ productId: 'p-1', productName: 'Apple iPhone 15', currentPrice: 799.0 }],
+          matchClassification: 'EXACT_MATCH',
+          requestedEntity: 'iPhone 15'
+        }
+      }
+    };
+    vi.spyOn(apiClient, 'post').mockResolvedValue(mockResponse);
+
+    const result = await apiService.sendAssistantMessage('c-exact', 'Find the iPhone 15');
+
+    expect(result.matchClassification).toBe('EXACT_MATCH');
+    expect(result.requestedEntity).toBe('iPhone 15');
+    expect(result.response).toContain('Exact match found in the verified catalog:');
+    expect(result.products).toHaveLength(1);
+  });
+
+  it('should correctly receive and parse CLOSE_MATCHES classification when exact product is absent', async () => {
+    const mockResponse = {
+      data: {
+        conversationId: 'c-close',
+        messageId: 'm-close',
+        response: 'No exact iPhone 16 was found in the verified catalog.\n\nClosest available matches:\n1. iPhone 15 — $799.00\n2. iPhone 15 Pro — $999.00',
+        intent: 'DISCOVERY',
+        matchClassification: 'CLOSE_MATCHES',
+        requestedEntity: 'iPhone 16',
+        products: [
+          { productId: 'p-1', productName: 'Apple iPhone 15', currentPrice: 799.0 },
+          { productId: 'p-2', productName: 'Apple iPhone 15 Pro', currentPrice: 999.0 }
+        ],
+        evidenceBundle: {
+          groundedProducts: [
+            { productId: 'p-1', productName: 'Apple iPhone 15', currentPrice: 799.0 },
+            { productId: 'p-2', productName: 'Apple iPhone 15 Pro', currentPrice: 999.0 }
+          ],
+          matchClassification: 'CLOSE_MATCHES',
+          requestedEntity: 'iPhone 16'
+        }
+      }
+    };
+    vi.spyOn(apiClient, 'post').mockResolvedValue(mockResponse);
+
+    const result = await apiService.sendAssistantMessage('c-close', 'Find me the iPhone 16');
+
+    expect(result.matchClassification).toBe('CLOSE_MATCHES');
+    expect(result.requestedEntity).toBe('iPhone 16');
+    expect(result.response).toContain('No exact iPhone 16 was found in the verified catalog.');
+    expect(result.response).toContain('Closest available matches:');
+    expect(result.response).not.toContain('matching products');
+  });
+
+  it('should correctly receive and parse NO_MATCH classification', async () => {
+    const mockResponse = {
+      data: {
+        conversationId: 'c-nomatch',
+        messageId: 'm-nomatch',
+        response: "I couldn't find an exact match or sufficiently close product in the verified catalog.",
+        intent: 'DISCOVERY',
+        matchClassification: 'NO_MATCH',
+        requestedEntity: 'Electric Toothbrush',
+        products: [],
+        evidenceBundle: {
+          groundedProducts: [],
+          matchClassification: 'NO_MATCH',
+          requestedEntity: 'Electric Toothbrush'
+        }
+      }
+    };
+    vi.spyOn(apiClient, 'post').mockResolvedValue(mockResponse);
+
+    const result = await apiService.sendAssistantMessage('c-nomatch', 'Find electric toothbrush');
+
+    expect(result.matchClassification).toBe('NO_MATCH');
+    expect(result.response).toContain("I couldn't find an exact match or sufficiently close product in the verified catalog.");
+    expect(result.products).toHaveLength(0);
+  });
 });

@@ -78,11 +78,25 @@ class ShoppingIntentClassifierTest {
     }
 
     @Test
-    @DisplayName("Extract price constraints from natural language query")
+    @DisplayName("Classify required runtime acceptance queries accurately")
+    void testRuntimeAcceptanceQueryIntents() {
+        assertEquals(AssistantIntent.DISCOVERY, classifier.classifyIntent("Find me a good pair of wireless headphones under ₹5000"));
+        assertEquals(AssistantIntent.DISCOVERY, classifier.classifyIntent("Find me a good pair of wireless headphones"));
+        assertEquals(AssistantIntent.COMPARISON, classifier.classifyIntent("Compare these headphones"));
+        assertEquals(AssistantIntent.RECOMMENDATION, classifier.classifyIntent("Show me trending products"));
+        assertEquals(AssistantIntent.PRICE_ANALYSIS, classifier.classifyIntent("Is now a good time to buy?"));
+        assertEquals(AssistantIntent.PREFERENCE_QUERY, classifier.classifyIntent("Adjust Shopping Preferences"));
+        assertEquals(AssistantIntent.GENERAL, classifier.classifyIntent("What is the capital of France?"));
+    }
+
+    @Test
+    @DisplayName("Extract price constraints from natural language query including currency symbols")
     void testExtractPriceConstraint() {
         assertEquals(1200.0, classifier.extractPriceConstraint("Find gaming laptops under $1200"));
+        assertEquals(5000.0, classifier.extractPriceConstraint("Find me a good pair of wireless headphones under ₹5000"));
         assertEquals(500.50, classifier.extractPriceConstraint("Show phones below 500.50"));
         assertEquals(800.0, classifier.extractPriceConstraint("Looking for items with budget of $800"));
+        assertEquals(25000.0, classifier.extractPriceConstraint("Phones under INR 25000"));
         assertNull(classifier.extractPriceConstraint("Find laptops without price limit"));
     }
 }

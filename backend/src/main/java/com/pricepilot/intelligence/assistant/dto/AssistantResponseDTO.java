@@ -28,6 +28,8 @@ public class AssistantResponseDTO {
 
     // Intent & Evidence
     private AssistantIntent intent;
+    private AssistantMatchClassification matchClassification;
+    private String requestedEntity;
     private AssistantEvidenceBundle evidenceBundle;
 
     // Backward-compatible fields

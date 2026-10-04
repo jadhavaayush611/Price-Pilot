@@ -334,8 +334,15 @@ public class QueryInterpreter {
         }
     }
 
+    private static final Set<String> STOP_WORDS = Set.of(
+            "the", "a", "an", "for", "with", "and", "or", "in", "at", "to", "by", "of", "from",
+            "find", "me", "show", "good", "pair", "looking", "search", "please", "give", "display",
+            "get", "need", "want", "tell", "i", "my", "some", "any", "these", "those", "this", "that",
+            "top", "compare", "recommend", "suggest", "versus", "vs", "all",
+            "now", "about", "what", "how", "is", "it", "are", "can", "you", "more", "details", "info"
+    );
+
     private static boolean isStopWord(String word) {
-        return Set.of("the", "a", "an", "for", "with", "and", "or", "in", "at", "to", "by", "of", "from")
-                .contains(word);
+        return word != null && STOP_WORDS.contains(word.toLowerCase().trim());
     }
 }

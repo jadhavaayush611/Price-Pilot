@@ -33,14 +33,49 @@ public class DiscoverySpecifications {
             // 2. Keyword tokens matching across name, brand, category, description
             if (keywords != null && !keywords.isEmpty()) {
                 List<Predicate> tokenPredicates = new ArrayList<>();
-                for (String token : keywords) {
-                    if (token == null || token.trim().isEmpty()) continue;
-                    String pattern = "%" + token.trim().toLowerCase() + "%";
+                for (String rawToken : keywords) {
+                    if (rawToken == null || rawToken.trim().isEmpty()) continue;
+                    String token = rawToken.trim().toLowerCase();
+
+                    // If category is already filtered, skip keyword matching for the category itself (e.g. "laptops", "headphones")
+                    if (category != null && !category.trim().isEmpty() && !category.equalsIgnoreCase("All")) {
+                        String catLower = category.trim().toLowerCase();
+                        if (catLower.equals(token) || (token.endsWith("s") && catLower.equals(token.substring(0, token.length() - 1)))
+                                || catLower.startsWith(token) || token.startsWith(catLower)) {
+                            continue;
+                        }
+                    }
+
+                    // If brand is already filtered, skip keyword matching for brand
+                    if (brand != null && !brand.trim().isEmpty() && !brand.equalsIgnoreCase("All")) {
+                        String brandLower = brand.trim().toLowerCase();
+                        if (brandLower.equals(token) || brandLower.startsWith(token) || token.startsWith(brandLower)) {
+                            continue;
+                        }
+                    }
+
+                    String pattern = "%" + token + "%";
                     Predicate nameMatch = cb.like(cb.lower(root.get("name")), pattern);
                     Predicate brandMatch = cb.like(cb.lower(root.get("brand")), pattern);
                     Predicate categoryMatch = cb.like(cb.lower(root.get("category")), pattern);
                     Predicate descMatch = cb.like(cb.lower(root.get("description")), pattern);
-                    tokenPredicates.add(cb.or(nameMatch, brandMatch, categoryMatch, descMatch));
+
+                    List<Predicate> orParts = new ArrayList<>();
+                    orParts.add(nameMatch);
+                    orParts.add(brandMatch);
+                    orParts.add(categoryMatch);
+                    orParts.add(descMatch);
+
+                    if (token.endsWith("s") && token.length() > 3) {
+                        String singular = token.substring(0, token.length() - 1);
+                        String singularPattern = "%" + singular + "%";
+                        orParts.add(cb.like(cb.lower(root.get("name")), singularPattern));
+                        orParts.add(cb.like(cb.lower(root.get("brand")), singularPattern));
+                        orParts.add(cb.like(cb.lower(root.get("category")), singularPattern));
+                        orParts.add(cb.like(cb.lower(root.get("description")), singularPattern));
+                    }
+
+                    tokenPredicates.add(cb.or(orParts.toArray(new Predicate[0])));
                 }
                 if (!tokenPredicates.isEmpty()) {
                     predicates.add(cb.and(tokenPredicates.toArray(new Predicate[0])));

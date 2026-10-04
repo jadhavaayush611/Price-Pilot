@@ -30,7 +30,7 @@ public class PromptInjectionProtector {
             Pattern.compile("drop table", Pattern.CASE_INSENSITIVE)
     );
 
-    private static final Pattern PRICE_REGEX = Pattern.compile("\\$\\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\\.[0-9]{2})?|[0-9]+(?:\\.[0-9]{2})?)");
+    private static final Pattern PRICE_REGEX = Pattern.compile("[$₹€£¥]\\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\\.[0-9]{2})?|[0-9]+(?:\\.[0-9]{2})?)");
     private static final Pattern DISCOUNT_REGEX = Pattern.compile("([0-9]+(?:\\.[0-9]+)?)%\\s*(?:off|discount)");
 
     public boolean containsInjectionAttempt(String text) {
@@ -110,8 +110,8 @@ public class PromptInjectionProtector {
         // If we have known prices in the evidence bundle, verify price claims
         if (!knownPrices.isEmpty()) {
             String lower = responseText.toLowerCase(Locale.ROOT);
-            if ((lower.contains("free") || lower.contains("$0")) && !knownPrices.contains(0.0)) {
-                log.warn("Response ungrounded: claims item is free or $0 when known prices are {}", knownPrices);
+            if ((lower.contains("free") || lower.contains("$0") || lower.contains("₹0") || lower.contains("€0") || lower.contains("£0") || lower.contains("¥0")) && !knownPrices.contains(0.0)) {
+                log.warn("Response ungrounded: claims item is free or 0 when known prices are {}", knownPrices);
                 return false;
             }
 
