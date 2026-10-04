@@ -51,7 +51,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
   return (
     <article
       aria-label={`Recommendation for ${product.name}`}
-      className={`group bg-zinc-950 border rounded-2xl p-5 transition-all duration-300 flex flex-col justify-between hover:shadow-xl ${
+      className={`group bg-zinc-950/80 backdrop-blur-sm border rounded-2xl p-5 transition-all duration-300 flex flex-col justify-between hover:shadow-xl ${
         isRecommended
           ? 'border-emerald-600/60 shadow-lg shadow-emerald-950/30 ring-1 ring-emerald-500/20'
           : hasPersonalization

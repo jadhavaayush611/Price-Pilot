@@ -41,7 +41,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }`;
 
   return (
-    <div className="min-h-screen bg-[#030303] text-zinc-100 flex flex-col antialiased">
+    <div className="min-h-screen bg-transparent text-zinc-100 flex flex-col antialiased relative z-10">
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-[#030303]/85 border-b border-zinc-900/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">

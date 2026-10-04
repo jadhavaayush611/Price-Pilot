@@ -64,7 +64,7 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
   return (
     <article
       aria-label={`Alternative product: ${alternative.name}`}
-      className={`group bg-zinc-950 border rounded-2xl p-5 transition-all duration-300 flex flex-col justify-between hover:shadow-xl ${
+      className={`group bg-zinc-950/80 backdrop-blur-sm border rounded-2xl p-5 transition-all duration-300 flex flex-col justify-between hover:shadow-xl ${
         hasPersonalization
           ? 'border-indigo-900/50 hover:border-indigo-700/70'
           : 'border-zinc-900 hover:border-zinc-700'

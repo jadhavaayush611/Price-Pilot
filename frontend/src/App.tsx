@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/Layout';
+import { AmbientBackground } from './components/ambient/AmbientBackground.tsx';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -55,6 +56,7 @@ export const App: React.FC = () => {
       <AuthProvider>
         <Router>
           <ErrorBoundary>
+            <AmbientBackground />
             <Layout>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
