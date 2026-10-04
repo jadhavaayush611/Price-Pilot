@@ -18,6 +18,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ProductImage } from '../components/common/ProductImage';
 
 interface FormState {
   name: string;
@@ -192,19 +193,14 @@ export const SellerManagementPage: React.FC = () => {
     {
       header: 'Seller logo',
       accessor: (seller: Seller) => (
-        <div className="h-10 w-10 rounded-lg overflow-hidden border border-zinc-900 bg-zinc-950 flex items-center justify-center text-zinc-700 shrink-0">
-          {seller.logoUrl ? (
-            <img
-              src={seller.logoUrl}
-              alt={seller.name}
-              className="h-full w-full object-contain p-1"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = ''; // Fallback
-              }}
-            />
-          ) : (
-            <Store className="h-5 w-5" />
-          )}
+        <div className="h-10 w-10 rounded-lg overflow-hidden border border-zinc-900 bg-zinc-950 flex items-center justify-center text-zinc-700 shrink-0 p-1">
+          <ProductImage
+            src={seller.logoUrl}
+            alt={seller.name}
+            className="h-full w-full object-contain"
+            showFallbackText
+            fallbackText={seller.name?.substring(0, 3)}
+          />
         </div>
       ),
       className: 'w-[80px]',

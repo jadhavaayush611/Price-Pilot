@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { apiService, MOCK_PRODUCTS } from '../services/api';
-import type { ProductAnalytics, ProductWithPrices } from '../types';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { apiService } from '../services/api';
+import type { ProductAnalytics, ProductWithPrices, Product } from '../types';
 import { formatPrice, type CurrencyCode } from '../currency';
 import { HistoricalPriceChart } from '../components/analytics/HistoricalPriceChart';
+import { ProductImage } from '../components/common/ProductImage';
 import {
   TrendingUp,
   TrendingDown,
@@ -17,43 +18,91 @@ import {
   ArrowUpRight,
   Activity,
   History,
+  Search,
+  ArrowRight,
+  ShoppingBag,
 } from 'lucide-react';
 
 export const AnalyticsPage: React.FC = () => {
-  const { productId } = useParams<{ productId: string }>();
-  const [product, setProduct] = useState<ProductWithPrices | null>(null);
+  const { productId: pathProductId } = useParams<{ productId: string }>();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const queryProductId = searchParams.get('productId');
+  const productId = pathProductId || queryProductId || '';
+
+  const [product, setProduct] = useState<ProductWithPrices | Product | null>(null);
   const [analytics, setAnalytics] = useState<ProductAnalytics | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(Boolean(productId));
   const [error, setError] = useState<string | null>(null);
+  const [isNotFound, setIsNotFound] = useState<boolean>(false);
+
+  // Catalog picker state for direct /analytics navigation
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+
   const currency: CurrencyCode = 'USD';
 
+  // Load catalog products for selection when no productId is present
+  const loadCatalog = useCallback(async (query?: string) => {
+    setCatalogLoading(true);
+    try {
+      const res = await apiService.getProducts(0, 24, undefined, undefined, query?.trim() || undefined);
+      setCatalogProducts(res.content || []);
+    } catch {
+      setCatalogProducts([]);
+    } finally {
+      setCatalogLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const id = productId || MOCK_PRODUCTS[0]?.id;
-    if (!id) return;
+    if (!productId) {
+      setProduct(null);
+      setAnalytics(null);
+      setError(null);
+      setIsNotFound(false);
+      setLoading(false);
+      loadCatalog(searchTerm);
+      return;
+    }
 
     setLoading(true);
     setError(null);
+    setIsNotFound(false);
 
-    Promise.all([
-      apiService.getProduct(id).catch(() => MOCK_PRODUCTS[0]),
-      apiService.getIntelligenceAnalytics(id).catch((err) => {
-        console.error('Failed to load intelligence analytics:', err);
-        return null;
-      }),
+    Promise.allSettled([
+      apiService.getProduct(productId),
+      apiService.getIntelligenceAnalytics(productId),
     ])
-      .then(([prod, ana]) => {
-        setProduct(prod || MOCK_PRODUCTS[0]);
-        if (!ana) {
-          setError('Unable to load real-time price analytics from the intelligence engine.');
+      .then(([prodResult, anaResult]) => {
+        if (prodResult.status === 'fulfilled' && prodResult.value) {
+          setProduct(prodResult.value);
         } else {
-          setAnalytics(ana);
+          setProduct(null);
+          setIsNotFound(true);
+          setError('Product not found in verified catalog.');
+          return;
+        }
+
+        if (anaResult.status === 'fulfilled' && anaResult.value) {
+          setAnalytics(anaResult.value);
+        } else {
+          setError('Unable to load real-time price analytics for this product.');
         }
       })
       .catch((err) => {
+        setIsNotFound(true);
         setError(err?.message || 'Error communicating with intelligence server.');
       })
       .finally(() => setLoading(false));
-  }, [productId]);
+  }, [productId, loadCatalog]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    loadCatalog(searchTerm);
+  };
 
   const getSignalBadge = (signal?: string) => {
     switch (signal) {
@@ -132,6 +181,147 @@ export const AnalyticsPage: React.FC = () => {
     return <span className="text-zinc-500 text-xs font-mono">INSUFFICIENT DATA</span>;
   };
 
+  // Direct /analytics navigation without a productId: Show Product Selection State
+  if (!productId) {
+    return (
+      <main className="space-y-8 max-w-7xl mx-auto px-4 py-6 text-left">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-900 pb-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-mono mb-2">
+              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Price Intelligence & Historical Analytics</span>
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">
+              Product Price Intelligence
+            </h1>
+            <p className="text-xs text-zinc-400 mt-1">
+              Select any verified catalog product to inspect historical trajectory, volatility coefficients, and purchase timing signals.
+            </p>
+          </div>
+        </div>
+
+        {/* Search and Filter Form */}
+        <form onSubmit={handleSearchSubmit} className="flex gap-3 max-w-xl">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <input
+              type="text"
+              placeholder="Search catalog products to analyze..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
+            />
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition-colors"
+          >
+            Search
+          </button>
+        </form>
+
+        {/* Product Picker Grid */}
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold text-zinc-300">Choose a Product to Inspect</h2>
+          {catalogLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="h-48 bg-zinc-950 border border-zinc-900 rounded-2xl" />
+              ))}
+            </div>
+          ) : catalogProducts.length === 0 ? (
+            <div className="p-12 text-center bg-zinc-950 border border-zinc-900 rounded-2xl space-y-3">
+              <ShoppingBag className="w-8 h-8 text-zinc-600 mx-auto" />
+              <p className="text-sm text-zinc-400 font-medium">No catalog products found matching your query.</p>
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  loadCatalog();
+                }}
+                className="text-xs text-emerald-400 hover:underline"
+              >
+                Reset Search
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {catalogProducts.map((prod) => (
+                <div
+                  key={prod.id}
+                  onClick={() => navigate(`/analytics/${prod.id}`)}
+                  className="p-4 bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 rounded-2xl space-y-3 cursor-pointer group transition-all duration-300 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]"
+                >
+                  <div className="space-y-3">
+                    <div className="h-36 w-full rounded-xl overflow-hidden bg-zinc-900/40 p-2 flex items-center justify-center">
+                      <ProductImage
+                        src={prod.imageUrl}
+                        alt={prod.name}
+                        className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                        showFallbackText
+                        fallbackText={prod.brand}
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{prod.brand}</span>
+                      <h3 className="text-xs font-bold text-zinc-200 group-hover:text-white line-clamp-2 mt-0.5">
+                        {prod.name}
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-zinc-900">
+                    <span className="text-xs font-mono font-bold text-emerald-400">
+                      {(prod as ProductWithPrices).lowestPrice ? `$${(prod as ProductWithPrices).lowestPrice}` : 'View Prices'}
+                    </span>
+                    <span className="text-xs text-zinc-400 group-hover:text-emerald-400 font-semibold flex items-center gap-1 transition-colors">
+                      Analyze <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  // Unavailable / Not Found state
+  if (!loading && (isNotFound || (!product && error))) {
+    return (
+      <main className="space-y-8 max-w-7xl mx-auto px-4 py-6 text-left">
+        <div className="border-b border-zinc-900 pb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-mono mb-2">
+            <Activity className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Price Intelligence</span>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-white">Product Price Intelligence</h1>
+        </div>
+
+        <div role="alert" className="p-8 text-center bg-zinc-950 border border-zinc-900 rounded-2xl space-y-4 max-w-xl mx-auto">
+          <ShieldAlert className="w-10 h-10 text-amber-400 mx-auto" />
+          <h2 className="text-base font-bold text-zinc-100">Product Unavailable</h2>
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            The requested product (ID: <code className="text-zinc-300 font-mono">{productId}</code>) could not be located in our verified catalog or is no longer active.
+          </p>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => navigate('/analytics')}
+              className="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-colors"
+            >
+              Select Another Product
+            </button>
+            <Link
+              to="/search"
+              className="px-4 py-2 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 rounded-xl transition-colors"
+            >
+              Browse Catalog
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="space-y-8 max-w-7xl mx-auto px-4 py-6 text-left">
       {/* Header */}
@@ -149,14 +339,22 @@ export const AnalyticsPage: React.FC = () => {
           </p>
         </div>
 
-        {product && (
+        <div className="flex items-center gap-3">
           <Link
-            to={`/product/${product.id}`}
-            className="px-4 py-2 text-xs font-semibold bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-lg hover:border-zinc-700 hover:bg-zinc-850 self-start md:self-auto transition-colors"
+            to="/analytics"
+            className="px-3.5 py-2 text-xs font-semibold bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg hover:border-zinc-700 hover:bg-zinc-800 transition-colors"
           >
-            &larr; Back to Product
+            Change Product
           </Link>
-        )}
+          {product && (
+            <Link
+              to={`/product/${product.id}`}
+              className="px-4 py-2 text-xs font-semibold bg-emerald-950 border border-emerald-800/60 text-emerald-300 rounded-lg hover:bg-emerald-900 transition-colors"
+            >
+              &larr; Back to Product
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Loading Skeleton */}
@@ -171,17 +369,17 @@ export const AnalyticsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Error State */}
-      {!loading && error && (
-        <div role="alert" className="p-8 text-center bg-rose-950/20 border border-rose-900/50 rounded-xl space-y-3">
-          <ShieldAlert className="w-8 h-8 text-rose-400 mx-auto" />
-          <h3 className="text-base font-bold text-rose-300">Analytics Service Unavailable</h3>
+      {/* Error State (non-fatal, e.g. analytics missing for valid product) */}
+      {!loading && error && !isNotFound && (
+        <div role="alert" className="p-6 text-center bg-amber-950/20 border border-amber-900/50 rounded-xl space-y-2">
+          <AlertCircle className="w-6 h-6 text-amber-400 mx-auto" />
+          <h3 className="text-sm font-bold text-amber-300">Analytics Data Pending</h3>
           <p className="text-xs text-zinc-400 max-w-md mx-auto">{error}</p>
         </div>
       )}
 
       {/* Main Content */}
-      {!loading && !error && analytics && (
+      {!loading && analytics && (
         <div className="space-y-8">
           {/* Purchase Signal & Recommendation Banner */}
           {(() => {

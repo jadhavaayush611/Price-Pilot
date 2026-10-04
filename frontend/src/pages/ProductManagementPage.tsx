@@ -17,6 +17,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ProductImage } from '../components/common/ProductImage';
 
 interface FormState {
   name: string;
@@ -199,19 +200,12 @@ export const ProductManagementPage: React.FC = () => {
       header: 'Product',
       accessor: (product: Product) => (
         <div className="flex items-center gap-3.5">
-          <div className="h-10 w-10 rounded-lg overflow-hidden border border-zinc-900 bg-zinc-950 flex items-center justify-center text-zinc-700 shrink-0">
-            {product.imageUrl ? (
-              <img 
-                src={product.imageUrl} 
-                alt={product.name} 
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = ''; // Clear source to trigger fallback icon
-                }}
-              />
-            ) : (
-              <Package className="h-5 w-5" />
-            )}
+          <div className="h-10 w-10 rounded-lg overflow-hidden border border-zinc-900 bg-zinc-950 flex items-center justify-center text-zinc-700 shrink-0 p-0.5">
+            <ProductImage
+              src={product.imageUrl}
+              alt={product.name}
+              className="h-full w-full object-contain"
+            />
           </div>
           <div className="flex flex-col min-w-0">
             <span className="text-zinc-200 font-semibold truncate max-w-[200px] sm:max-w-[300px]">

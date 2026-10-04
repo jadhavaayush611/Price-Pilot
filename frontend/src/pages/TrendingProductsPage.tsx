@@ -5,6 +5,7 @@ import { Flame, Bell, Heart, TrendingDown, ChevronRight, Inbox, RefreshCw, Spark
 import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
 import { formatPrice, getDisplayPrice, getSavedCurrency } from '../currency';
+import { ProductImage } from '../components/common/ProductImage';
 
 type ActiveTab = 'trending' | 'watched' | 'saved' | 'drops';
 
@@ -207,16 +208,14 @@ export const TrendingProductsPage: React.FC = () => {
                   onClick={() => navigate(`/product/${product.id}`)}
                   className="flex flex-col h-full rounded-2xl bg-zinc-950/45 border border-zinc-900 hover:shadow-[0_0_30px_rgba(255,255,255,0.01)] transition-all duration-300 cursor-pointer overflow-hidden group"
                 >
-                  <div className="h-44 w-full bg-zinc-900/40 border-b border-zinc-900 relative flex items-center justify-center overflow-hidden">
-                    {product.imageUrl ? (
-                      <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <span className="text-zinc-700 text-xs font-medium uppercase font-mono">No image available</span>
-                    )}
+                  <div className="h-44 w-full bg-zinc-900/40 border-b border-zinc-900 relative flex items-center justify-center overflow-hidden p-2">
+                    <ProductImage
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500"
+                      showFallbackText
+                      fallbackText={product.brand}
+                    />
                     {discount > 0 && (
                       <span className="absolute top-3.5 right-3.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-mono">
                         -{discount}% OFF

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatPrice, getDisplayPrice, getSavedCurrency } from '../currency';
+import { ProductImage } from './common/ProductImage';
 
 interface SearchResultsProps {
   products: ProductWithPrices[];
@@ -196,15 +197,12 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
               <div>
                 {/* Image container */}
                 <div className="aspect-[4/3] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-900 mb-4 relative">
-                  <img
-                    src={product.imageUrl || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=600'}
+                  <ProductImage
+                    src={product.imageUrl}
                     alt={product.name}
-                    loading="lazy"
-                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=600';
-                    }}
+                    showFallbackText
+                    fallbackText={product.brand}
                   />
                   {onToggleSave && (
                     <button

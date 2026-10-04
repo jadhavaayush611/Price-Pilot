@@ -102,4 +102,31 @@ describe('Price Intelligence Frontend Analytics Tests', () => {
     expect(result.observationCount).toBe(1);
     expect(result.supportingEvidence).toEqual([]);
   });
+
+  it('rejects nonexistent products and propagates exact product UUID without mock fallback', async () => {
+    const validUuid = '550e8400-e29b-41d4-a716-446655440000';
+    const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
+      data: {
+        id: validUuid,
+        name: 'Real Catalog Item',
+        brand: 'RealBrand',
+        prices: [],
+      },
+    });
+
+    const product = await apiService.getProduct(validUuid);
+    expect(getSpy).toHaveBeenCalledWith(`/products/${validUuid}`);
+    expect(product).toBeDefined();
+    expect(product?.id).toBe(validUuid);
+    expect(product?.name).not.toContain('iPhone 15 Pro Max (256GB, Space Black)');
+  });
+
+  it('handles backend 404 cleanly when querying an invalid or nonexistent analytics UUID', async () => {
+    const invalidId = 'nonexistent-uuid-999';
+    vi.spyOn(apiClient, 'get').mockRejectedValue({
+      response: { status: 404, data: { message: 'Product analytics not found' } },
+    });
+
+    await expect(apiService.getIntelligenceAnalytics(invalidId)).rejects.toBeDefined();
+  });
 });

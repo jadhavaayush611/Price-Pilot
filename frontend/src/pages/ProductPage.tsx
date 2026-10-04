@@ -9,6 +9,7 @@ import { SellerCard } from '../components/SellerCard';
 import { useAuth } from '../context/AuthContext';
 import { PriceHistorySection } from '../components/PriceHistorySection';
 import { AlternativeList } from '../components/alternative/AlternativeList';
+import { ProductImage } from '../components/common/ProductImage';
 
 export const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -368,11 +369,13 @@ export const ProductPage: React.FC = () => {
           variants={childVariants}
           className="aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-900/80 shadow-2xl relative group"
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
-          <img
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent pointer-events-none z-10" />
+          <ProductImage
             src={product.imageUrl}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-700"
+            className="w-full h-full object-contain p-4 group-hover:scale-102 transition-transform duration-700"
+            showFallbackText
+            fallbackText={product.brand}
           />
         </motion.div>
 
@@ -633,19 +636,15 @@ export const ProductPage: React.FC = () => {
                           >
                             {/* Seller Logo & Name */}
                             <td className="px-6 py-4.5 flex items-center gap-3.5 font-medium text-white">
-                              {price.seller?.logoUrl ? (
-                                <div className="h-7 w-14 flex items-center justify-center bg-zinc-950 border border-zinc-900 rounded-lg p-1.5 shadow-sm">
-                                  <img
-                                    src={price.seller.logoUrl}
-                                    alt={price.seller.name}
-                                    className="max-h-full max-w-full object-contain filter brightness-95"
-                                  />
-                                </div>
-                              ) : (
-                                <span className="h-7 w-14 flex items-center justify-center bg-zinc-900 border border-zinc-800 rounded-lg text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
-                                  {price.seller?.name.substring(0, 3)}
-                                </span>
-                              )}
+                              <div className="h-7 w-14 flex items-center justify-center bg-zinc-950 border border-zinc-900 rounded-lg p-1 shadow-sm overflow-hidden">
+                                <ProductImage
+                                  src={price.seller?.logoUrl}
+                                  alt={price.seller?.name || 'Seller'}
+                                  className="max-h-full max-w-full object-contain filter brightness-95"
+                                  showFallbackText
+                                  fallbackText={price.seller?.name?.substring(0, 3) || 'SEL'}
+                                />
+                              </div>
                               <div className="flex flex-col">
                                 <span className="font-semibold text-zinc-200">{price.seller?.name}</span>
                                 {isLowest && (

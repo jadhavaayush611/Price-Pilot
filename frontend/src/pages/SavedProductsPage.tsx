@@ -6,6 +6,7 @@ import { Heart, Inbox, ArrowLeft, Trash2, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, getDisplayPrice, getSavedCurrency } from '../currency';
 import { useAuth } from '../context/AuthContext';
+import { ProductImage } from '../components/common/ProductImage';
 
 export const SavedProductsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -161,14 +162,13 @@ export const SavedProductsPage: React.FC = () => {
               >
                 <div className="flex items-center flex-grow">
                   {/* Product Image */}
-                  <div className="h-20 w-24 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-900 mr-4 shrink-0 relative">
-                    <img
-                      src={product.imageUrl || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=600'}
+                  <div className="h-20 w-24 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-900 mr-4 shrink-0 relative p-1 flex items-center justify-center">
+                    <ProductImage
+                      src={product.imageUrl}
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=600';
-                      }}
+                      className="w-full h-full object-contain group-hover:scale-102 transition-transform duration-500"
+                      showFallbackText
+                      fallbackText={product.brand}
                     />
                   </div>
 

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { ProductWithPrices, ProductScore, EvidenceItem } from '../../types';
 import { Award, CheckCircle2, AlertTriangle, ShieldCheck, Tag, Sparkles, UserCheck } from 'lucide-react';
 import { formatPrice, getSavedCurrency, getDisplayPrice } from '../../currency';
+import { ProductImage } from '../common/ProductImage';
 
 export interface RecommendationCardProps {
   product: ProductWithPrices;
@@ -111,11 +112,13 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
         {/* Product Image */}
         <div className="h-44 w-full bg-zinc-900/40 rounded-xl p-3 flex items-center justify-center group-hover:scale-[1.02] transition-transform overflow-hidden border border-zinc-900/60">
-          {product.imageUrl ? (
-            <img src={product.imageUrl} alt={product.name} className="h-full w-full object-contain" />
-          ) : (
-            <span className="text-xs text-zinc-600 font-mono">No Image Available</span>
-          )}
+          <ProductImage
+            src={product.imageUrl}
+            alt={product.name}
+            className="h-full w-full object-contain"
+            showFallbackText
+            fallbackText={product.brand}
+          />
         </div>
 
         {/* Product Identity & Objective Facts */}

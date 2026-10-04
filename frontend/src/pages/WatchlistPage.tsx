@@ -6,6 +6,7 @@ import { Bell, Trash2, ArrowLeft, Edit2, AlertCircle, ToggleLeft, ToggleRight, I
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, getSavedCurrency, type CurrencyCode, CURRENCY_SYMBOLS, getDisplayPrice, convertToUsd } from '../currency';
 import { useAuth } from '../context/AuthContext';
+import { ProductImage } from '../components/common/ProductImage';
 
 export const WatchlistPage: React.FC = () => {
   const navigate = useNavigate();
@@ -298,14 +299,13 @@ export const WatchlistPage: React.FC = () => {
                 >
                   <div className="flex items-center gap-4 flex-grow w-full md:w-auto">
                     {/* Image */}
-                    <div className="h-16 w-20 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-900 shrink-0">
-                      <img
-                        src={item.imageUrl || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=600'}
+                    <div className="h-16 w-20 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-900 shrink-0 p-1 flex items-center justify-center">
+                      <ProductImage
+                        src={item.imageUrl}
                         alt={item.productName}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&q=80&w=600';
-                        }}
+                        className="w-full h-full object-contain"
+                        showFallbackText
+                        fallbackText={item.brand}
                       />
                     </div>
 

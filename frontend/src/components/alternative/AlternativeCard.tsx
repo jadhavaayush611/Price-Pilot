@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { AlternativeProduct, AlternativeType } from '../../types';
 import { Award, Sparkles, UserCheck, Star, Layers, TrendingDown, TrendingUp, AlertTriangle, Tag } from 'lucide-react';
 import { formatPrice, getSavedCurrency, getDisplayPrice } from '../../currency';
+import { ProductImage } from '../common/ProductImage';
 
 export interface AlternativeCardProps {
   alternative: AlternativeProduct;
@@ -118,11 +119,13 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
 
         {/* Product Image */}
         <div className="h-44 w-full bg-zinc-900/40 rounded-xl p-3 flex items-center justify-center group-hover:scale-[1.02] transition-transform overflow-hidden border border-zinc-900/60">
-          {alternative.imageUrl ? (
-            <img src={alternative.imageUrl} alt={alternative.name} className="h-full w-full object-contain" />
-          ) : (
-            <span className="text-xs text-zinc-600 font-mono">No Image Available</span>
-          )}
+          <ProductImage
+            src={alternative.imageUrl}
+            alt={alternative.name}
+            className="h-full w-full object-contain"
+            showFallbackText
+            fallbackText={alternative.brand}
+          />
         </div>
 
         {/* Product Identity & Objective Facts */}

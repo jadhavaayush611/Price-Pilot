@@ -4,6 +4,7 @@ import { ExternalLink, Sparkles, Tag, Clock, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatPrice, getDisplayPrice, type CurrencyCode } from '../currency';
 import { apiService } from '../services/api';
+import { ProductImage } from './common/ProductImage';
 
 interface SellerCardProps {
   price: ProductPrice;
@@ -50,19 +51,15 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
       <div className="flex items-start justify-between gap-4 mb-4">
         <div className="flex items-center gap-3.5">
           {/* Logo container */}
-          {price.seller?.logoUrl ? (
-            <div className="h-9 w-18 flex items-center justify-center bg-zinc-950/80 border border-zinc-900 rounded-xl p-2 shadow-inner">
-              <img
-                src={price.seller.logoUrl}
-                alt={price.seller.name}
-                className="max-h-full max-w-full object-contain filter brightness-95"
-              />
-            </div>
-          ) : (
-            <div className="h-9 w-18 flex items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest">
-              {price.seller?.name?.substring(0, 3) || 'SEL'}
-            </div>
-          )}
+          <div className="h-9 w-18 flex items-center justify-center bg-zinc-950/80 border border-zinc-900 rounded-xl p-1.5 shadow-inner overflow-hidden">
+            <ProductImage
+              src={price.seller?.logoUrl}
+              alt={price.seller?.name || 'Seller'}
+              className="max-h-full max-w-full object-contain filter brightness-95"
+              showFallbackText
+              fallbackText={price.seller?.name?.substring(0, 3) || 'SEL'}
+            />
+          </div>
           
           <div className="flex flex-col">
             <span className="font-bold text-zinc-100 text-sm">{price.seller?.name}</span>

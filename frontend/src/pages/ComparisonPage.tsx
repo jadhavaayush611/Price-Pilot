@@ -1,27 +1,33 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { apiService, MOCK_PRODUCTS } from '../services/api';
-import type { ComparisonResponse, ProductWithPrices, SavedComparison } from '../types';
+import { apiService } from '../services/api';
+import type { ComparisonResponse, ProductWithPrices, Product, SavedComparison } from '../types';
 import { ComparisonTable } from '../components/comparison/ComparisonTable';
 import { ComparisonSelector } from '../components/comparison/ComparisonSelector';
 import { ComparisonSkeleton } from '../components/comparison/ComparisonSkeleton';
+import { ShieldAlert, Layers } from 'lucide-react';
+
+export const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export const parseValidUuids = (raw: string | null | undefined): string[] => {
+  if (!raw) return [];
+  const tokens = raw.split(',').map((s) => s.trim()).filter(Boolean);
+  const valid = tokens.filter((token) => UUID_REGEX.test(token));
+  return Array.from(new Set(valid)).slice(0, 5);
+};
 
 export const ComparisonPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const idsParam = searchParams.get('ids') || '';
   const sessionParam = searchParams.get('sessionId') || '';
 
-  const [selectedIds, setSelectedIds] = useState<string[]>(() => {
-    if (idsParam) {
-      return idsParam.split(',').map((s) => s.trim()).filter(Boolean);
-    }
-    return MOCK_PRODUCTS.slice(0, 2).map((p) => p.id);
-  });
+  const initialValidIds = useMemo(() => parseValidUuids(idsParam), [idsParam]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(initialValidIds);
 
-  const [availableProducts, setAvailableProducts] = useState<ProductWithPrices[]>(MOCK_PRODUCTS);
+  const [availableProducts, setAvailableProducts] = useState<(ProductWithPrices | Product)[]>([]);
   const [comparisonData, setComparisonData] = useState<ComparisonResponse | null>(null);
   const [savedComparisons, setSavedComparisons] = useState<SavedComparison[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   // Modal / Drawer state
@@ -32,27 +38,8 @@ export const ComparisonPage: React.FC = () => {
   const [saving, setSaving] = useState<boolean>(false);
   const [saveStatusMsg, setSaveStatusMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Load products list for selector
-    apiService.getProducts(0, 50)
-      .then((res) => {
-        if (res.content && res.content.length > 0) {
-          const formatted = res.content.map((p) => ({
-            ...p,
-            prices: (p as unknown as ProductWithPrices).prices || [],
-          }));
-          setAvailableProducts(formatted as ProductWithPrices[]);
-        }
-      })
-      .catch(() => {
-        setAvailableProducts(MOCK_PRODUCTS);
-      });
-
-    // Load saved comparisons list
-    loadSavedComparisonsList();
-  }, []);
-
-  const loadSavedComparisonsList = () => {
+  // Load saved comparisons list
+  const loadSavedComparisonsList = useCallback(() => {
     apiService.getSavedComparisons()
       .then((res) => {
         if (res && res.content) {
@@ -62,8 +49,34 @@ export const ComparisonPage: React.FC = () => {
       .catch(() => {
         // Unauthenticated or no saved comparisons yet
       });
-  };
+  }, []);
 
+  // Initial load: available catalog products + saved comparisons
+  useEffect(() => {
+    apiService.getProducts(0, 50)
+      .then((res) => {
+        if (res && res.content) {
+          setAvailableProducts(res.content);
+        }
+      })
+      .catch(() => {
+        setAvailableProducts([]);
+      });
+
+    loadSavedComparisonsList();
+  }, [loadSavedComparisonsList]);
+
+  // Keep state in sync with URL searchParams (e.g. on browser back/forward)
+  useEffect(() => {
+    const currentValid = parseValidUuids(idsParam);
+    setSelectedIds((prev) => {
+      const prevSorted = [...prev].sort().join(',');
+      const currSorted = [...currentValid].sort().join(',');
+      return prevSorted === currSorted ? prev : currentValid;
+    });
+  }, [idsParam]);
+
+  // Handle comparison fetching
   useEffect(() => {
     if (sessionParam) {
       setLoading(true);
@@ -72,17 +85,29 @@ export const ComparisonPage: React.FC = () => {
         .then((data) => {
           setComparisonData(data);
           if (data.products && data.products.length > 0) {
-            setSelectedIds(data.products.map((p) => p.id));
+            const valid = data.products.map((p) => p.id).filter((id) => UUID_REGEX.test(id));
+            setSelectedIds(valid);
           }
         })
         .catch((err) => {
           setError(err?.response?.data?.message || 'Failed to load comparison session.');
+          setComparisonData(null);
         })
         .finally(() => setLoading(false));
       return;
     }
 
-    if (selectedIds.length === 0) {
+    // If fewer than 2 valid IDs or more than 5, do not make comparison request
+    if (selectedIds.length < 2 || selectedIds.length > 5) {
+      setComparisonData(null);
+      setLoading(false);
+      return;
+    }
+
+    // Ensure all IDs are valid UUIDs before sending to backend
+    const allValid = selectedIds.every((id) => UUID_REGEX.test(id));
+    if (!allValid) {
+      setError('Invalid product identifier detected. Only verified catalog UUIDs can be compared.');
       setComparisonData(null);
       setLoading(false);
       return;
@@ -90,61 +115,27 @@ export const ComparisonPage: React.FC = () => {
 
     setLoading(true);
     setError(null);
-    setSearchParams({ ids: selectedIds.join(',') });
 
     apiService.getComparison(selectedIds)
       .then((data) => {
         setComparisonData(data);
       })
-      .catch(() => {
-        // Fallback representation for initial scaffold if backend disconnected
-        const mockProducts = availableProducts.filter((p) => selectedIds.includes(p.id));
-        setComparisonData({
-          comparisonId: 'session-matrix',
-          products: mockProducts,
-          rows: [
-            {
-              featureName: 'Brand',
-              category: 'General',
-              valuesByProductId: mockProducts.reduce<Record<string, string>>((acc, p) => { acc[p.id] = p.brand; return acc; }, {}),
-              isHighlight: false,
-              rowType: 'GENERAL',
-            },
-            {
-              featureName: 'Category',
-              category: 'General',
-              valuesByProductId: mockProducts.reduce<Record<string, string>>((acc, p) => { acc[p.id] = p.category; return acc; }, {}),
-              isHighlight: false,
-              rowType: 'GENERAL',
-            },
-            {
-              featureName: 'Best Price',
-              category: 'Pricing',
-              valuesByProductId: mockProducts.reduce<Record<string, string>>((acc, p) => { acc[p.id] = p.lowestPrice ? `$${p.lowestPrice}` : 'N/A'; return acc; }, {}),
-              isHighlight: true,
-              highlightedProductIds: mockProducts.slice(0, 1).map(p => p.id),
-              rowType: 'LOWEST_PRICE',
-            },
-          ],
-          scores: mockProducts.reduce<Record<string, any>>((acc, p, idx) => {
-            acc[p.id] = {
-              productId: p.id,
-              productName: p.name,
-              overallScore: 92 - idx * 4,
-              priceValueScore: 90,
-              featureScore: 88,
-              popularityScore: 85,
-              breakdown: { PriceCompetitiveness: 90, ProductRating: 88 },
-              recommendationBadge: idx === 0 ? 'TOP PICK' : 'VALUE OPTION',
-            };
-            return acc;
-          }, {}),
-          summary: `Comparing ${mockProducts.length} products with Shopping Intelligence Engine v1.1.`,
-          createdAt: new Date().toISOString(),
-        });
+      .catch((err) => {
+        setComparisonData(null);
+        setError(err?.response?.data?.message || 'Failed to generate comparison matrix for the selected products.');
       })
       .finally(() => setLoading(false));
   }, [selectedIds, sessionParam]);
+
+  const handleSelectionChange = (newIds: string[]) => {
+    const validOnly = parseValidUuids(newIds.join(','));
+    setSelectedIds(validOnly);
+    if (validOnly.length > 0) {
+      setSearchParams({ ids: validOnly.join(',') }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+  };
 
   const handleSaveComparison = async () => {
     if (!saveTitle.trim()) return;
@@ -178,9 +169,9 @@ export const ComparisonPage: React.FC = () => {
   };
 
   const handleLoadSaved = (saved: SavedComparison) => {
-    if (saved.productIds && saved.productIds.length > 0) {
-      setSelectedIds(saved.productIds);
-      setSearchParams({ ids: saved.productIds.join(',') });
+    const valid = parseValidUuids(saved.productIds?.join(','));
+    if (valid.length > 0) {
+      handleSelectionChange(valid);
       setShowSavedDrawer(false);
     }
   };
@@ -192,7 +183,7 @@ export const ComparisonPage: React.FC = () => {
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 font-mono">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Shopping Intelligence v1.1 Matrix</span>
+            <span>Shopping Intelligence v1.2 Matrix</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-white">Product Comparison Engine</h1>
           <p className="text-zinc-400 text-sm max-w-2xl">
@@ -206,7 +197,8 @@ export const ComparisonPage: React.FC = () => {
             onClick={() => setShowSavedDrawer(!showSavedDrawer)}
             className="px-4 py-2 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 rounded-xl transition-all flex items-center gap-2 shadow-lg"
           >
-            <span>📁 Saved Matrices</span>
+            <Layers className="w-3.5 h-3.5" />
+            <span>Saved Matrices</span>
             {savedComparisons.length > 0 && (
               <span className="px-1.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-mono">
                 {savedComparisons.length}
@@ -239,7 +231,10 @@ export const ComparisonPage: React.FC = () => {
       {/* Error Alert */}
       {error && (
         <div className="p-4 rounded-xl bg-red-950/40 border border-red-900/60 text-red-300 text-sm flex items-center justify-between">
-          <span>{error}</span>
+          <div className="flex items-center gap-2.5">
+            <ShieldAlert className="w-5 h-5 text-red-400 shrink-0" />
+            <span>{error}</span>
+          </div>
           <button onClick={() => setError(null)} className="text-red-400 font-bold hover:text-red-200">✕</button>
         </div>
       )}
@@ -296,7 +291,7 @@ export const ComparisonPage: React.FC = () => {
       <ComparisonSelector
         availableProducts={availableProducts}
         selectedIds={selectedIds}
-        onSelect={(ids) => setSelectedIds(ids)}
+        onSelect={handleSelectionChange}
       />
 
       {/* Matrix Table / Skeleton / Empty State */}
@@ -304,6 +299,11 @@ export const ComparisonPage: React.FC = () => {
         <ComparisonSkeleton />
       ) : comparisonData ? (
         <ComparisonTable comparison={comparisonData} />
+      ) : selectedIds.length === 1 ? (
+        <div className="p-12 text-center bg-zinc-950 border border-zinc-900 rounded-xl text-zinc-400 space-y-2">
+          <p className="text-zinc-200 font-semibold text-sm">1 product selected.</p>
+          <p className="text-xs text-zinc-500">Select at least 1 more product from the catalog above to render side-by-side comparison matrix.</p>
+        </div>
       ) : (
         <div className="p-12 text-center bg-zinc-950 border border-zinc-900 rounded-xl text-zinc-500 space-y-2">
           <p className="text-zinc-300 font-semibold">Select 2 to 5 products above to initiate comparison matrix.</p>
@@ -322,7 +322,7 @@ export const ComparisonPage: React.FC = () => {
                 <label className="text-xs font-semibold text-zinc-300 block mb-1">Matrix Title</label>
                 <input
                   type="text"
-                  placeholder="e.g. Flagship Smartphones 2026"
+                  placeholder="e.g. Flagship Headphones Comparison"
                   value={saveTitle}
                   onChange={(e) => setSaveTitle(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 focus:outline-none focus:border-emerald-500/50"
@@ -332,7 +332,7 @@ export const ComparisonPage: React.FC = () => {
               <div>
                 <label className="text-xs font-semibold text-zinc-300 block mb-1">Notes (Optional)</label>
                 <textarea
-                  placeholder="e.g. Comparing battery life vs price discount for decision..."
+                  placeholder="e.g. Comparing noise cancellation and battery life..."
                   value={saveNotes}
                   onChange={(e) => setSaveNotes(e.target.value)}
                   rows={3}

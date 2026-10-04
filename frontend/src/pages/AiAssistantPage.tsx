@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { apiService } from '../services/api';
 import { getSavedCurrency, formatPrice, getDisplayPrice } from '../currency';
 import { useAuth } from '../context/AuthContext';
+import { ProductImage } from '../components/common/ProductImage';
 import type { 
   AssistantConversationDTO, 
   AssistantEvidenceBundle, 
@@ -786,13 +787,13 @@ export const AiAssistantPage: React.FC = () => {
                   <Sparkles size={11} />
                   Active Product
                 </span>
-                {activeProduct?.imageUrl && (
-                  <img
-                    src={activeProduct.imageUrl}
-                    alt={activeProduct.name || 'Product'}
-                    className="h-6 w-6 rounded-md object-cover border border-zinc-700 shrink-0"
+                <div className="h-6 w-6 rounded-md overflow-hidden border border-zinc-700 shrink-0 flex items-center justify-center bg-zinc-900">
+                  <ProductImage
+                    src={activeProduct?.imageUrl}
+                    alt={activeProduct?.name || 'Product'}
+                    className="h-full w-full object-cover"
                   />
-                )}
+                </div>
                 <div className="flex items-center gap-2 truncate">
                   <span className="font-semibold text-zinc-200 truncate">
                     {activeProduct?.name || `Product: ${activeProductId.slice(0, 8)}...`}

@@ -19,6 +19,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ProductImage } from '../components/common/ProductImage';
 
 interface FormState {
   productId: string;
@@ -259,19 +260,12 @@ export const PriceManagementPage: React.FC = () => {
       header: 'Product',
       accessor: (pp: ProductPrice) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg overflow-hidden border border-zinc-900 bg-zinc-950 flex items-center justify-center text-zinc-700 shrink-0">
-            {pp.product?.imageUrl ? (
-              <img
-                src={pp.product.imageUrl}
-                alt={pp.product.name}
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '';
-                }}
-              />
-            ) : (
-              <div className="h-5 w-5 bg-zinc-900 rounded" />
-            )}
+          <div className="h-10 w-10 rounded-lg overflow-hidden border border-zinc-900 bg-zinc-950 flex items-center justify-center text-zinc-700 shrink-0 p-0.5">
+            <ProductImage
+              src={pp.product?.imageUrl}
+              alt={pp.product?.name || 'Product'}
+              className="h-full w-full object-contain"
+            />
           </div>
           <div className="flex flex-col min-w-0">
             <span className="text-zinc-200 font-semibold truncate max-w-[180px] sm:max-w-[260px]">
@@ -288,19 +282,14 @@ export const PriceManagementPage: React.FC = () => {
       header: 'Seller',
       accessor: (pp: ProductPrice) => (
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded overflow-hidden border border-zinc-900 bg-zinc-950 flex items-center justify-center shrink-0">
-            {pp.seller?.logoUrl ? (
-              <img
-                src={pp.seller.logoUrl}
-                alt={pp.seller.name}
-                className="h-full w-full object-contain p-0.5"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '';
-                }}
-              />
-            ) : (
-              <span className="text-[10px] text-zinc-600">S</span>
-            )}
+          <div className="h-6 w-6 rounded overflow-hidden border border-zinc-900 bg-zinc-950 flex items-center justify-center shrink-0 p-0.5">
+            <ProductImage
+              src={pp.seller?.logoUrl}
+              alt={pp.seller?.name || 'Seller'}
+              className="h-full w-full object-contain"
+              showFallbackText
+              fallbackText={pp.seller?.name?.substring(0, 1) || 'S'}
+            />
           </div>
           <span className="text-zinc-300 font-medium text-sm">
             {pp.seller?.name || 'Deleted Merchant'}

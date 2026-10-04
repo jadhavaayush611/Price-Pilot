@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ComparisonResponse } from '../../types';
 import { ComparisonRowItem } from './ComparisonRowItem';
+import { ProductImage } from '../common/ProductImage';
 
 interface ComparisonTableProps {
   comparison: ComparisonResponse;
@@ -51,10 +52,12 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({ comparison }) 
                   <th key={p.id} className="py-4 px-4 min-w-[220px] align-top border-r border-zinc-900/50 last:border-r-0">
                     <div className="space-y-3">
                       <div className="h-32 w-full bg-zinc-900/70 rounded-xl overflow-hidden flex items-center justify-center p-3 border border-zinc-800/80 shadow-inner group">
-                        <img
+                        <ProductImage
                           src={p.imageUrl}
                           alt={p.name}
                           className="h-full object-contain transition-transform group-hover:scale-105"
+                          showFallbackText
+                          fallbackText={p.brand}
                         />
                       </div>
 

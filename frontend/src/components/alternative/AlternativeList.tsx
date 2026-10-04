@@ -4,6 +4,7 @@ import { AlternativeCard, formatAlternativeType } from './AlternativeCard';
 import { AlternativeSkeleton } from './AlternativeSkeleton';
 import { Sparkles, UserCheck, Layers, AlertCircle } from 'lucide-react';
 import { formatPrice, getSavedCurrency, getDisplayPrice } from '../../currency';
+import { ProductImage } from '../common/ProductImage';
 
 export interface AlternativeListProps {
   response: AlternativeResponse | null;
@@ -94,13 +95,15 @@ export const AlternativeList: React.FC<AlternativeListProps> = ({
       {sourceContext && (
         <div className="bg-zinc-950/80 border border-zinc-900 p-4 rounded-2xl flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            {sourceContext.imageUrl && (
-              <img
+            <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 p-1 flex items-center justify-center shrink-0 overflow-hidden">
+              <ProductImage
                 src={sourceContext.imageUrl}
                 alt={sourceContext.name}
-                className="w-12 h-12 rounded-xl object-contain bg-zinc-900 border border-zinc-800 p-1"
+                className="h-full w-full object-contain"
+                showFallbackText
+                fallbackText={sourceContext.brand}
               />
-            )}
+            </div>
             <div>
               <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block">
                 Finding alternatives for

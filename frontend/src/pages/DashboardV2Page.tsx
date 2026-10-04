@@ -21,6 +21,7 @@ import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { formatPrice } from '../currency';
 import type { DashboardV2Response } from '../types';
+import { ProductImage } from '../components/common/ProductImage';
 
 export const DashboardV2Page: React.FC = () => {
   const { user } = useAuth();
@@ -277,13 +278,13 @@ export const DashboardV2Page: React.FC = () => {
                             <h3 className="text-sm font-semibold text-white line-clamp-1">{item.productName}</h3>
                             {item.brand && <p className="text-xs text-zinc-400">{item.brand}</p>}
                           </div>
-                          {item.productImageUrl && (
-                            <img
+                          <div className="w-12 h-12 rounded-lg bg-zinc-900 border border-zinc-800 shrink-0 overflow-hidden flex items-center justify-center p-0.5">
+                            <ProductImage
                               src={item.productImageUrl}
-                              alt=""
-                              className="w-12 h-12 rounded-lg object-cover bg-zinc-900 border border-zinc-800 shrink-0"
+                              alt={item.productName}
+                              className="w-full h-full object-cover"
                             />
-                          )}
+                          </div>
                         </div>
 
                         <div className="p-3 bg-zinc-900/80 rounded-lg border border-zinc-800/80 space-y-1">
@@ -360,9 +361,9 @@ export const DashboardV2Page: React.FC = () => {
                           </span>
                           <h3 className="text-sm font-semibold text-white line-clamp-1">{opp.productName}</h3>
                         </div>
-                        {opp.productImageUrl && (
-                          <img src={opp.productImageUrl} alt="" className="w-10 h-10 rounded-lg object-cover bg-zinc-900 border border-zinc-800 shrink-0" />
-                        )}
+                        <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 shrink-0 overflow-hidden flex items-center justify-center p-0.5">
+                          <ProductImage src={opp.productImageUrl} alt={opp.productName} className="w-full h-full object-cover" />
+                        </div>
                       </div>
 
                       <div className="space-y-1 mb-4">
@@ -430,9 +431,9 @@ export const DashboardV2Page: React.FC = () => {
                           {p.brand && <span className="text-[11px] font-mono text-zinc-500 uppercase">{p.brand}</span>}
                           <h3 className="text-sm font-semibold text-white line-clamp-1">{p.productName}</h3>
                         </div>
-                        {p.imageUrl && (
-                          <img src={p.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover bg-zinc-900 border border-zinc-800 shrink-0" />
-                        )}
+                        <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 shrink-0 overflow-hidden flex items-center justify-center p-0.5">
+                          <ProductImage src={p.imageUrl} alt={p.productName} className="w-full h-full object-cover" />
+                        </div>
                       </div>
 
                       {/* Pricing & Targets */}

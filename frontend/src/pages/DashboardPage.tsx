@@ -4,6 +4,7 @@ import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { UserInteractionEvent, ProductWithPrices, Watchlist, SavedProduct } from '../types';
 import { formatPrice, getDisplayPrice, getSavedCurrency } from '../currency';
+import { ProductImage } from '../components/common/ProductImage';
 import {
   Eye,
   Heart,
@@ -469,8 +470,10 @@ export const DashboardPage: React.FC = () => {
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {data.priceDropAlerts.slice(0, 4).map((alert) => (
-                        <div key={alert.id} className="bg-zinc-950/60 border border-zinc-900 rounded-xl p-3 flex gap-3 items-center">
-                          <img src={alert.imageUrl} alt={alert.productName} className="h-12 w-12 rounded bg-zinc-900 object-cover border border-zinc-900" />
+                        <div key={alert.id} className="bg-zinc-955/60 border border-zinc-900 rounded-xl p-3 flex gap-3 items-center">
+                          <div className="h-12 w-12 rounded bg-zinc-900 border border-zinc-900 shrink-0 overflow-hidden flex items-center justify-center p-0.5">
+                            <ProductImage src={alert.imageUrl} alt={alert.productName} className="h-full w-full object-cover" />
+                          </div>
                           <div className="flex flex-col min-w-0">
                             <Link to={`/product/${alert.productId}`} className="text-white hover:text-emerald-400 text-xs font-bold truncate block">
                               {alert.productName}
@@ -511,8 +514,8 @@ export const DashboardPage: React.FC = () => {
                         const lowest = getLowestPrice(product);
                         return (
                           <div key={product.id} className="bg-zinc-950/20 border border-zinc-900 hover:border-zinc-800 p-4 rounded-2xl flex flex-col gap-3 group relative overflow-hidden transition-all">
-                            <div className="aspect-video relative rounded-lg bg-zinc-900 overflow-hidden border border-zinc-900">
-                              <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover group-hover:scale-103 transition-transform duration-500" />
+                            <div className="aspect-video relative rounded-lg bg-zinc-900 overflow-hidden border border-zinc-900 p-1 flex items-center justify-center">
+                              <ProductImage src={product.imageUrl} alt={product.name} className="h-full w-full object-contain group-hover:scale-103 transition-transform duration-500" showFallbackText fallbackText={product.brand} />
                               {discount > 0 && (
                                 <span className="absolute left-2 top-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
                                   <TrendingDown className="h-3 w-3" />
@@ -555,7 +558,9 @@ export const DashboardPage: React.FC = () => {
                         const price = getLowestPrice(p);
                         return (
                           <div key={p.id} className="bg-zinc-950/15 border border-zinc-900 p-2.5 rounded-xl flex flex-col gap-2 hover:border-zinc-800 transition-colors">
-                            <img src={p.imageUrl} alt={p.name} className="aspect-square w-full rounded object-cover bg-zinc-900 border border-zinc-900" />
+                            <div className="aspect-square w-full rounded overflow-hidden bg-zinc-900 border border-zinc-900 p-1 flex items-center justify-center">
+                              <ProductImage src={p.imageUrl} alt={p.name} className="h-full w-full object-contain" />
+                            </div>
                             <div className="flex flex-col min-w-0">
                               <Link to={`/product/${p.id}`} className="text-white hover:text-blue-450 text-xs font-bold truncate block">
                                 {p.name}
@@ -691,8 +696,8 @@ export const DashboardPage: React.FC = () => {
                     const highest = getHighestPrice(product);
                     return (
                       <div key={product.id} className="bg-zinc-950/20 border border-zinc-900 hover:border-zinc-800 p-5 rounded-2xl flex flex-col gap-4 group relative overflow-hidden transition-all hover:bg-zinc-950/30">
-                        <div className="aspect-video relative rounded-xl bg-zinc-900 overflow-hidden border border-zinc-900">
-                          <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover group-hover:scale-102 transition-transform duration-500" />
+                        <div className="aspect-video relative rounded-xl bg-zinc-900 overflow-hidden border border-zinc-900 p-2 flex items-center justify-center">
+                          <ProductImage src={product.imageUrl} alt={product.name} className="h-full w-full object-contain group-hover:scale-102 transition-transform duration-500" showFallbackText fallbackText={product.brand} />
                           {discount > 0 && (
                             <span className="absolute left-3 top-3 bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-xs font-mono font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
                               <TrendingDown className="h-3.5 w-3.5" />
@@ -758,7 +763,9 @@ export const DashboardPage: React.FC = () => {
                     return (
                       <div key={alert.id} className="bg-zinc-955/20 border border-emerald-500/20 p-5 rounded-2xl flex gap-4 items-start relative overflow-hidden transition-all hover:bg-zinc-950/30">
                         <div className="absolute right-0 top-0 h-32 w-32 bg-emerald-500/5 rounded-full blur-2xl -z-10" />
-                        <img src={alert.imageUrl} alt={alert.productName} className="h-20 w-20 rounded-xl bg-zinc-900 object-cover border border-zinc-900 shrink-0" />
+                        <div className="h-20 w-20 rounded-xl bg-zinc-900 border border-zinc-900 shrink-0 overflow-hidden flex items-center justify-center p-1">
+                          <ProductImage src={alert.imageUrl} alt={alert.productName} className="h-full w-full object-cover" />
+                        </div>
                         <div className="flex flex-col min-w-0 flex-grow text-left">
                           <Link to={`/product/${alert.productId}`} className="text-white hover:text-emerald-400 text-sm font-bold truncate block transition-colors">
                             {alert.productName}
@@ -813,8 +820,8 @@ export const DashboardPage: React.FC = () => {
                   const lowest = getLowestPrice(product);
                   return (
                     <div key={product.id} className="bg-zinc-950/20 border border-zinc-900 hover:border-zinc-800 p-4 rounded-2xl flex flex-col gap-3 group relative overflow-hidden transition-all hover:bg-zinc-950/30">
-                      <div className="aspect-video relative rounded-lg bg-zinc-900 overflow-hidden border border-zinc-900">
-                        <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover group-hover:scale-102 transition-transform duration-500" />
+                      <div className="aspect-video relative rounded-lg bg-zinc-900 overflow-hidden border border-zinc-900 p-1 flex items-center justify-center">
+                        <ProductImage src={product.imageUrl} alt={product.name} className="h-full w-full object-contain group-hover:scale-102 transition-transform duration-500" showFallbackText fallbackText={product.brand} />
                         {discount > 0 && (
                           <span className="absolute left-2 top-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold px-2 py-0.5 rounded flex items-center gap-0.5">
                             <TrendingDown className="h-3.5 w-3.5" />
