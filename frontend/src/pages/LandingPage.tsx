@@ -9,13 +9,13 @@ import {
   Sparkles,
   Layers,
   ChevronRight,
-  CheckCircle2,
-  LineChart
+  CheckCircle2
 } from 'lucide-react';
 import { apiService } from '../services/api';
 import type { ProductWithPrices } from '../types';
 import { formatPrice, getDisplayPrice, getSavedCurrency } from '../currency';
 import { ProductImage } from '../components/common/ProductImage';
+import { FeaturedPricePreview } from '../components/landing/FeaturedPricePreview';
 
 export const LandingPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -338,11 +338,8 @@ export const LandingPage: React.FC = () => {
             <p className="text-sm text-zinc-400 leading-relaxed">
               PricePilot empowers consumers by exposing retail pricing data transparently. We bypass affiliate filters to show you true listing costs.
             </p>
-            <div className="mt-4 hidden lg:block">
-              <div className="h-40 w-full rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-900 relative overflow-hidden flex items-center justify-center">
-                <LineChart className="h-16 w-16 text-zinc-800" />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
-              </div>
+            <div className="mt-4 w-full">
+              <FeaturedPricePreview initialProducts={trendingProducts} />
             </div>
           </div>
 

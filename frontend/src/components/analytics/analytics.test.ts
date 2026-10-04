@@ -129,4 +129,83 @@ describe('Price Intelligence Frontend Analytics Tests', () => {
 
     await expect(apiService.getIntelligenceAnalytics(invalidId)).rejects.toBeDefined();
   });
+
+  describe('P1-D Product-Driven Analytics & Currency Conversion', () => {
+    const sampleCanonicalPriceUsd = 604.975;
+
+    it('formats price metrics accurately across all 5 configured currencies without double conversion', async () => {
+      const { getDisplayPrice, formatPrice } = await import('../../currency');
+
+      // Locked conversion rates: USD 1, INR 80, EUR 0.90, GBP 0.80, JPY 150
+      expect(getDisplayPrice(sampleCanonicalPriceUsd, 'USD')).toBeCloseTo(604.975, 2);
+      expect(getDisplayPrice(sampleCanonicalPriceUsd, 'INR')).toBeCloseTo(48398, 2);
+      expect(getDisplayPrice(sampleCanonicalPriceUsd, 'EUR')).toBeCloseTo(544.4775, 2);
+      expect(getDisplayPrice(sampleCanonicalPriceUsd, 'GBP')).toBeCloseTo(483.98, 2);
+      expect(getDisplayPrice(sampleCanonicalPriceUsd, 'JPY')).toBeCloseTo(90746.25, 2);
+
+      const inrFormatted = formatPrice(getDisplayPrice(sampleCanonicalPriceUsd, 'INR'), 'INR');
+      expect(inrFormatted).toContain('48,398');
+      expect(inrFormatted).toContain('₹');
+      expect(inrFormatted).not.toContain('38,71,840'); // No double conversion
+    });
+
+    it('ensures catalog selection API is called without hardcoded fallback products', async () => {
+      const getSpy = vi.spyOn(apiClient, 'get').mockResolvedValue({
+        data: {
+          content: [
+            { id: 'prod-sony', name: 'Sony WH-1000XM5', brand: 'Sony', lowestPrice: 349.99 },
+            { id: 'prod-bose', name: 'Bose QuietComfort Ultra', brand: 'Bose', lowestPrice: 379.99 },
+          ],
+          totalElements: 2,
+          totalPages: 1,
+        },
+      });
+
+      const catalog = await apiService.getProducts(0, 24, undefined, undefined, 'Sony');
+      expect(getSpy).toHaveBeenCalledWith('/products', {
+        params: { page: 0, size: 24, search: 'Sony' },
+      });
+      expect(catalog.content.length).toBe(2);
+      expect(catalog.content[0].name).toBe('Sony WH-1000XM5');
+    });
+
+    it('ensures analytics response matches product header price when present', async () => {
+      const prodId = 'prod-match-123';
+      vi.spyOn(apiClient, 'get').mockImplementation(async (url: string) => {
+        if (url === `/products/${prodId}`) {
+          return {
+            data: {
+              id: prodId,
+              name: 'Apple iPad Pro 13 M4',
+              brand: 'Apple',
+              lowestPrice: 1268.18,
+              prices: [{ id: 'p1', currentPrice: 1268.18, originalPrice: 1299.00 }],
+            },
+          };
+        }
+        if (url === `/analytics/${prodId}`) {
+          return {
+            data: {
+              productId: prodId,
+              currentPrice: 1268.18,
+              historicalMin: 1199.00,
+              historicalAvg: 1275.00,
+              historicalMax: 1399.00,
+              dealQuality: 'FAIR_PRICE',
+              purchaseSignal: 'NEUTRAL',
+            },
+          };
+        }
+        return { data: {} };
+      });
+
+      const [prod, ana] = await Promise.all([
+        apiService.getProduct(prodId),
+        apiService.getIntelligenceAnalytics(prodId),
+      ]);
+
+      expect(prod?.lowestPrice).toBe(ana.currentPrice);
+    });
+  });
 });
+

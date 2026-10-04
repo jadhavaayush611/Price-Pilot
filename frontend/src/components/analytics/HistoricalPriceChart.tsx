@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { HistoricalPricePoint } from '../../types';
-import { formatPrice, type CurrencyCode } from '../../currency';
+import { formatPrice, getDisplayPrice, type CurrencyCode } from '../../currency';
 
 interface HistoricalPriceChartProps {
   priceSeries?: HistoricalPricePoint[];
@@ -17,7 +17,7 @@ export const HistoricalPriceChart: React.FC<HistoricalPriceChartProps> = ({
   historicalAvg,
   historicalMin,
   historicalMax,
-  currency = 'USD',
+  currency = 'INR',
 }) => {
   const [hoveredPoint, setHoveredPoint] = useState<HistoricalPricePoint | null>(null);
 
@@ -26,56 +26,66 @@ export const HistoricalPriceChart: React.FC<HistoricalPriceChartProps> = ({
       <div
         role="region"
         aria-label="Price history chart"
-        className="h-64 rounded-xl bg-zinc-900/30 border border-dashed border-zinc-800 flex flex-col items-center justify-center p-6 text-center text-zinc-500"
+        className="h-64 rounded-2xl bg-zinc-950/60 border border-dashed border-zinc-800 flex flex-col items-center justify-center p-6 text-center text-zinc-500"
       >
-        <p className="text-sm font-medium text-zinc-400">Insufficient Price History for Visual Chart</p>
-        <p className="text-xs text-zinc-600 mt-1 max-w-md">
-          At least two historical observations are required to render trend lines. Individual price points remain recorded.
+        <p className="text-sm font-semibold text-zinc-300">Insufficient Price History for Trajectory Chart</p>
+        <p className="text-xs text-zinc-500 mt-1 max-w-md">
+          At least two verified historical observations are required to render trend lines. Recorded checkpoint data is preserved.
         </p>
       </div>
     );
   }
 
+  // Convert all canonical values to active display currency
+  const displaySeries = priceSeries.map((pt) => ({
+    ...pt,
+    displayPrice: getDisplayPrice(pt.price, currency),
+  }));
+  const displayCurrent = currentPrice !== undefined ? getDisplayPrice(currentPrice, currency) : undefined;
+  const displayAvg = historicalAvg !== undefined ? getDisplayPrice(historicalAvg, currency) : undefined;
+  const displayMin = historicalMin !== undefined ? getDisplayPrice(historicalMin, currency) : undefined;
+  const displayMax = historicalMax !== undefined ? getDisplayPrice(historicalMax, currency) : undefined;
+
   // Chart dimensions & padding
   const width = 800;
   const height = 300;
-  const padding = { top: 30, right: 60, bottom: 40, left: 60 };
+  const padding = { top: 30, right: 65, bottom: 40, left: 60 };
 
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
 
-  // Compute min and max for scaling
-  const prices = priceSeries.map((p) => p.price);
-  const minVal = Math.min(...prices, currentPrice ?? Infinity, historicalMin ?? Infinity);
-  const maxVal = Math.max(...prices, currentPrice ?? -Infinity, historicalMax ?? -Infinity);
+  // Compute min and max for scaling in display currency
+  const prices = displaySeries.map((p) => p.displayPrice);
+  const minVal = Math.min(...prices, displayCurrent ?? Infinity, displayMin ?? Infinity);
+  const maxVal = Math.max(...prices, displayCurrent ?? -Infinity, displayMax ?? -Infinity);
   const spread = maxVal - minVal > 0 ? maxVal - minVal : 1;
   const yMin = Math.max(0, minVal - spread * 0.1);
   const yMax = maxVal + spread * 0.1;
   const yRange = yMax - yMin;
 
-  const getX = (index: number) => padding.left + (index / (priceSeries.length - 1)) * innerWidth;
+  const getX = (index: number) => padding.left + (index / (displaySeries.length - 1)) * innerWidth;
   const getY = (price: number) => padding.top + innerHeight - ((price - yMin) / yRange) * innerHeight;
 
   // Build SVG path
-  const pathD = priceSeries.reduce((acc, pt, idx) => {
+  const pathD = displaySeries.reduce((acc, pt, idx) => {
     const x = getX(idx);
-    const y = getY(pt.price);
+    const y = getY(pt.displayPrice);
     return idx === 0 ? `M ${x} ${y}` : `${acc} L ${x} ${y}`;
   }, '');
 
   return (
-    <div className="space-y-4" role="region" aria-label="Historical Price Trajectory Chart">
-      <div className="relative w-full overflow-hidden bg-zinc-950/60 border border-zinc-900 rounded-xl p-4">
+    <div className="space-y-3" role="region" aria-label="Historical Price Trajectory Chart">
+      <div className="relative w-full overflow-hidden bg-zinc-950/80 border border-zinc-800/80 rounded-2xl p-4 shadow-inner">
         {/* Tooltip header */}
-        <div className="flex items-center justify-between text-xs font-mono text-zinc-400 mb-2 border-b border-zinc-900 pb-2">
-          <span>Timeline: {priceSeries.length} Recorded Checkpoints</span>
+        <div className="flex items-center justify-between text-xs font-mono text-zinc-400 mb-2 border-b border-zinc-800/60 pb-2.5">
+          <span className="text-zinc-400 font-medium">Recorded Checkpoints: <strong className="text-zinc-200">{displaySeries.length}</strong></span>
           {hoveredPoint ? (
-            <span className="text-emerald-400">
-              {new Date(hoveredPoint.timestamp).toLocaleDateString()} — {formatPrice(hoveredPoint.price, currency)}
+            <span className="text-emerald-400 font-semibold">
+              {new Date(hoveredPoint.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} — {formatPrice(getDisplayPrice(hoveredPoint.price, currency), currency)}
               {hoveredPoint.sellerName ? ` (${hoveredPoint.sellerName})` : ''}
             </span>
           ) : (
-            <span className="text-zinc-500">Hover over markers for snapshot details</span>
+            <span className="text-zinc-500 hidden sm:inline">Hover over data points for checkpoint details</span>
           )}
         </div>
 
@@ -102,7 +112,7 @@ export const HistoricalPriceChart: React.FC<HistoricalPriceChartProps> = ({
                 <text
                   x={width - padding.right + 8}
                   y={y + 4}
-                  className="fill-zinc-600 font-mono text-[10px]"
+                  className="fill-zinc-500 font-mono text-[10px]"
                 >
                   {formatPrice(priceVal, currency)}
                 </text>
@@ -111,44 +121,44 @@ export const HistoricalPriceChart: React.FC<HistoricalPriceChartProps> = ({
           })}
 
           {/* Historical Average reference line */}
-          {historicalAvg && (
+          {displayAvg !== undefined && (
             <g className="text-indigo-400/60">
               <line
                 x1={padding.left}
-                y1={getY(historicalAvg)}
+                y1={getY(displayAvg)}
                 x2={width - padding.right}
-                y2={getY(historicalAvg)}
+                y2={getY(displayAvg)}
                 stroke="currentColor"
                 strokeDasharray="3 3"
                 strokeWidth="1.5"
               />
               <text
                 x={padding.left + 8}
-                y={getY(historicalAvg) - 6}
-                className="fill-indigo-400 font-mono text-[10px]"
+                y={getY(displayAvg) - 6}
+                className="fill-indigo-400 font-mono text-[10px] font-medium"
               >
-                Historical Avg: {formatPrice(historicalAvg, currency)}
+                Historical Avg: {formatPrice(displayAvg, currency)}
               </text>
             </g>
           )}
 
           {/* Current Price reference line */}
-          {currentPrice && (
+          {displayCurrent !== undefined && (
             <g className="text-emerald-400/70">
               <line
                 x1={padding.left}
-                y1={getY(currentPrice)}
+                y1={getY(displayCurrent)}
                 x2={width - padding.right}
-                y2={getY(currentPrice)}
+                y2={getY(displayCurrent)}
                 stroke="currentColor"
                 strokeWidth="1.5"
               />
               <text
                 x={width - padding.right - 140}
-                y={getY(currentPrice) - 6}
+                y={getY(displayCurrent) - 6}
                 className="fill-emerald-400 font-mono text-[10px] font-bold"
               >
-                Current Offer: {formatPrice(currentPrice, currency)}
+                Current Offer: {formatPrice(displayCurrent, currency)}
               </text>
             </g>
           )}
@@ -156,12 +166,12 @@ export const HistoricalPriceChart: React.FC<HistoricalPriceChartProps> = ({
           {/* Gradient area under line */}
           <defs>
             <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.22" />
               <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
             </linearGradient>
           </defs>
           <path
-            d={`${pathD} L ${getX(priceSeries.length - 1)} ${padding.top + innerHeight} L ${getX(0)} ${padding.top + innerHeight} Z`}
+            d={`${pathD} L ${getX(displaySeries.length - 1)} ${padding.top + innerHeight} L ${getX(0)} ${padding.top + innerHeight} Z`}
             fill="url(#priceGradient)"
           />
 
@@ -176,12 +186,12 @@ export const HistoricalPriceChart: React.FC<HistoricalPriceChartProps> = ({
           />
 
           {/* Data point circles */}
-          {priceSeries.map((pt, idx) => {
+          {displaySeries.map((pt, idx) => {
             const cx = getX(idx);
-            const cy = getY(pt.price);
-            const isHovered = hoveredPoint === pt;
-            const isMin = pt.price === minVal;
-            const isMax = pt.price === maxVal;
+            const cy = getY(pt.displayPrice);
+            const isHovered = hoveredPoint === priceSeries[idx];
+            const isMin = pt.displayPrice === minVal;
+            const isMax = pt.displayPrice === maxVal;
 
             return (
               <g key={idx}>
@@ -196,7 +206,7 @@ export const HistoricalPriceChart: React.FC<HistoricalPriceChartProps> = ({
                       ? 'fill-amber-400 stroke-amber-950 stroke-2'
                       : 'fill-zinc-200 stroke-zinc-950 stroke-2 hover:fill-emerald-300'
                   }`}
-                  onMouseEnter={() => setHoveredPoint(pt)}
+                  onMouseEnter={() => setHoveredPoint(priceSeries[idx])}
                   onMouseLeave={() => setHoveredPoint(null)}
                 />
               </g>
@@ -205,31 +215,31 @@ export const HistoricalPriceChart: React.FC<HistoricalPriceChartProps> = ({
         </svg>
 
         {/* Legend */}
-        <div className="flex items-center justify-between flex-wrap gap-4 text-[11px] text-zinc-400 font-mono pt-3 border-t border-zinc-900">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between flex-wrap gap-3 text-[11px] text-zinc-400 font-mono pt-3 border-t border-zinc-800/60">
+          <div className="flex items-center gap-4 flex-wrap">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               Price Trajectory
             </span>
-            {historicalAvg && (
+            {displayAvg !== undefined && (
               <span className="flex items-center gap-1.5">
                 <span className="w-3 border-t border-dashed border-indigo-400" />
                 Historical Average
               </span>
             )}
-            {currentPrice && (
+            {displayCurrent !== undefined && (
               <span className="flex items-center gap-1.5">
                 <span className="w-3 border-t border-emerald-400" />
-                Current Price
+                Current Offer
               </span>
             )}
           </div>
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 text-emerald-400">
+            <span className="flex items-center gap-1 text-emerald-400 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
               Low: {formatPrice(minVal, currency)}
             </span>
-            <span className="flex items-center gap-1 text-amber-400">
+            <span className="flex items-center gap-1 text-amber-400 font-medium">
               <span className="w-2 h-2 rounded-full bg-amber-400" />
               High: {formatPrice(maxVal, currency)}
             </span>
@@ -248,11 +258,11 @@ export const HistoricalPriceChart: React.FC<HistoricalPriceChartProps> = ({
           </tr>
         </thead>
         <tbody>
-          {priceSeries.map((p, i) => (
+          {displaySeries.map((p, i) => (
             <tr key={i}>
               <td>{new Date(p.timestamp).toLocaleDateString()}</td>
-              <td>{p.price}</td>
-              <td>{p.sellerName || 'Unknown'}</td>
+              <td>{formatPrice(p.displayPrice, currency)}</td>
+              <td>{p.sellerName || 'Verified Seller'}</td>
             </tr>
           ))}
         </tbody>
@@ -260,3 +270,4 @@ export const HistoricalPriceChart: React.FC<HistoricalPriceChartProps> = ({
     </div>
   );
 };
+

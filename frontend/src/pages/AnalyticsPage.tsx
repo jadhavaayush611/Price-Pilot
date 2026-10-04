@@ -21,6 +21,10 @@ import {
   Search,
   ArrowRight,
   ShoppingBag,
+  ExternalLink,
+  Layers,
+  Scale,
+  X,
 } from 'lucide-react';
 
 export const AnalyticsPage: React.FC = () => {
@@ -41,14 +45,16 @@ export const AnalyticsPage: React.FC = () => {
   const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
   const [catalogLoading, setCatalogLoading] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
   const currency: CurrencyCode = getSavedCurrency();
 
   // Load catalog products for selection when no productId is present
-  const loadCatalog = useCallback(async (query?: string) => {
+  const loadCatalog = useCallback(async (query?: string, category?: string) => {
     setCatalogLoading(true);
     try {
-      const res = await apiService.getProducts(0, 24, undefined, undefined, query?.trim() || undefined);
+      const catParam = category && category !== 'ALL' ? category : undefined;
+      const res = await apiService.getProducts(0, 24, catParam, undefined, query?.trim() || undefined);
       setCatalogProducts(res.content || []);
     } catch {
       setCatalogProducts([]);
@@ -64,7 +70,7 @@ export const AnalyticsPage: React.FC = () => {
       setError(null);
       setIsNotFound(false);
       setLoading(false);
-      loadCatalog(searchTerm);
+      loadCatalog(searchTerm, selectedCategory);
       return;
     }
 
@@ -97,44 +103,49 @@ export const AnalyticsPage: React.FC = () => {
         setError(err?.message || 'Error communicating with intelligence server.');
       })
       .finally(() => setLoading(false));
-  }, [productId, loadCatalog]);
+  }, [productId, loadCatalog, selectedCategory]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    loadCatalog(searchTerm);
+    loadCatalog(searchTerm, selectedCategory);
   };
 
   const getSignalBadge = (signal?: string) => {
     switch (signal) {
       case 'BUY_NOW':
         return {
-          text: 'BUY NOW',
-          bg: 'bg-emerald-950 border-emerald-700/60 text-emerald-300',
+          text: 'Buy Now',
+          bg: 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300',
           icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" />,
+          description: 'Current price is favorably near its recorded low with strong purchase timing.',
         };
       case 'GOOD_TIME':
         return {
-          text: 'GOOD TIME TO BUY',
-          bg: 'bg-teal-950 border-teal-700/60 text-teal-300',
+          text: 'Good Time to Buy',
+          bg: 'bg-teal-950/80 border-teal-500/40 text-teal-300',
           icon: <Sparkles className="w-4 h-4 text-teal-400" />,
+          description: 'Price is below historical averages with favorable market positioning.',
         };
       case 'WAIT':
         return {
-          text: 'WAIT FOR DROP',
-          bg: 'bg-amber-950 border-amber-700/60 text-amber-300',
+          text: 'Wait for Drop',
+          bg: 'bg-amber-950/80 border-amber-500/40 text-amber-300',
           icon: <Clock className="w-4 h-4 text-amber-400" />,
+          description: 'Price is above baseline averages; waiting for an upcoming drop is advised.',
         };
       case 'NEUTRAL':
         return {
-          text: 'NEUTRAL TIMING',
+          text: 'Neutral Timing',
           bg: 'bg-zinc-900 border-zinc-700 text-zinc-300',
           icon: <Minus className="w-4 h-4 text-zinc-400" />,
+          description: 'Price is stable near historical averages without strong upward or downward pressure.',
         };
       default:
         return {
-          text: 'INSUFFICIENT DATA',
-          bg: 'bg-zinc-900 border-zinc-800 text-zinc-500',
+          text: 'Pending History',
+          bg: 'bg-zinc-900 border-zinc-800 text-zinc-400',
           icon: <AlertCircle className="w-4 h-4 text-zinc-500" />,
+          description: 'Additional historical price records are being gathered to establish baseline trends.',
         };
     }
   };
@@ -142,142 +153,209 @@ export const AnalyticsPage: React.FC = () => {
   const getDealBadge = (deal?: string) => {
     switch (deal) {
       case 'EXCELLENT_DEAL':
-        return { label: 'EXCELLENT DEAL', color: 'text-emerald-400 border-emerald-800/40 bg-emerald-950/20' };
+        return { label: 'Excellent Deal', color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' };
       case 'GOOD_DEAL':
-        return { label: 'GOOD DEAL', color: 'text-teal-400 border-teal-800/40 bg-teal-950/20' };
+        return { label: 'Good Deal', color: 'text-blue-400 border-blue-500/30 bg-blue-500/10' };
       case 'FAIR_PRICE':
-        return { label: 'FAIR PRICE', color: 'text-zinc-300 border-zinc-800 bg-zinc-900/40' };
+        return { label: 'Fair Price', color: 'text-zinc-300 border-zinc-700 bg-zinc-800/40' };
       case 'ABOVE_AVERAGE':
-        return { label: 'ABOVE AVERAGE', color: 'text-amber-400 border-amber-800/40 bg-amber-950/20' };
+        return { label: 'Above Average', color: 'text-amber-400 border-amber-500/30 bg-amber-500/10' };
       case 'HIGH_PRICE':
-        return { label: 'HIGH PRICE', color: 'text-rose-400 border-rose-800/40 bg-rose-950/20' };
+      case 'OVERPRICED':
+        return { label: 'Overpriced', color: 'text-rose-400 border-rose-500/30 bg-rose-500/10' };
       default:
-        return { label: 'INSUFFICIENT DATA', color: 'text-zinc-500 border-zinc-800 bg-zinc-950' };
+        return { label: 'Verified Price', color: 'text-zinc-400 border-zinc-800 bg-zinc-900/60' };
     }
   };
 
-  const getTrendIcon = (trend?: string, pct?: number) => {
+  const getTrendBadge = (trend?: string, pct?: number) => {
     if (trend === 'RISING') {
       return (
-        <span className="flex items-center gap-1 text-rose-400 text-sm font-semibold">
-          <TrendingUp className="w-4 h-4" /> RISING {pct !== undefined ? `(+${pct}%)` : ''}
+        <span className="flex items-center gap-1.5 text-rose-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-950/40 border border-rose-900/50">
+          <TrendingUp className="w-3.5 h-3.5" /> Rising {pct !== undefined ? `(+${pct}%)` : ''}
         </span>
       );
     }
     if (trend === 'FALLING') {
       return (
-        <span className="flex items-center gap-1 text-emerald-400 text-sm font-semibold">
-          <TrendingDown className="w-4 h-4" /> FALLING {pct !== undefined ? `(${pct}%)` : ''}
+        <span className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-950/40 border border-emerald-900/50">
+          <TrendingDown className="w-3.5 h-3.5" /> Falling {pct !== undefined ? `(${pct}%)` : ''}
         </span>
       );
     }
     if (trend === 'STABLE') {
       return (
-        <span className="flex items-center gap-1 text-zinc-300 text-sm font-semibold">
-          <Minus className="w-4 h-4" /> STABLE {pct !== undefined ? `(${pct}%)` : ''}
+        <span className="flex items-center gap-1.5 text-zinc-300 text-xs font-semibold px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-700/60">
+          <Minus className="w-3.5 h-3.5" /> Stable {pct !== undefined ? `(${pct}%)` : ''}
         </span>
       );
     }
-    return <span className="text-zinc-500 text-xs font-mono">INSUFFICIENT DATA</span>;
+    return <span className="text-zinc-500 text-xs font-mono">Stable</span>;
   };
 
-  // Direct /analytics navigation without a productId: Show Product Selection State
+  const CATEGORY_CHIPS = ['ALL', 'Electronics', 'Audio', 'Smartphones', 'Laptops', 'Wearables'];
+
+  // Direct /analytics navigation without a productId: Product Selection Experience
   if (!productId) {
     return (
       <main className="space-y-8 max-w-7xl mx-auto px-4 py-6 text-left">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-900 pb-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800/80 pb-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-mono mb-2">
               <Activity className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Price History & Deal Analytics</span>
+              <span>Catalog Price Intelligence</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               Price Analytics
             </h1>
-            <p className="text-xs text-zinc-400 mt-1">
-              Select any verified catalog product to inspect historical price trends, market stability, and purchase timing signals.
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl">
+              Search and select a verified catalog product to analyze its historical price movement, evaluate deal quality, and inspect purchase timing signals.
             </p>
           </div>
         </div>
 
-        {/* Search and Filter Form */}
-        <form onSubmit={handleSearchSubmit} className="flex gap-3 max-w-xl">
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-            <input
-              type="text"
-              placeholder="Search catalog products to analyze..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
-            />
+        {/* Search & Category Filter */}
+        <div className="space-y-3">
+          <form onSubmit={handleSearchSubmit} className="flex gap-2.5 max-w-2xl">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <input
+                type="text"
+                placeholder="Search catalog products to analyze (e.g. Sony WH-1000XM5, iPhone 15, iPad)..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-10 py-2.5 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-emerald-500/50 rounded-xl text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none transition-colors"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm('');
+                    loadCatalog('', selectedCategory);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-xs font-semibold rounded-xl transition-all cursor-pointer shrink-0 active:scale-[0.98]"
+            >
+              Search
+            </button>
+          </form>
+
+          {/* Category Chips */}
+          <div className="flex items-center gap-1.5 flex-wrap pt-1">
+            {CATEGORY_CHIPS.map((cat) => {
+              const isSelected = selectedCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    loadCatalog(searchTerm, cat);
+                  }}
+                  className={`px-3 py-1 text-xs font-medium rounded-full transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-zinc-200 text-black font-semibold shadow-sm'
+                      : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700'
+                  }`}
+                >
+                  {cat === 'ALL' ? 'All Categories' : cat}
+                </button>
+              );
+            })}
           </div>
-          <button
-            type="submit"
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
-          >
-            Search
-          </button>
-        </form>
+        </div>
 
         {/* Product Picker Grid */}
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-zinc-300">Choose a Product to Inspect</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+              Verified Products ({catalogProducts.length})
+            </h2>
+            {selectedCategory !== 'ALL' && (
+              <span className="text-xs text-zinc-500 font-mono">Filtered by: {selectedCategory}</span>
+            )}
+          </div>
+
           {catalogLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div key={i} className="h-48 bg-zinc-950 border border-zinc-900 rounded-2xl" />
+                <div key={i} className="h-56 bg-zinc-950/80 border border-zinc-900 rounded-2xl p-4 space-y-3">
+                  <div className="h-32 bg-zinc-900/60 rounded-xl" />
+                  <div className="h-4 bg-zinc-900/60 rounded w-3/4" />
+                  <div className="h-4 bg-zinc-900/60 rounded w-1/2" />
+                </div>
               ))}
             </div>
           ) : catalogProducts.length === 0 ? (
-            <div className="p-12 text-center bg-zinc-950 border border-zinc-900 rounded-2xl space-y-3">
+            <div className="p-12 text-center bg-zinc-950/60 border border-zinc-900 rounded-2xl space-y-3">
               <ShoppingBag className="w-8 h-8 text-zinc-600 mx-auto" />
-              <p className="text-sm text-zinc-400 font-medium">No catalog products found matching your query.</p>
+              <p className="text-sm text-zinc-400 font-medium">No verified catalog products found matching your search.</p>
               <button
+                type="button"
                 onClick={() => {
                   setSearchTerm('');
-                  loadCatalog();
+                  setSelectedCategory('ALL');
+                  loadCatalog('', 'ALL');
                 }}
-                className="text-xs text-emerald-400 hover:underline cursor-pointer"
+                className="text-xs text-emerald-400 hover:underline cursor-pointer font-semibold"
               >
-                Reset Search
+                Reset Search Filters
               </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {catalogProducts.map((prod) => (
-                <div
-                  key={prod.id}
-                  onClick={() => navigate(`/analytics/${prod.id}`)}
-                  className="p-4 bg-zinc-950/60 border border-zinc-900 hover:border-zinc-800 rounded-2xl space-y-3 cursor-pointer group transition-all duration-300 flex flex-col justify-between hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]"
-                >
-                  <div className="space-y-3">
-                    <div className="h-36 w-full rounded-xl overflow-hidden bg-zinc-900/40 p-2 flex items-center justify-center">
-                      <ProductImage
-                        src={prod.imageUrl}
-                        alt={prod.name}
-                        className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                        showFallbackText
-                        fallbackText={prod.brand}
-                      />
+              {catalogProducts.map((prod) => {
+                const prodWithPrices = prod as ProductWithPrices;
+                const lowest = prodWithPrices.lowestPrice;
+                return (
+                  <div
+                    key={prod.id}
+                    onClick={() => navigate(`/analytics/${prod.id}`)}
+                    className="p-4 bg-zinc-950/80 border border-zinc-900 hover:border-zinc-700/80 rounded-2xl space-y-3.5 cursor-pointer group transition-all duration-200 flex flex-col justify-between hover:shadow-lg hover:-translate-y-0.5"
+                  >
+                    <div className="space-y-3">
+                      <div className="h-36 w-full rounded-xl overflow-hidden bg-zinc-900/30 p-2 flex items-center justify-center border border-zinc-900">
+                        <ProductImage
+                          src={prod.imageUrl}
+                          alt={prod.name}
+                          className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          showFallbackText
+                          fallbackText={prod.brand}
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                          <span>{prod.brand}</span>
+                          {prod.category && <span className="text-zinc-600 font-medium">{prod.category}</span>}
+                        </div>
+                        <h3 className="text-xs font-bold text-zinc-200 group-hover:text-white line-clamp-2 mt-1 leading-snug">
+                          {prod.name}
+                        </h3>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{prod.brand}</span>
-                      <h3 className="text-xs font-bold text-zinc-200 group-hover:text-white line-clamp-2 mt-0.5">
-                        {prod.name}
-                      </h3>
+
+                    <div className="flex items-center justify-between pt-2.5 border-t border-zinc-900">
+                      <div>
+                        <span className="text-[10px] text-zinc-500 block">Best Price</span>
+                        <span className="text-xs font-mono font-bold text-white">
+                          {lowest !== undefined && lowest !== null ? formatPrice(getDisplayPrice(lowest, currency), currency) : 'View Offers'}
+                        </span>
+                      </div>
+                      <span className="text-xs text-zinc-400 group-hover:text-white font-semibold flex items-center gap-1 transition-colors">
+                        Analyze <ArrowRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" />
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-zinc-900">
-                    <span className="text-xs font-mono font-bold text-emerald-400">
-                      {(prod as ProductWithPrices).lowestPrice !== undefined ? formatPrice(getDisplayPrice((prod as ProductWithPrices).lowestPrice!, currency), currency) : 'View Prices'}
-                    </span>
-                    <span className="text-xs text-zinc-400 group-hover:text-emerald-400 font-semibold flex items-center gap-1 transition-colors">
-                      Analyze <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -292,21 +370,21 @@ export const AnalyticsPage: React.FC = () => {
         <div className="border-b border-zinc-900 pb-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-mono mb-2">
             <Activity className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Price Intelligence</span>
+            <span>Price Analytics</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Product Price Intelligence</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Product Price Intelligence</h1>
         </div>
 
-        <div role="alert" className="p-8 text-center bg-zinc-950 border border-zinc-900 rounded-2xl space-y-4 max-w-xl mx-auto">
+        <div role="alert" className="p-8 text-center bg-zinc-950/90 border border-zinc-900 rounded-2xl space-y-4 max-w-xl mx-auto">
           <ShieldAlert className="w-10 h-10 text-amber-400 mx-auto" />
           <h2 className="text-base font-bold text-zinc-100">Product Unavailable</h2>
           <p className="text-xs text-zinc-400 leading-relaxed">
-            The requested product (ID: <code className="text-zinc-300 font-mono">{productId}</code>) could not be located in our verified catalog or is no longer active.
+            The requested product (ID: <code className="text-zinc-300 font-mono bg-zinc-900 px-1.5 py-0.5 rounded">{productId}</code>) could not be located in our verified catalog or is no longer active.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
             <button
               onClick={() => navigate('/analytics')}
-              className="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-colors"
+              className="px-4 py-2 text-xs font-semibold bg-white hover:bg-zinc-200 text-black rounded-xl transition-all cursor-pointer active:scale-95"
             >
               Select Another Product
             </button>
@@ -322,40 +400,89 @@ export const AnalyticsPage: React.FC = () => {
     );
   }
 
+  const prodWithPrices = product as ProductWithPrices | null;
+  const currentBestPriceVal = analytics?.currentPrice ?? prodWithPrices?.lowestPrice;
+
   return (
     <main className="space-y-8 max-w-7xl mx-auto px-4 py-6 text-left">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-900 pb-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            {product ? product.name : 'Price Analytics'}
-          </h1>
-          <p className="text-xs text-zinc-400 mt-1">
-            Historical price trends, deal quality ratings, and purchase timing recommendations.
-          </p>
-        </div>
+      {/* Product Hero Header */}
+      {product && (
+        <section 
+          aria-label="Selected Product Header"
+          className="p-5 sm:p-6 bg-zinc-950 border border-zinc-800 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-md"
+        >
+          <div className="flex items-start sm:items-center gap-4 min-w-0">
+            <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-xl overflow-hidden bg-zinc-900/50 p-2 border border-zinc-800 shrink-0 flex items-center justify-center">
+              <ProductImage
+                src={product.imageUrl}
+                alt={product.name}
+                className="h-full w-full object-contain"
+                showFallbackText
+                fallbackText={product.brand}
+              />
+            </div>
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+                  {product.brand}
+                </span>
+                {product.category && (
+                  <span className="text-[10px] font-medium text-zinc-500 bg-zinc-900/60 px-2 py-0.5 rounded border border-zinc-800/60">
+                    {product.category}
+                  </span>
+                )}
+                {analytics?.dealQuality && (
+                  <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${getDealBadge(analytics.dealQuality).color}`}>
+                    {getDealBadge(analytics.dealQuality).label}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug line-clamp-2">
+                {product.name}
+              </h1>
+              <div className="flex items-baseline gap-2 pt-0.5">
+                <span className="text-xs text-zinc-500">Current Verified Price:</span>
+                <span className="text-xl sm:text-2xl font-extrabold font-mono text-white">
+                  {currentBestPriceVal !== undefined && currentBestPriceVal !== null
+                    ? formatPrice(getDisplayPrice(currentBestPriceVal, currency), currency)
+                    : 'N/A'}
+                </span>
+              </div>
+            </div>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            to="/analytics"
-            className="px-3.5 py-2 text-xs font-semibold bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg hover:border-zinc-700 hover:bg-zinc-800 transition-colors"
-          >
-            Change Product
-          </Link>
-          {product && (
+          {/* Quick Actions */}
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-zinc-900">
             <Link
               to={`/product/${product.id}`}
-              className="px-4 py-2 text-xs font-semibold bg-emerald-950 border border-emerald-800/60 text-emerald-300 rounded-lg hover:bg-emerald-900 transition-colors"
+              className="flex-1 sm:flex-none px-4 py-2 text-xs font-semibold bg-white hover:bg-zinc-200 text-black rounded-xl transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
             >
-              &larr; Back to Product
+              <span>View Product & Offers</span>
+              <ExternalLink className="w-3.5 h-3.5" />
             </Link>
-          )}
-        </div>
-      </div>
+            <Link
+              to={`/compare?ids=${product.id}`}
+              className="px-3.5 py-2 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-xl transition-colors flex items-center justify-center gap-1.5"
+              title="Compare with other products"
+            >
+              <Scale className="w-3.5 h-3.5 text-zinc-400" />
+              <span className="hidden sm:inline">Compare</span>
+            </Link>
+            <Link
+              to="/analytics"
+              className="px-3.5 py-2 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-xl transition-colors flex items-center justify-center gap-1"
+              title="Select a different product to analyze"
+            >
+              <span>Change</span>
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Loading Skeleton */}
       {loading && (
         <div className="space-y-6 animate-pulse" role="status" aria-label="Loading analytics">
+          <div className="h-36 bg-zinc-950 border border-zinc-900 rounded-2xl" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-28 bg-zinc-950 border border-zinc-900 rounded-xl" />
@@ -377,31 +504,32 @@ export const AnalyticsPage: React.FC = () => {
       {/* Main Content */}
       {!loading && analytics && (
         <div className="space-y-8">
-          {/* Purchase Signal & Recommendation Banner */}
+          {/* Level 1: Decision Summary Card */}
           {(() => {
             const badge = getSignalBadge(analytics.purchaseSignal);
             return (
               <section
-                aria-label="Purchase Signal Summary"
-                className="bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800 p-6 rounded-2xl space-y-4 shadow-xl"
+                aria-label="Purchase Timing & Decision Summary"
+                className="bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800/90 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xl"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5 flex-wrap">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider border flex items-center gap-1.5 shadow-sm ${badge.bg}`}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider border flex items-center gap-1.5 shadow-sm ${badge.bg}`}
                     >
                       {badge.icon}
                       <span>{badge.text}</span>
                     </span>
                     {analytics.dealQuality && (
                       <span
-                        className={`text-xs px-2.5 py-0.5 rounded-full border font-bold ${
+                        className={`text-xs px-2.5 py-1 rounded-full border font-bold ${
                           getDealBadge(analytics.dealQuality).color
                         }`}
                       >
                         {getDealBadge(analytics.dealQuality).label}
                       </span>
                     )}
+                    {analytics.trend && getTrendBadge(analytics.trend, analytics.trendPercentage)}
                   </div>
 
                   <div className="flex items-center gap-3 font-mono text-xs text-zinc-400">
@@ -410,25 +538,30 @@ export const AnalyticsPage: React.FC = () => {
                       <strong className="text-zinc-200">{analytics.observationCount || 0}</strong>
                     </span>
                     {analytics.pricePositionScore !== undefined && (
-                      <span>
+                      <span className="flex items-center gap-1">
                         Position Score:{' '}
-                        <strong className="text-emerald-400">{analytics.pricePositionScore}</strong>/100
+                        <strong className="text-emerald-400 font-bold">{analytics.pricePositionScore}</strong>/100
                       </span>
                     )}
                   </div>
                 </div>
 
-                {analytics.purchaseSignalReason && (
+                {/* Authoritative Decision Reason */}
+                {analytics.purchaseSignalReason ? (
                   <p className="text-sm text-zinc-200 leading-relaxed font-medium">
                     {analytics.purchaseSignalReason}
+                  </p>
+                ) : (
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    {badge.description}
                   </p>
                 )}
 
                 {/* Supporting Evidence List */}
                 {analytics.supportingEvidence && analytics.supportingEvidence.length > 0 && (
-                  <div className="pt-2 border-t border-zinc-900 space-y-1.5">
-                    <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                      Price Intelligence Evidence:
+                  <div className="pt-3 border-t border-zinc-900 space-y-1.5">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                      Verified Decision Evidence:
                     </span>
                     <ul className="space-y-1 text-xs text-zinc-300">
                       {analytics.supportingEvidence.map((ev, idx) => (
@@ -444,9 +577,9 @@ export const AnalyticsPage: React.FC = () => {
             );
           })()}
 
-          {/* Key Metric Cards */}
+          {/* Level 2: Key Price Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Current Price */}
+            {/* Current Best Offer */}
             <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-1">
               <span className="text-xs text-zinc-500 font-medium">Current Best Offer</span>
               <p className="text-2xl font-bold font-mono text-white">
@@ -493,46 +626,20 @@ export const AnalyticsPage: React.FC = () => {
               </p>
               {analytics.priceRange !== undefined && (
                 <span className="text-[10px] text-zinc-500">
-                  Range spread: {formatPrice(getDisplayPrice(analytics.priceRange, currency), currency)}
+                  Spread: {formatPrice(getDisplayPrice(analytics.priceRange, currency), currency)}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Dynamics Row: Trend & Volatility */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Price Trend</span>
-                {getTrendIcon(analytics.trend, analytics.trendPercentage)}
-              </div>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Calculated by comparing recent prices against historical baselines.
-              </p>
-            </div>
-
-            <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Market Volatility</span>
-                <span className="text-xs font-mono font-bold text-zinc-200">
-                  {analytics.volatility || 'INSUFFICIENT_DATA'}
-                  {analytics.volatilityValue !== undefined && analytics.volatilityValue !== null
-                    ? ` (CV: ${(analytics.volatilityValue * 100).toFixed(1)}%)`
-                    : ''}
-                </span>
-              </div>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Measures price stability across recorded seller listings over time.
-              </p>
-            </div>
-          </div>
-
-          {/* Historical Price Chart */}
+          {/* Level 3: Core Analytical Visualization — Price History Chart */}
           <section aria-label="Interactive Price Chart" className="space-y-3">
-            <h2 className="text-base font-bold text-zinc-200 flex items-center gap-2">
-              <History className="w-4 h-4 text-emerald-400" />
-              Price History
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-zinc-200 flex items-center gap-2">
+                <History className="w-4 h-4 text-emerald-400" />
+                Price Trajectory & Trend History
+              </h2>
+            </div>
             <HistoricalPriceChart
               priceSeries={analytics.priceSeries}
               currentPrice={analytics.currentPrice}
@@ -543,13 +650,82 @@ export const AnalyticsPage: React.FC = () => {
             />
           </section>
 
-          {/* Historical Milestone Events */}
+          {/* Level 4: Verified Sellers & Current Offers Context */}
+          {prodWithPrices && prodWithPrices.prices && prodWithPrices.prices.length > 0 && (
+            <section aria-label="Current Seller Offers" className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold text-zinc-200 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-zinc-400" />
+                  Verified Seller Offers ({prodWithPrices.prices.length})
+                </h2>
+                <Link
+                  to={`/product/${product?.id}`}
+                  className="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1"
+                >
+                  <span>Full Seller Comparison</span>
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {prodWithPrices.prices.map((sp, sIdx) => {
+                  const sPrice = sp.currentPrice;
+                  const sOrig = sp.originalPrice;
+                  const isLowest = currentBestPriceVal !== undefined && Math.abs(sPrice - currentBestPriceVal) < 0.01;
+
+                  return (
+                    <div
+                      key={sp.id || sIdx}
+                      className={`p-3.5 bg-zinc-950 border rounded-xl flex items-center justify-between gap-3 ${
+                        isLowest ? 'border-emerald-500/40 bg-emerald-950/10' : 'border-zinc-900'
+                      }`}
+                    >
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-xs text-white truncate">
+                            {sp.seller?.name || `Seller #${sIdx + 1}`}
+                          </span>
+                          {isLowest && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                              Best Offer
+                            </span>
+                          )}
+                        </div>
+                        {sp.discountPercentage !== undefined && sp.discountPercentage > 0 ? (
+                          <span className="text-[10px] text-emerald-400 font-medium block">
+                            {sp.discountPercentage.toFixed(0)}% savings recorded
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-zinc-500 block">
+                            Verified Seller Offer
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="text-sm font-bold font-mono text-white block">
+                          {formatPrice(getDisplayPrice(sPrice, currency), currency)}
+                        </span>
+                        {sOrig && sOrig > sPrice && (
+                          <span className="text-[10px] text-zinc-500 line-through block font-mono">
+                            {formatPrice(getDisplayPrice(sOrig, currency), currency)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Level 5: Historical Milestone Events */}
           {analytics.historicalEvents && analytics.historicalEvents.length > 0 && (
-            <section aria-label="Price Milestone Events" className="space-y-4 pt-4 border-t border-zinc-900">
+            <section aria-label="Price Milestone Events" className="space-y-3 pt-2">
               <h2 className="text-base font-bold text-zinc-200">Price Drop History & Milestones</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {analytics.historicalEvents.map((evt, idx) => (
-                  <div key={idx} className="bg-zinc-950 border border-zinc-900 rounded-lg p-3.5 space-y-1">
+                  <div key={idx} className="bg-zinc-950 border border-zinc-900 rounded-xl p-3.5 space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-mono">
                       <span className="text-emerald-400 font-semibold flex items-center gap-1">
                         {evt.percentageChange < 0 ? (
@@ -564,8 +740,8 @@ export const AnalyticsPage: React.FC = () => {
                       </span>
                     </div>
                     <p className="text-xs text-zinc-300">{evt.description}</p>
-                    <div className="text-[11px] font-mono text-zinc-500 pt-1">
-                      Resulting: {formatPrice(getDisplayPrice(evt.resultingPrice, currency), currency)}
+                    <div className="text-[11px] font-mono text-zinc-400 pt-1 border-t border-zinc-900">
+                      Resulting Price: <strong className="text-white">{formatPrice(getDisplayPrice(evt.resultingPrice, currency), currency)}</strong>
                     </div>
                   </div>
                 ))}
