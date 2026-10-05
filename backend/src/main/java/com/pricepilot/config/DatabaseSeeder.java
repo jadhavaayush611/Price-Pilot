@@ -84,16 +84,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
 
         if (productRepository.count() > 0) {
-            log.info("Database already seeded. Verifying semantic embeddings index...");
-            if (productEmbeddingService != null) {
-                try {
-                    List<ProductEntity> allProducts = productRepository.findAll();
-                    productEmbeddingService.indexProductBatch(allProducts);
-                    log.info("Verified/indexed {} products into vector store.", allProducts.size());
-                } catch (Exception e) {
-                    log.warn("Non-fatal: failed to verify vector store embeddings on startup: {}", e.getMessage());
-                }
-            }
+            log.info("Database already seeded with products. Initialization skipped.");
             return;
         }
 

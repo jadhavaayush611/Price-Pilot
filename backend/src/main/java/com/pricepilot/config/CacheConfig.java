@@ -1,144 +1,45 @@
 package com.pricepilot.config;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.cache.RedisCacheConfiguration;
-import org.springframework.data.redis.cache.RedisCacheManager;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import org.springframework.cache.annotation.CachingConfigurer;
-import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurer;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.interceptor.CacheErrorHandler;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import java.time.Duration;
 import java.util.Collection;
-import java.util.Map;
 
 @Configuration
 @EnableCaching
 public class CacheConfig implements CachingConfigurer {
 
     @Bean
-    public RedisCacheConfiguration cacheConfiguration() {
-        return createCacheConfig(Duration.ofMinutes(10)); // Default 10 min TTL
-    }
-
-    @Bean
-    public CacheManager cacheManager(
-            @Value("${spring.cache.type:simple}") String cacheType,
-            ObjectProvider<RedisConnectionFactory> connectionFactoryProvider,
-            MeterRegistry meterRegistry) {
-
-        RedisConnectionFactory connectionFactory = connectionFactoryProvider.getIfAvailable();
-
-        if ("redis".equalsIgnoreCase(cacheType) && connectionFactory != null) {
-            RedisCacheManager redisCacheManager = RedisCacheManager.builder(connectionFactory)
-                    .cacheDefaults(cacheConfiguration())
-                    .withInitialCacheConfigurations(Map.ofEntries(
-                            Map.entry("product-details", createCacheConfig(Duration.ofMinutes(30))),
-                            Map.entry("product-searches", createCacheConfig(Duration.ofMinutes(5))),
-                            Map.entry("popular-products", createCacheConfig(Duration.ofMinutes(60))),
-                            Map.entry("trending-products", createCacheConfig(Duration.ofMinutes(15))),
-                            Map.entry("most-watched-products", createCacheConfig(Duration.ofMinutes(15))),
-                            Map.entry("most-saved-products", createCacheConfig(Duration.ofMinutes(15))),
-                            Map.entry("biggest-drops", createCacheConfig(Duration.ofMinutes(15))),
-                            Map.entry("recommendations", createCacheConfig(Duration.ofMinutes(10))),
-                            Map.entry("price-analytics", createCacheConfig(Duration.ofMinutes(10))),
-                            Map.entry("dashboard", createCacheConfig(Duration.ofMinutes(5))),
-                            Map.entry("dashboard-v2", createCacheConfig(Duration.ofMinutes(3))),
-                            Map.entry("user-preferences", createCacheConfig(Duration.ofMinutes(30))),
-                            Map.entry("user-recommendations", createCacheConfig(Duration.ofMinutes(10))),
-                            Map.entry("user-behavioral-signals", createCacheConfig(Duration.ofMinutes(10)))
-                    ))
-                    .build();
-
-            return new CacheManager() {
-                @Override
-                public Cache getCache(String name) {
-                    Cache cache = redisCacheManager.getCache(name);
-                    return cache == null ? null : new InstrumentedCache(cache, meterRegistry);
-                }
-
-                @Override
-                public Collection<String> getCacheNames() {
-                    return redisCacheManager.getCacheNames();
-                }
-            };
-        } else {
-            // Fallback to simple in-memory ConcurrentMap cache
-            ConcurrentMapCacheManager concurrentMapCacheManager = new ConcurrentMapCacheManager(
-                    "product-details", "product-searches", "popular-products",
-                    "trending-products", "most-watched-products", "most-saved-products", "biggest-drops",
-                    "recommendations", "price-analytics", "dashboard", "dashboard-v2",
-                    "user-preferences", "user-recommendations", "user-behavioral-signals"
-            );
-
-            return new CacheManager() {
-                @Override
-                public Cache getCache(String name) {
-                    Cache cache = concurrentMapCacheManager.getCache(name);
-                    return cache == null ? null : new InstrumentedCache(cache, meterRegistry);
-                }
-
-                @Override
-                public Collection<String> getCacheNames() {
-                    return concurrentMapCacheManager.getCacheNames();
-                }
-            };
-        }
-    }
-
-    private final ObjectMapper sharedObjectMapper = createSharedObjectMapper();
-    private final GenericJackson2JsonRedisSerializer sharedValueSerializer = new GenericJackson2JsonRedisSerializer(sharedObjectMapper);
-    private final StringRedisSerializer sharedKeySerializer = new StringRedisSerializer();
-
-    private static ObjectMapper createSharedObjectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator ptv = 
-                com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator.builder()
-                        .allowIfBaseType("com.pricepilot")
-                        .allowIfBaseType("java.util")
-                        .allowIfBaseType("java.lang")
-                        .allowIfBaseType("java.math")
-                        .allowIfBaseType("java.time")
-                        .allowIfSubType("com.pricepilot")
-                        .allowIfSubType("java.util")
-                        .allowIfSubType("java.lang")
-                        .allowIfSubType("java.math")
-                        .allowIfSubType("java.time")
-                        .allowIfSubType("org.springframework.data.domain")
-                        .build();
-        objectMapper.activateDefaultTyping(
-                ptv,
-                ObjectMapper.DefaultTyping.NON_FINAL,
-                JsonTypeInfo.As.PROPERTY
+    public CacheManager cacheManager(MeterRegistry meterRegistry) {
+        // High-efficiency, low-footprint in-memory ConcurrentMap cache manager
+        ConcurrentMapCacheManager concurrentMapCacheManager = new ConcurrentMapCacheManager(
+                "product-details", "product-searches", "popular-products",
+                "trending-products", "most-watched-products", "most-saved-products", "biggest-drops",
+                "recommendations", "price-analytics", "dashboard", "dashboard-v2",
+                "user-preferences", "user-recommendations", "user-behavioral-signals"
         );
-        return objectMapper;
-    }
 
-    private RedisCacheConfiguration createCacheConfig(Duration ttl) {
-        return RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(ttl)
-                .disableCachingNullValues()
-                .prefixCacheNameWith("pricepilot::")
-                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(sharedKeySerializer))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(sharedValueSerializer));
+        return new CacheManager() {
+            @Override
+            public Cache getCache(String name) {
+                Cache cache = concurrentMapCacheManager.getCache(name);
+                return cache == null ? null : new InstrumentedCache(cache, meterRegistry);
+            }
+
+            @Override
+            public Collection<String> getCacheNames() {
+                return concurrentMapCacheManager.getCacheNames();
+            }
+        };
     }
 
     @Override

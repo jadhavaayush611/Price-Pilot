@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.core.env.Environment;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -24,9 +23,6 @@ public class StartupDiagnostics implements CommandLineRunner {
 
     @Autowired(required = false)
     private JdbcTemplate jdbcTemplate;
-
-    @Autowired(required = false)
-    private RedisConnectionFactory redisConnectionFactory;
 
     @Autowired(required = false)
     private AiClient aiClient;
@@ -85,19 +81,8 @@ public class StartupDiagnostics implements CommandLineRunner {
             log.info("Flyway Version       : NOT ENABLED");
         }
 
-        // 5. Redis Connectivity
-        if (redisConnectionFactory != null) {
-            String redisStatus = "DISCONNECTED";
-            try (var connection = redisConnectionFactory.getConnection()) {
-                connection.ping();
-                redisStatus = "CONNECTED";
-            } catch (Exception e) {
-                log.error("Redis connection check failed", e);
-            }
-            log.info("Redis Connected      : {}", redisStatus);
-        } else {
-            log.info("Redis Connected      : NOT CONFIGURED");
-        }
+        // 5. Caching Subsystem
+        log.info("Cache Subsystem      : SIMPLE (ConcurrentMap)");
 
         // 6. AI Gateway Connectivity
         if (aiClient != null) {

@@ -159,51 +159,41 @@ public class ProductEmbeddingServiceImpl implements ProductEmbeddingService {
                 return Collections.emptyList();
             }
 
-            Map<String, String> entityIdToText = new LinkedHashMap<>();
-            Map<String, Map<String, String>> attributesByEntityId = new LinkedHashMap<>();
-
-            for (ProductEntity product : activeProducts) {
-                try {
-                    CanonicalProductText canonical = textBuilder.build(product);
-                    String idStr = product.getId().toString();
-                    entityIdToText.put(idStr, canonical.getCanonicalText());
-                    attributesByEntityId.put(idStr, canonical.getAttributes());
-                } catch (Exception e) {
-                    failureCounter.increment();
-                    log.warn("Failed to canonicalize product id={}, skipping in batch", product.getId(), e);
-                }
-            }
-
-            if (entityIdToText.isEmpty()) {
-                return Collections.emptyList();
-            }
-
-            // Batch embedding generation via EmbeddingService (respects batch bounds)
-            List<EmbeddingRecord> records = new ArrayList<>(entityIdToText.size());
-            List<String> allIds = new ArrayList<>(entityIdToText.keySet());
             int batchSize = properties.getBatchSize() > 0 ? properties.getBatchSize() : 32;
+            List<EmbeddingRecord> allRecords = new ArrayList<>(activeProducts.size());
 
-            for (int i = 0; i < allIds.size(); i += batchSize) {
-                int end = Math.min(i + batchSize, allIds.size());
-                List<String> chunkIds = allIds.subList(i, end);
+            // Process in chunks to avoid retaining large intermediate maps across the entire batch
+            for (int i = 0; i < activeProducts.size(); i += batchSize) {
+                int end = Math.min(i + batchSize, activeProducts.size());
+                List<ProductEntity> chunk = activeProducts.subList(i, end);
 
-                Map<String, String> chunkTexts = new LinkedHashMap<>();
-                Map<String, Map<String, String>> chunkAttrs = new LinkedHashMap<>();
-                for (String id : chunkIds) {
-                    chunkTexts.put(id, entityIdToText.get(id));
-                    chunkAttrs.put(id, attributesByEntityId.get(id));
+                Map<String, String> chunkTexts = new LinkedHashMap<>(chunk.size());
+                Map<String, Map<String, String>> chunkAttrs = new LinkedHashMap<>(chunk.size());
+
+                for (ProductEntity product : chunk) {
+                    try {
+                        CanonicalProductText canonical = textBuilder.build(product);
+                        String idStr = product.getId().toString();
+                        chunkTexts.put(idStr, canonical.getCanonicalText());
+                        chunkAttrs.put(idStr, canonical.getAttributes());
+                    } catch (Exception e) {
+                        failureCounter.increment();
+                        log.warn("Failed to canonicalize product id={}, skipping in batch", product.getId(), e);
+                    }
                 }
 
-                List<EmbeddingRecord> chunkRecords = embeddingService.createBatchRecords(
-                        ENTITY_TYPE_PRODUCT, chunkTexts, chunkAttrs
-                );
-                vectorStore.batchUpsert(chunkRecords);
-                records.addAll(chunkRecords);
+                if (!chunkTexts.isEmpty()) {
+                    List<EmbeddingRecord> chunkRecords = embeddingService.createBatchRecords(
+                            ENTITY_TYPE_PRODUCT, chunkTexts, chunkAttrs
+                    );
+                    vectorStore.batchUpsert(chunkRecords);
+                    allRecords.addAll(chunkRecords);
+                }
             }
 
-            indexedCounter.increment(records.size());
+            indexedCounter.increment(allRecords.size());
             indexingTimer.record(System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
-            return records;
+            return allRecords;
         } catch (Exception e) {
             failureCounter.increment();
             log.error("Failed to batch index {} products", products.size(), e);
