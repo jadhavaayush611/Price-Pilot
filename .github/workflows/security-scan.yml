@@ -2,9 +2,12 @@ name: Security Hardening & Dependency Scan
 
 on:
   push:
-    branches: [ main, master, maintenance ]
+    branches: [ main, master, develop, maintenance ]
   pull_request:
-    branches: [ main, master, maintenance ]
+    branches: [ main, master, develop, maintenance ]
+
+permissions:
+  contents: read
 
 jobs:
   security-scan:
@@ -74,7 +77,8 @@ jobs:
       - name: Run npm audit
         run: |
           cd frontend
-          npm audit --audit-level=high
+          npm ci
+          npm audit
 
       # 3. Python Dependency Scan (AI Service & SDK)
       - name: Set up Python
