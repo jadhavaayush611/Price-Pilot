@@ -16,18 +16,18 @@ public class AiServiceHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         try {
-            if (aiClient.isAvailable()) {
+            if (aiClient != null && aiClient.isAvailable()) {
                 return Health.up()
                         .withDetail("service", "FastAPI AI service is reachable and responsive")
                         .build();
             } else {
-                return Health.down()
-                        .withDetail("service", "FastAPI AI service is unreachable or not healthy")
+                return Health.up()
+                        .withDetail("service", "FastAPI AI service is not configured or offline (local deterministic fallback active)")
                         .build();
             }
         } catch (Exception e) {
-            return Health.down(e)
-                    .withDetail("service", "FastAPI AI service check failed with exception")
+            return Health.up()
+                    .withDetail("service", "FastAPI AI service check failed (local deterministic fallback active)")
                     .build();
         }
     }
