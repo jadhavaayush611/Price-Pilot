@@ -31,7 +31,7 @@
 
 <br/>
 
-<img src="frontend/src/assets/hero.png" alt="PricePilot Shopping Intelligence" width="320" />
+<img src="frontend/src/assets/hero.png" alt="PricePilot Shopping Intelligence" width="720" />
 
 </div>
 
