@@ -29,7 +29,19 @@ import type {
 } from '../types';
 import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../currency';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+export const getApiBaseUrl = (customEnv?: { VITE_API_URL?: string; VITE_API_BASE_URL?: string }): string => {
+  const envUrl = customEnv?.VITE_API_URL ?? 
+                 customEnv?.VITE_API_BASE_URL ?? 
+                 import.meta.env.VITE_API_URL ?? 
+                 import.meta.env.VITE_API_BASE_URL;
+  if (!envUrl) {
+    return 'http://localhost:8080/api/v1';
+  }
+  const trimmed = envUrl.replace(/\/+$/, '');
+  return trimmed.endsWith('/api/v1') ? trimmed : `${trimmed}/api/v1`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -79,14 +91,9 @@ apiClient.interceptors.response.use(
 
 export const apiService = {
   // Check backend health
-  async checkHealth(): Promise<{ status: string }> {
-    try {
-      const response = await apiClient.get('/health');
-      return response.data;
-    } catch {
-      console.warn('Backend connection failed, falling back to mock UP status');
-      return { status: 'UP' };
-    }
+  async checkHealth(): Promise<{ status: string; [key: string]: unknown }> {
+    const response = await apiClient.get('/health');
+    return response.data;
   },
 
   // Get list of products with pagination, sorting, and optional search (Real API)
