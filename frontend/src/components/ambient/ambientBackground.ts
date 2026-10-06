@@ -1,7 +1,7 @@
 /**
  * Ambient Dot-Grid and Comet Cursor Trail Engine
  * Refined visual model:
- * - 28px static dot grid with 0.1% (0.001) inactive opacity
+ * - 28px static dot grid with calibrated 4% (0.04) inactive baseline opacity against #030303
  * - 95px concentrated radial cursor glow
  * - Directional dot energy bias (concentrated behind motion vector)
  * - Tapered comet profile (Head -> Body -> Tail)
@@ -54,7 +54,7 @@ export interface AmbientEngineConfig {
 export const DEFAULT_CONFIG: AmbientEngineConfig = {
   gridSpacing: 28,
   dotRadius: 0.75,
-  baseDotOpacity: 0.001, // 0.1% inactive baseline opacity
+  baseDotOpacity: 0.04, // 4% inactive baseline opacity (subtle, calibrated against #030303)
   interactionRadius: 95,
   trailMaxDurationMs: 650,
   maxTrailPoints: 26,
@@ -63,6 +63,19 @@ export const DEFAULT_CONFIG: AmbientEngineConfig = {
   colorShiftRate: 0.0008, // Full palette cycle every ~1250px of movement
   maxDpr: 2,
 };
+
+/**
+ * Determines whether interactive canvas animation should be activated
+ * based on accessibility preferences and pointer capabilities.
+ * If reduced motion is requested or device is touch-only, returns false
+ * so that only the lightweight static CSS dot grid is presented.
+ */
+export function shouldEnableInteractiveAmbient(
+  prefersReducedMotion: boolean,
+  hasFinePointer: boolean
+): boolean {
+  return !prefersReducedMotion && hasFinePointer;
+}
 
 /**
  * Muted color progression along the comet trail palette.

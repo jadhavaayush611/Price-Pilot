@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { AmbientAnimationState, DEFAULT_CONFIG } from './ambientBackground.ts';
+import { AmbientAnimationState, DEFAULT_CONFIG, shouldEnableInteractiveAmbient } from './ambientBackground.ts';
 
 export const AmbientBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -19,7 +19,7 @@ export const AmbientBackground: React.FC = () => {
       (window.matchMedia('(pointer: fine)').matches || !window.matchMedia('(pointer: coarse)').matches);
 
     // If reduced motion is requested or touch device, we keep the static CSS dot grid and skip canvas RAF
-    if (prefersReducedMotion || !hasFinePointer) {
+    if (!shouldEnableInteractiveAmbient(Boolean(prefersReducedMotion), Boolean(hasFinePointer))) {
       return;
     }
 
@@ -108,7 +108,7 @@ export const AmbientBackground: React.FC = () => {
     window.addEventListener('pointermove', handlePointerMove, { passive: true });
     document.addEventListener('pointerleave', handlePointerLeave, { passive: true });
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('resize', handleResize);
 
     return () => {
       if (rafIdRef.current) {
@@ -128,12 +128,12 @@ export const AmbientBackground: React.FC = () => {
       aria-hidden="true"
       data-testid="ambient-background"
     >
-      {/* 1. Subtle Static CSS Dot Grid (0.1% baseline opacity) */}
+      {/* 1. Subtle Static CSS Dot Grid (calibrated baseline opacity against #030303) */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-90"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(circle 0.75px at center, rgba(255, 255, 255, 0.001) 0.75px, transparent 0.75px)',
-          backgroundSize: '28px 28px',
+          backgroundImage: `radial-gradient(circle ${DEFAULT_CONFIG.dotRadius}px at center, rgba(255, 255, 255, ${DEFAULT_CONFIG.baseDotOpacity}) ${DEFAULT_CONFIG.dotRadius}px, transparent ${DEFAULT_CONFIG.dotRadius}px)`,
+          backgroundSize: `${DEFAULT_CONFIG.gridSpacing}px ${DEFAULT_CONFIG.gridSpacing}px`,
           backgroundPosition: 'center center',
         }}
       />

@@ -8,6 +8,7 @@ import {
   getInterpolatedPaletteColor,
   computeSmoothPathSegments,
   distanceToSegment,
+  shouldEnableInteractiveAmbient,
   AmbientAnimationState,
   DEFAULT_CONFIG,
   TRAIL_PALETTE,
@@ -15,12 +16,43 @@ import {
 
 describe('Ambient Background Engine & Dynamic Comet Tests', () => {
   describe('Configuration Defaults & Inactive Dot Opacity', () => {
-    it('uses 28px dot grid spacing, 95px interaction radius, and 0.001 (0.1%) baseline opacity', () => {
+    it('uses 28px dot grid spacing, 95px interaction radius, and 0.04 (4%) calibrated baseline opacity', () => {
       expect(DEFAULT_CONFIG.gridSpacing).toBe(28);
       expect(DEFAULT_CONFIG.interactionRadius).toBe(95);
       expect(DEFAULT_CONFIG.dotRadius).toBe(0.75);
-      expect(DEFAULT_CONFIG.baseDotOpacity).toBe(0.001); // 0.1% baseline
+      expect(DEFAULT_CONFIG.baseDotOpacity).toBe(0.04); // 4% calibrated subtle baseline
       expect(DEFAULT_CONFIG.colorShiftRate).toBe(0.0008);
+    });
+
+    it('ensures baseline dot opacity is clearly perceptible against #030303 without overpowering UI', () => {
+      expect(DEFAULT_CONFIG.baseDotOpacity).toBeGreaterThanOrEqual(0.02);
+      expect(DEFAULT_CONFIG.baseDotOpacity).toBeLessThanOrEqual(0.08);
+    });
+  });
+
+  describe('Accessibility & Device Capability Rules (shouldEnableInteractiveAmbient)', () => {
+    it('enables interactive canvas animation on standard desktop with fine pointer', () => {
+      const prefersReducedMotion = false;
+      const hasFinePointer = true;
+      expect(shouldEnableInteractiveAmbient(prefersReducedMotion, hasFinePointer)).toBe(true);
+    });
+
+    it('disables interactive canvas animation when user requests reduced motion', () => {
+      const prefersReducedMotion = true;
+      const hasFinePointer = true;
+      expect(shouldEnableInteractiveAmbient(prefersReducedMotion, hasFinePointer)).toBe(false);
+    });
+
+    it('disables interactive canvas animation on touch / mobile devices lacking fine pointer', () => {
+      const prefersReducedMotion = false;
+      const hasFinePointer = false;
+      expect(shouldEnableInteractiveAmbient(prefersReducedMotion, hasFinePointer)).toBe(false);
+    });
+
+    it('disables interactive canvas animation when touch device also has reduced motion', () => {
+      const prefersReducedMotion = true;
+      const hasFinePointer = false;
+      expect(shouldEnableInteractiveAmbient(prefersReducedMotion, hasFinePointer)).toBe(false);
     });
   });
 
