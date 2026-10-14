@@ -42,7 +42,7 @@ export const RecommendationList: React.FC<RecommendationListProps> = ({
 
   if (!recommendations || !recommendations.recommendedProducts || recommendations.recommendedProducts.length === 0) {
     return (
-      <div className="p-8 text-center bg-zinc-950 border border-zinc-900 rounded-2xl text-zinc-500 text-sm">
+      <div className="p-8 text-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl text-[var(--color-muted-foreground)] text-sm">
         {isPersonalized
           ? 'No personalized product recommendations found matching your criteria.'
           : 'No intelligence recommendations available for this product.'}
@@ -71,25 +71,25 @@ export const RecommendationList: React.FC<RecommendationListProps> = ({
     <section aria-label={isPersonalized ? "Personalized Product Recommendations" : "Shopping Intelligence Recommendations"} className="space-y-6">
       {/* Pipeline explanation banner */}
       {recommendations.explanation && (
-        <div className="bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800 p-4 rounded-2xl flex items-start gap-3 shadow-md">
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-4 rounded-2xl flex items-start gap-3 shadow-sm">
           {isPersonalized ? (
-            <UserCheck className="w-5 h-5 text-indigo-400 mt-0.5 shrink-0" />
+            <UserCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mt-0.5 shrink-0" />
           ) : (
-            <Sparkles className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+            <Sparkles className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
           )}
           <div className="space-y-1 text-xs flex-1">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <span className="font-semibold text-zinc-200">
+              <span className="font-semibold text-[var(--color-foreground)]">
                 {isPersonalized ? 'Personalized Intelligence Insights' : `Explainable AI Insights (${recommendations.recommendationType || 'BEST OVERALL'})`}
               </span>
               {recommendations.confidence !== undefined && (
-                <span className="text-[11px] text-zinc-400 flex items-center gap-1 font-mono">
-                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="text-[11px] text-[var(--color-muted-foreground)] flex items-center gap-1 font-mono">
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                   Confidence: {Math.round(recommendations.confidence * 100)}%
                 </span>
               )}
             </div>
-            <p className="text-zinc-300 leading-relaxed">{recommendations.explanation}</p>
+            <p className="text-[var(--color-muted-foreground)] leading-relaxed">{recommendations.explanation}</p>
           </div>
         </div>
       )}

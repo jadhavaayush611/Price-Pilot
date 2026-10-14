@@ -115,36 +115,36 @@ export const AnalyticsPage: React.FC = () => {
       case 'BUY_NOW':
         return {
           text: 'Buy Now',
-          bg: 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300',
-          icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" />,
+          bg: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300',
+          icon: <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
           description: 'Current price is favorably near its recorded low with strong purchase timing.',
         };
       case 'GOOD_TIME':
         return {
           text: 'Good Time to Buy',
-          bg: 'bg-teal-950/80 border-teal-500/40 text-teal-300',
-          icon: <Sparkles className="w-4 h-4 text-teal-400" />,
+          bg: 'bg-teal-500/15 border-teal-500/30 text-teal-700 dark:text-teal-300',
+          icon: <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-400" />,
           description: 'Price is below historical averages with favorable market positioning.',
         };
       case 'WAIT':
         return {
           text: 'Wait for Drop',
-          bg: 'bg-amber-950/80 border-amber-500/40 text-amber-300',
-          icon: <Clock className="w-4 h-4 text-amber-400" />,
+          bg: 'bg-amber-500/15 border-amber-500/30 text-amber-800 dark:text-amber-300',
+          icon: <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />,
           description: 'Price is above baseline averages; waiting for an upcoming drop is advised.',
         };
       case 'NEUTRAL':
         return {
           text: 'Neutral Timing',
-          bg: 'bg-zinc-900 border-zinc-700 text-zinc-300',
-          icon: <Minus className="w-4 h-4 text-zinc-400" />,
+          bg: 'bg-[var(--color-surface-accent)] border-[var(--color-border)] text-[var(--color-foreground)]',
+          icon: <Minus className="w-4 h-4 text-[var(--color-muted-foreground)]" />,
           description: 'Price is stable near historical averages without strong upward or downward pressure.',
         };
       default:
         return {
           text: 'Pending History',
-          bg: 'bg-zinc-900 border-zinc-800 text-zinc-400',
-          icon: <AlertCircle className="w-4 h-4 text-zinc-500" />,
+          bg: 'bg-[var(--color-surface-accent)] border-[var(--color-border)] text-[var(--color-muted-foreground)]',
+          icon: <AlertCircle className="w-4 h-4 text-[var(--color-muted-foreground)]" />,
           description: 'Additional historical price records are being gathered to establish baseline trends.',
         };
     }
@@ -153,44 +153,44 @@ export const AnalyticsPage: React.FC = () => {
   const getDealBadge = (deal?: string) => {
     switch (deal) {
       case 'EXCELLENT_DEAL':
-        return { label: 'Excellent Deal', color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' };
+        return { label: 'Excellent Deal', color: 'text-emerald-700 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10' };
       case 'GOOD_DEAL':
-        return { label: 'Good Deal', color: 'text-blue-400 border-blue-500/30 bg-blue-500/10' };
+        return { label: 'Good Deal', color: 'text-blue-700 dark:text-blue-400 border-blue-500/30 bg-blue-500/10' };
       case 'FAIR_PRICE':
-        return { label: 'Fair Price', color: 'text-zinc-300 border-zinc-700 bg-zinc-800/40' };
+        return { label: 'Fair Price', color: 'text-[var(--color-foreground)] border-[var(--color-border)] bg-[var(--color-surface-accent)]' };
       case 'ABOVE_AVERAGE':
-        return { label: 'Above Average', color: 'text-amber-400 border-amber-500/30 bg-amber-500/10' };
+        return { label: 'Above Average', color: 'text-amber-800 dark:text-amber-400 border-amber-500/30 bg-amber-500/10' };
       case 'HIGH_PRICE':
       case 'OVERPRICED':
-        return { label: 'Overpriced', color: 'text-rose-400 border-rose-500/30 bg-rose-500/10' };
+        return { label: 'Overpriced', color: 'text-rose-700 dark:text-rose-400 border-rose-500/30 bg-rose-500/10' };
       default:
-        return { label: 'Verified Price', color: 'text-zinc-400 border-zinc-800 bg-zinc-900/60' };
+        return { label: 'Verified Price', color: 'text-[var(--color-muted-foreground)] border-[var(--color-border)] bg-[var(--color-surface-accent)]' };
     }
   };
 
   const getTrendBadge = (trend?: string, pct?: number) => {
     if (trend === 'RISING') {
       return (
-        <span className="flex items-center gap-1.5 text-rose-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-950/40 border border-rose-900/50">
+        <span className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/30">
           <TrendingUp className="w-3.5 h-3.5" /> Rising {pct !== undefined ? `(+${pct}%)` : ''}
         </span>
       );
     }
     if (trend === 'FALLING') {
       return (
-        <span className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-950/40 border border-emerald-900/50">
+        <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
           <TrendingDown className="w-3.5 h-3.5" /> Falling {pct !== undefined ? `(${pct}%)` : ''}
         </span>
       );
     }
     if (trend === 'STABLE') {
       return (
-        <span className="flex items-center gap-1.5 text-zinc-300 text-xs font-semibold px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-700/60">
+        <span className="flex items-center gap-1.5 text-[var(--color-muted-foreground)] text-xs font-semibold px-2 py-0.5 rounded-full bg-[var(--color-surface-accent)] border border-[var(--color-border)]">
           <Minus className="w-3.5 h-3.5" /> Stable {pct !== undefined ? `(${pct}%)` : ''}
         </span>
       );
     }
-    return <span className="text-zinc-500 text-xs font-mono">Stable</span>;
+    return <span className="text-[var(--color-muted-foreground)] text-xs font-mono">Stable</span>;
   };
 
   const CATEGORY_CHIPS = ['ALL', 'Electronics', 'Audio', 'Smartphones', 'Laptops', 'Wearables'];
@@ -200,16 +200,16 @@ export const AnalyticsPage: React.FC = () => {
     return (
       <main className="space-y-8 max-w-7xl mx-auto px-4 py-6 text-left">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800/80 pb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--color-border)] pb-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-mono mb-2">
-              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-surface-accent)] border border-[var(--color-border)] text-xs text-[var(--color-muted-foreground)] font-mono mb-2">
+              <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Catalog Price Intelligence</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
               Price Analytics
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl">
+            <p className="text-xs sm:text-sm text-[var(--color-muted-foreground)] mt-1 max-w-2xl">
               Search and select a verified catalog product to analyze its historical price movement, evaluate deal quality, and inspect purchase timing signals.
             </p>
           </div>
@@ -219,13 +219,13 @@ export const AnalyticsPage: React.FC = () => {
         <div className="space-y-3">
           <form onSubmit={handleSearchSubmit} className="flex gap-2.5 max-w-2xl">
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-muted-foreground)]" />
               <input
                 type="text"
                 placeholder="Search catalog products to analyze (e.g. Sony WH-1000XM5, iPhone 15, iPad)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-10 py-2.5 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-emerald-500/50 rounded-xl text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none transition-colors"
+                className="w-full pl-10 pr-10 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-border)]/80 focus:border-[var(--color-primary)] rounded-xl text-xs text-[var(--color-foreground)] placeholder:text-[var(--color-muted-foreground)]/60 focus:outline-none transition-colors"
               />
               {searchTerm && (
                 <button
@@ -234,7 +234,7 @@ export const AnalyticsPage: React.FC = () => {
                     setSearchTerm('');
                     loadCatalog('', selectedCategory);
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -242,7 +242,7 @@ export const AnalyticsPage: React.FC = () => {
             </div>
             <button
               type="submit"
-              className="px-5 py-2.5 bg-white hover:bg-zinc-200 text-black text-xs font-semibold rounded-xl transition-all cursor-pointer shrink-0 active:scale-[0.98]"
+              className="px-5 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)] text-xs font-semibold rounded-xl transition-all cursor-pointer shrink-0 active:scale-[0.98]"
             >
               Search
             </button>
@@ -262,8 +262,8 @@ export const AnalyticsPage: React.FC = () => {
                   }}
                   className={`px-3 py-1 text-xs font-medium rounded-full transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-zinc-200 text-black font-semibold shadow-sm'
-                      : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700'
+                      ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] font-semibold shadow-sm'
+                      : 'bg-[var(--color-surface-accent)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] border border-[var(--color-border)]'
                   }`}
                 >
                   {cat === 'ALL' ? 'All Categories' : cat}
@@ -276,28 +276,28 @@ export const AnalyticsPage: React.FC = () => {
         {/* Product Picker Grid */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--color-muted-foreground)]">
               Verified Products ({catalogProducts.length})
             </h2>
             {selectedCategory !== 'ALL' && (
-              <span className="text-xs text-zinc-500 font-mono">Filtered by: {selectedCategory}</span>
+              <span className="text-xs text-[var(--color-muted-foreground)] font-mono">Filtered by: {selectedCategory}</span>
             )}
           </div>
 
           {catalogLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div key={i} className="h-56 bg-zinc-950/80 border border-zinc-900 rounded-2xl p-4 space-y-3">
-                  <div className="h-32 bg-zinc-900/60 rounded-xl" />
-                  <div className="h-4 bg-zinc-900/60 rounded w-3/4" />
-                  <div className="h-4 bg-zinc-900/60 rounded w-1/2" />
+                <div key={i} className="h-56 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 space-y-3">
+                  <div className="h-32 bg-[var(--color-surface-accent)] rounded-xl" />
+                  <div className="h-4 bg-[var(--color-surface-accent)] rounded w-3/4" />
+                  <div className="h-4 bg-[var(--color-surface-accent)] rounded w-1/2" />
                 </div>
               ))}
             </div>
           ) : catalogProducts.length === 0 ? (
-            <div className="p-12 text-center bg-zinc-950/60 border border-zinc-900 rounded-2xl space-y-3">
-              <ShoppingBag className="w-8 h-8 text-zinc-600 mx-auto" />
-              <p className="text-sm text-zinc-400 font-medium">No verified catalog products found matching your search.</p>
+            <div className="p-12 text-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl space-y-3">
+              <ShoppingBag className="w-8 h-8 text-[var(--color-muted-foreground)]/60 mx-auto" />
+              <p className="text-sm text-[var(--color-muted-foreground)] font-medium">No verified catalog products found matching your search.</p>
               <button
                 type="button"
                 onClick={() => {
@@ -305,7 +305,7 @@ export const AnalyticsPage: React.FC = () => {
                   setSelectedCategory('ALL');
                   loadCatalog('', 'ALL');
                 }}
-                className="text-xs text-emerald-400 hover:underline cursor-pointer font-semibold"
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer font-semibold"
               >
                 Reset Search Filters
               </button>
@@ -319,10 +319,10 @@ export const AnalyticsPage: React.FC = () => {
                   <div
                     key={prod.id}
                     onClick={() => navigate(`/analytics/${prod.id}`)}
-                    className="p-4 bg-zinc-950/80 border border-zinc-900 hover:border-zinc-700/80 rounded-2xl space-y-3.5 cursor-pointer group transition-all duration-200 flex flex-col justify-between hover:shadow-lg hover:-translate-y-0.5"
+                    className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-border)]/80 rounded-2xl space-y-3.5 cursor-pointer group transition-all duration-200 flex flex-col justify-between hover:shadow-lg hover:-translate-y-0.5"
                   >
                     <div className="space-y-3">
-                      <div className="h-36 w-full rounded-xl overflow-hidden bg-zinc-900/30 p-2 flex items-center justify-center border border-zinc-900">
+                      <div className="h-36 w-full rounded-xl overflow-hidden bg-[var(--color-surface-accent)]/50 p-2 flex items-center justify-center border border-[var(--color-border)]">
                         <ProductImage
                           src={prod.imageUrl}
                           alt={prod.name}
@@ -332,25 +332,25 @@ export const AnalyticsPage: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <div className="flex items-center justify-between text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                        <div className="flex items-center justify-between text-[10px] text-[var(--color-muted-foreground)] font-bold uppercase tracking-wider">
                           <span>{prod.brand}</span>
-                          {prod.category && <span className="text-zinc-600 font-medium">{prod.category}</span>}
+                          {prod.category && <span className="text-[var(--color-muted-foreground)]/80 font-medium">{prod.category}</span>}
                         </div>
-                        <h3 className="text-xs font-bold text-zinc-200 group-hover:text-white line-clamp-2 mt-1 leading-snug">
+                        <h3 className="text-xs font-bold text-[var(--color-foreground)] group-hover:text-[var(--color-primary)] line-clamp-2 mt-1 leading-snug">
                           {prod.name}
                         </h3>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2.5 border-t border-zinc-900">
+                    <div className="flex items-center justify-between pt-2.5 border-t border-[var(--color-border)]">
                       <div>
-                        <span className="text-[10px] text-zinc-500 block">Best Price</span>
-                        <span className="text-xs font-mono font-bold text-white">
+                        <span className="text-[10px] text-[var(--color-muted-foreground)] block">Best Price</span>
+                        <span className="text-xs font-mono font-bold text-[var(--color-foreground)]">
                           {lowest !== undefined && lowest !== null ? formatPrice(getDisplayPrice(lowest, currency), currency) : 'View Offers'}
                         </span>
                       </div>
-                      <span className="text-xs text-zinc-400 group-hover:text-white font-semibold flex items-center gap-1 transition-colors">
-                        Analyze <ArrowRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-white transition-colors" />
+                      <span className="text-xs text-[var(--color-muted-foreground)] group-hover:text-[var(--color-foreground)] font-semibold flex items-center gap-1 transition-colors">
+                        Analyze <ArrowRight className="w-3.5 h-3.5 text-[var(--color-muted-foreground)] group-hover:text-[var(--color-foreground)] transition-colors" />
                       </span>
                     </div>
                   </div>
@@ -367,30 +367,30 @@ export const AnalyticsPage: React.FC = () => {
   if (!loading && (isNotFound || (!product && error))) {
     return (
       <main className="space-y-8 max-w-7xl mx-auto px-4 py-6 text-left">
-        <div className="border-b border-zinc-900 pb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 font-mono mb-2">
-            <Activity className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="border-b border-[var(--color-border)] pb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-surface-accent)] border border-[var(--color-border)] text-xs text-[var(--color-muted-foreground)] font-mono mb-2">
+            <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Price Analytics</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Product Price Intelligence</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-foreground)]">Product Price Intelligence</h1>
         </div>
 
-        <div role="alert" className="p-8 text-center bg-zinc-950/90 border border-zinc-900 rounded-2xl space-y-4 max-w-xl mx-auto">
-          <ShieldAlert className="w-10 h-10 text-amber-400 mx-auto" />
-          <h2 className="text-base font-bold text-zinc-100">Product Unavailable</h2>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            The requested product (ID: <code className="text-zinc-300 font-mono bg-zinc-900 px-1.5 py-0.5 rounded">{productId}</code>) could not be located in our verified catalog or is no longer active.
+        <div role="alert" className="p-8 text-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl space-y-4 max-w-xl mx-auto">
+          <ShieldAlert className="w-10 h-10 text-amber-500 mx-auto" />
+          <h2 className="text-base font-bold text-[var(--color-foreground)]">Product Unavailable</h2>
+          <p className="text-xs text-[var(--color-muted-foreground)] leading-relaxed">
+            The requested product (ID: <code className="text-[var(--color-foreground)] font-mono bg-[var(--color-surface-accent)] px-1.5 py-0.5 rounded">{productId}</code>) could not be located in our verified catalog or is no longer active.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
             <button
               onClick={() => navigate('/analytics')}
-              className="px-4 py-2 text-xs font-semibold bg-white hover:bg-zinc-200 text-black rounded-xl transition-all cursor-pointer active:scale-95"
+              className="px-4 py-2 text-xs font-semibold bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)] rounded-xl transition-all cursor-pointer active:scale-95"
             >
               Select Another Product
             </button>
             <Link
               to="/search"
-              className="px-4 py-2 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 rounded-xl transition-colors"
+              className="px-4 py-2 text-xs font-semibold bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-foreground)] rounded-xl transition-colors"
             >
               Browse Catalog
             </Link>
@@ -409,10 +409,10 @@ export const AnalyticsPage: React.FC = () => {
       {product && (
         <section 
           aria-label="Selected Product Header"
-          className="p-5 sm:p-6 bg-zinc-950 border border-zinc-800 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-md"
+          className="p-5 sm:p-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm"
         >
           <div className="flex items-start sm:items-center gap-4 min-w-0">
-            <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-xl overflow-hidden bg-zinc-900/50 p-2 border border-zinc-800 shrink-0 flex items-center justify-center">
+            <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-xl overflow-hidden bg-[var(--color-surface-accent)]/50 p-2 border border-[var(--color-border)] shrink-0 flex items-center justify-center">
               <ProductImage
                 src={product.imageUrl}
                 alt={product.name}
@@ -423,11 +423,11 @@ export const AnalyticsPage: React.FC = () => {
             </div>
             <div className="space-y-1.5 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+                <span className="text-[10px] font-bold text-[var(--color-muted-foreground)] uppercase tracking-wider bg-[var(--color-surface-accent)] px-2 py-0.5 rounded border border-[var(--color-border)]">
                   {product.brand}
                 </span>
                 {product.category && (
-                  <span className="text-[10px] font-medium text-zinc-500 bg-zinc-900/60 px-2 py-0.5 rounded border border-zinc-800/60">
+                  <span className="text-[10px] font-medium text-[var(--color-muted-foreground)] bg-[var(--color-surface-accent)]/60 px-2 py-0.5 rounded border border-[var(--color-border)]">
                     {product.category}
                   </span>
                 )}
@@ -437,12 +437,12 @@ export const AnalyticsPage: React.FC = () => {
                   </span>
                 )}
               </div>
-              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug line-clamp-2">
+              <h1 className="text-lg sm:text-xl font-bold text-[var(--color-foreground)] tracking-tight leading-snug line-clamp-2">
                 {product.name}
               </h1>
               <div className="flex items-baseline gap-2 pt-0.5">
-                <span className="text-xs text-zinc-500">Current Verified Price:</span>
-                <span className="text-xl sm:text-2xl font-extrabold font-mono text-white">
+                <span className="text-xs text-[var(--color-muted-foreground)]">Current Verified Price:</span>
+                <span className="text-xl sm:text-2xl font-extrabold font-mono text-[var(--color-foreground)]">
                   {currentBestPriceVal !== undefined && currentBestPriceVal !== null
                     ? formatPrice(getDisplayPrice(currentBestPriceVal, currency), currency)
                     : 'N/A'}
@@ -452,25 +452,25 @@ export const AnalyticsPage: React.FC = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-zinc-900">
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-[var(--color-border)]">
             <Link
               to={`/product/${product.id}`}
-              className="flex-1 sm:flex-none px-4 py-2 text-xs font-semibold bg-white hover:bg-zinc-200 text-black rounded-xl transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+              className="flex-1 sm:flex-none px-4 py-2 text-xs font-semibold bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)] rounded-xl transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
             >
               <span>View Product & Offers</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
             <Link
               to={`/compare?ids=${product.id}`}
-              className="px-3.5 py-2 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 rounded-xl transition-colors flex items-center justify-center gap-1.5"
+              className="px-3.5 py-2 text-xs font-semibold bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-foreground)] rounded-xl transition-colors flex items-center justify-center gap-1.5"
               title="Compare with other products"
             >
-              <Scale className="w-3.5 h-3.5 text-zinc-400" />
+              <Scale className="w-3.5 h-3.5 text-[var(--color-muted-foreground)]" />
               <span className="hidden sm:inline">Compare</span>
             </Link>
             <Link
               to="/analytics"
-              className="px-3.5 py-2 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-xl transition-colors flex items-center justify-center gap-1"
+              className="px-3.5 py-2 text-xs font-semibold bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] rounded-xl transition-colors flex items-center justify-center gap-1"
               title="Select a different product to analyze"
             >
               <span>Change</span>
@@ -482,22 +482,22 @@ export const AnalyticsPage: React.FC = () => {
       {/* Loading Skeleton */}
       {loading && (
         <div className="space-y-6 animate-pulse" role="status" aria-label="Loading analytics">
-          <div className="h-36 bg-zinc-950 border border-zinc-900 rounded-2xl" />
+          <div className="h-36 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-28 bg-zinc-950 border border-zinc-900 rounded-xl" />
+              <div key={i} className="h-28 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl" />
             ))}
           </div>
-          <div className="h-80 bg-zinc-950 border border-zinc-900 rounded-xl" />
+          <div className="h-80 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl" />
         </div>
       )}
 
       {/* Error State (non-fatal, e.g. analytics missing for valid product) */}
       {!loading && error && !isNotFound && (
-        <div role="alert" className="p-6 text-center bg-amber-950/20 border border-amber-900/50 rounded-xl space-y-2">
-          <AlertCircle className="w-6 h-6 text-amber-400 mx-auto" />
-          <h3 className="text-sm font-bold text-amber-300">Analytics Data Pending</h3>
-          <p className="text-xs text-zinc-400 max-w-md mx-auto">{error}</p>
+        <div role="alert" className="p-6 text-center bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
+          <AlertCircle className="w-6 h-6 text-amber-500 mx-auto" />
+          <h3 className="text-sm font-bold text-amber-700 dark:text-amber-300">Analytics Data Pending</h3>
+          <p className="text-xs text-[var(--color-muted-foreground)] max-w-md mx-auto">{error}</p>
         </div>
       )}
 
@@ -510,7 +510,7 @@ export const AnalyticsPage: React.FC = () => {
             return (
               <section
                 aria-label="Purchase Timing & Decision Summary"
-                className="bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800/90 p-5 sm:p-6 rounded-2xl space-y-4 shadow-xl"
+                className="bg-[var(--color-surface)] border border-[var(--color-border)] p-5 sm:p-6 rounded-2xl space-y-4 shadow-sm"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2.5 flex-wrap">
@@ -532,15 +532,15 @@ export const AnalyticsPage: React.FC = () => {
                     {analytics.trend && getTrendBadge(analytics.trend, analytics.trendPercentage)}
                   </div>
 
-                  <div className="flex items-center gap-3 font-mono text-xs text-zinc-400">
+                  <div className="flex items-center gap-3 font-mono text-xs text-[var(--color-muted-foreground)]">
                     <span>
                       Observations:{' '}
-                      <strong className="text-zinc-200">{analytics.observationCount || 0}</strong>
+                      <strong className="text-[var(--color-foreground)]">{analytics.observationCount || 0}</strong>
                     </span>
                     {analytics.pricePositionScore !== undefined && (
                       <span className="flex items-center gap-1">
                         Position Score:{' '}
-                        <strong className="text-emerald-400 font-bold">{analytics.pricePositionScore}</strong>/100
+                        <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{analytics.pricePositionScore}</strong>/100
                       </span>
                     )}
                   </div>
@@ -548,25 +548,25 @@ export const AnalyticsPage: React.FC = () => {
 
                 {/* Authoritative Decision Reason */}
                 {analytics.purchaseSignalReason ? (
-                  <p className="text-sm text-zinc-200 leading-relaxed font-medium">
+                  <p className="text-sm text-[var(--color-foreground)] leading-relaxed font-medium">
                     {analytics.purchaseSignalReason}
                   </p>
                 ) : (
-                  <p className="text-xs text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-[var(--color-muted-foreground)] leading-relaxed">
                     {badge.description}
                   </p>
                 )}
 
                 {/* Supporting Evidence List */}
                 {analytics.supportingEvidence && analytics.supportingEvidence.length > 0 && (
-                  <div className="pt-3 border-t border-zinc-900 space-y-1.5">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                  <div className="pt-3 border-t border-[var(--color-border)] space-y-1.5">
+                    <span className="text-[10px] font-bold text-[var(--color-muted-foreground)] uppercase tracking-wider block">
                       Verified Decision Evidence:
                     </span>
-                    <ul className="space-y-1 text-xs text-zinc-300">
+                    <ul className="space-y-1 text-xs text-[var(--color-foreground)]">
                       {analytics.supportingEvidence.map((ev, idx) => (
                         <li key={idx} className="flex items-start gap-2">
-                          <span className="text-emerald-400 font-bold shrink-0">✓</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
                           <span>{ev}</span>
                         </li>
                       ))}
@@ -580,52 +580,52 @@ export const AnalyticsPage: React.FC = () => {
           {/* Level 2: Key Price Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Current Best Offer */}
-            <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-1">
-              <span className="text-xs text-zinc-500 font-medium">Current Best Offer</span>
-              <p className="text-2xl font-bold font-mono text-white">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 space-y-1">
+              <span className="text-xs text-[var(--color-muted-foreground)] font-medium">Current Best Offer</span>
+              <p className="text-2xl font-bold font-mono text-[var(--color-foreground)]">
                 {analytics.currentPrice ? formatPrice(getDisplayPrice(analytics.currentPrice, currency), currency) : 'N/A'}
               </p>
-              <span className="text-[10px] text-zinc-500">Live lowest active offer</span>
+              <span className="text-[10px] text-[var(--color-muted-foreground)]">Live lowest active offer</span>
             </div>
 
             {/* Historical Low */}
-            <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-1">
-              <span className="text-xs text-zinc-500 font-medium">All-Time Recorded Low</span>
-              <p className="text-2xl font-bold font-mono text-emerald-400">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 space-y-1">
+              <span className="text-xs text-[var(--color-muted-foreground)] font-medium">All-Time Recorded Low</span>
+              <p className="text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
                 {analytics.historicalMin ? formatPrice(getDisplayPrice(analytics.historicalMin, currency), currency) : 'N/A'}
               </p>
               {analytics.historicalLowDistance !== undefined && analytics.historicalMin ? (
-                <span className="text-[10px] text-zinc-400">
+                <span className="text-[10px] text-[var(--color-muted-foreground)]">
                   {analytics.historicalLowDistance === 0
                     ? 'Currently at all-time low'
                     : `+${formatPrice(getDisplayPrice(analytics.historicalLowDistance, currency), currency)} above low`}
                 </span>
               ) : (
-                <span className="text-[10px] text-zinc-600">Pending history</span>
+                <span className="text-[10px] text-[var(--color-muted-foreground)]/60">Pending history</span>
               )}
             </div>
 
             {/* Historical Average */}
-            <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-1">
-              <span className="text-xs text-zinc-500 font-medium">Historical Average</span>
-              <p className="text-2xl font-bold font-mono text-indigo-400">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 space-y-1">
+              <span className="text-xs text-[var(--color-muted-foreground)] font-medium">Historical Average</span>
+              <p className="text-2xl font-bold font-mono text-indigo-600 dark:text-indigo-400">
                 {analytics.historicalAvg ? formatPrice(getDisplayPrice(analytics.historicalAvg, currency), currency) : 'N/A'}
               </p>
               {analytics.historicalMedian && (
-                <span className="text-[10px] text-zinc-400">
+                <span className="text-[10px] text-[var(--color-muted-foreground)]">
                   Median: {formatPrice(getDisplayPrice(analytics.historicalMedian, currency), currency)}
                 </span>
               )}
             </div>
 
             {/* Historical High */}
-            <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-1">
-              <span className="text-xs text-zinc-500 font-medium">All-Time Peak Price</span>
-              <p className="text-2xl font-bold font-mono text-amber-400">
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 space-y-1">
+              <span className="text-xs text-[var(--color-muted-foreground)] font-medium">All-Time Peak Price</span>
+              <p className="text-2xl font-bold font-mono text-amber-600 dark:text-amber-400">
                 {analytics.historicalMax ? formatPrice(getDisplayPrice(analytics.historicalMax, currency), currency) : 'N/A'}
               </p>
               {analytics.priceRange !== undefined && (
-                <span className="text-[10px] text-zinc-500">
+                <span className="text-[10px] text-[var(--color-muted-foreground)]">
                   Spread: {formatPrice(getDisplayPrice(analytics.priceRange, currency), currency)}
                 </span>
               )}
@@ -635,8 +635,8 @@ export const AnalyticsPage: React.FC = () => {
           {/* Level 3: Core Analytical Visualization — Price History Chart */}
           <section aria-label="Interactive Price Chart" className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-zinc-200 flex items-center gap-2">
-                <History className="w-4 h-4 text-emerald-400" />
+              <h2 className="text-base font-bold text-[var(--color-foreground)] flex items-center gap-2">
+                <History className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 Price Trajectory & Trend History
               </h2>
             </div>
@@ -654,13 +654,13 @@ export const AnalyticsPage: React.FC = () => {
           {prodWithPrices && prodWithPrices.prices && prodWithPrices.prices.length > 0 && (
             <section aria-label="Current Seller Offers" className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-zinc-200 flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-zinc-400" />
+                <h2 className="text-base font-bold text-[var(--color-foreground)] flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-[var(--color-muted-foreground)]" />
                   Verified Seller Offers ({prodWithPrices.prices.length})
                 </h2>
                 <Link
                   to={`/product/${product?.id}`}
-                  className="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1"
+                  className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium flex items-center gap-1"
                 >
                   <span>Full Seller Comparison</span>
                   <ExternalLink className="w-3 h-3" />
@@ -676,38 +676,38 @@ export const AnalyticsPage: React.FC = () => {
                   return (
                     <div
                       key={sp.id || sIdx}
-                      className={`p-3.5 bg-zinc-950 border rounded-xl flex items-center justify-between gap-3 ${
-                        isLowest ? 'border-emerald-500/40 bg-emerald-950/10' : 'border-zinc-900'
+                      className={`p-3.5 bg-[var(--color-surface)] border rounded-xl flex items-center justify-between gap-3 ${
+                        isLowest ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-[var(--color-border)]'
                       }`}
                     >
                       <div className="space-y-0.5 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-xs text-white truncate">
+                          <span className="font-semibold text-xs text-[var(--color-foreground)] truncate">
                             {sp.seller?.name || `Seller #${sIdx + 1}`}
                           </span>
                           {isLowest && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shrink-0">
                               Best Offer
                             </span>
                           )}
                         </div>
                         {sp.discountPercentage !== undefined && sp.discountPercentage > 0 ? (
-                          <span className="text-[10px] text-emerald-400 font-medium block">
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium block">
                             {sp.discountPercentage.toFixed(0)}% savings recorded
                           </span>
                         ) : (
-                          <span className="text-[10px] text-zinc-500 block">
+                          <span className="text-[10px] text-[var(--color-muted-foreground)] block">
                             Verified Seller Offer
                           </span>
                         )}
                       </div>
 
                       <div className="text-right shrink-0">
-                        <span className="text-sm font-bold font-mono text-white block">
+                        <span className="text-sm font-bold font-mono text-[var(--color-foreground)] block">
                           {formatPrice(getDisplayPrice(sPrice, currency), currency)}
                         </span>
                         {sOrig && sOrig > sPrice && (
-                          <span className="text-[10px] text-zinc-500 line-through block font-mono">
+                          <span className="text-[10px] text-[var(--color-muted-foreground)]/80 line-through block font-mono">
                             {formatPrice(getDisplayPrice(sOrig, currency), currency)}
                           </span>
                         )}
@@ -722,26 +722,26 @@ export const AnalyticsPage: React.FC = () => {
           {/* Level 5: Historical Milestone Events */}
           {analytics.historicalEvents && analytics.historicalEvents.length > 0 && (
             <section aria-label="Price Milestone Events" className="space-y-3 pt-2">
-              <h2 className="text-base font-bold text-zinc-200">Price Drop History & Milestones</h2>
+              <h2 className="text-base font-bold text-[var(--color-foreground)]">Price Drop History & Milestones</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {analytics.historicalEvents.map((evt, idx) => (
-                  <div key={idx} className="bg-zinc-950 border border-zinc-900 rounded-xl p-3.5 space-y-1.5">
+                  <div key={idx} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-3.5 space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                         {evt.percentageChange < 0 ? (
-                          <ArrowDownRight className="w-3.5 h-3.5 text-emerald-400" />
+                          <ArrowDownRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                         ) : (
-                          <ArrowUpRight className="w-3.5 h-3.5 text-rose-400" />
+                          <ArrowUpRight className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                         )}
                         {evt.eventType.replace(/_/g, ' ')}
                       </span>
-                      <span className="text-zinc-500 text-[10px]">
+                      <span className="text-[var(--color-muted-foreground)] text-[10px]">
                         {new Date(evt.occurredAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-xs text-zinc-300">{evt.description}</p>
-                    <div className="text-[11px] font-mono text-zinc-400 pt-1 border-t border-zinc-900">
-                      Resulting Price: <strong className="text-white">{formatPrice(getDisplayPrice(evt.resultingPrice, currency), currency)}</strong>
+                    <p className="text-xs text-[var(--color-muted-foreground)]">{evt.description}</p>
+                    <div className="text-[11px] font-mono text-[var(--color-muted-foreground)] pt-1 border-t border-[var(--color-border)]">
+                      Resulting Price: <strong className="text-[var(--color-foreground)]">{formatPrice(getDisplayPrice(evt.resultingPrice, currency), currency)}</strong>
                     </div>
                   </div>
                 ))}

@@ -59,22 +59,22 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
   };
 
   return (
-    <div className="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-4 shadow-xl">
+    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 space-y-4 shadow-xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-zinc-200">Select Products to Compare</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-foreground)]">Select Products to Compare</h3>
             <span
               className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
                 selectedIds.length >= 2 && selectedIds.length <= 5
-                  ? 'bg-emerald-950/80 border-emerald-800 text-emerald-300'
-                  : 'bg-amber-950/80 border-amber-800 text-amber-300'
+                  ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-amber-500/15 border-amber-500/30 text-amber-800 dark:text-amber-300'
               }`}
             >
               {selectedIds.length}/5 Selected {selectedIds.length < 2 && '(Min 2 required)'}
             </span>
           </div>
-          <p className="text-xs text-zinc-400 mt-1">
+          <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
             Pick 2 to 5 products to compare specifications, ratings, and price competitiveness side-by-side.
           </p>
         </div>
@@ -83,19 +83,19 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
           {selectedIds.length > 0 && (
             <button
               onClick={clearAll}
-              className="px-3 py-1.5 text-xs bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-lg transition-colors"
+              className="px-3 py-1.5 text-xs bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] rounded-lg transition-colors cursor-pointer"
             >
               Clear Selection
             </button>
           )}
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--color-muted-foreground)]" />
             <input
               type="text"
               placeholder="Search products, brands..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-xs bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 focus:outline-none focus:border-emerald-500/50 w-full"
+              className="pl-8 pr-3 py-1.5 text-xs bg-[var(--color-surface-accent)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)] placeholder:text-[var(--color-muted-foreground)]/60 focus:outline-none focus:border-[var(--color-primary)] w-full"
             />
           </div>
         </div>
@@ -104,11 +104,11 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
       {/* Product Selection Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-h-60 overflow-y-auto pr-1">
         {isSearching ? (
-          <div className="col-span-full py-8 text-center text-xs text-zinc-500 font-mono">
+          <div className="col-span-full py-8 text-center text-xs text-[var(--color-muted-foreground)] font-mono">
             Searching verified catalog...
           </div>
         ) : displayList.length === 0 ? (
-          <div className="col-span-full py-8 text-center text-xs text-zinc-500">
+          <div className="col-span-full py-8 text-center text-xs text-[var(--color-muted-foreground)]">
             No products found matching "{searchTerm}".
           </div>
         ) : (
@@ -123,16 +123,16 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
                 onClick={() => !isDisabled && toggleSelect(p.id)}
                 disabled={isDisabled}
                 aria-label={`Select ${p.name}`}
-                className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
+                className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-zinc-900 border-emerald-500/60 text-zinc-100 ring-1 ring-emerald-500/40 shadow-lg shadow-emerald-950/20'
+                    ? 'bg-[var(--color-surface-accent)] border-emerald-500/60 text-[var(--color-foreground)] ring-1 ring-emerald-500/40 shadow-sm'
                     : isDisabled
-                    ? 'bg-zinc-950/40 border-zinc-900 text-zinc-600 opacity-50 cursor-not-allowed'
-                    : 'bg-zinc-900/40 border-zinc-900 text-zinc-400 hover:border-zinc-800 hover:text-zinc-200 hover:bg-zinc-900/80'
+                    ? 'bg-[var(--color-surface)]/40 border-[var(--color-border)] text-[var(--color-muted-foreground)]/40 opacity-50 cursor-not-allowed'
+                    : 'bg-[var(--color-surface-accent)]/40 border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:border-[var(--color-border)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)]'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="h-9 w-9 shrink-0 rounded-lg bg-zinc-900 p-0.5 border border-zinc-800 overflow-hidden flex items-center justify-center">
+                  <div className="h-9 w-9 shrink-0 rounded-lg bg-[var(--color-surface)] p-0.5 border border-[var(--color-border)] overflow-hidden flex items-center justify-center">
                     <ProductImage
                       src={p.imageUrl}
                       alt={p.name}
@@ -140,17 +140,17 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-xs text-zinc-200 truncate">{p.name}</p>
-                    <p className="text-[10px] text-zinc-500 truncate">{p.brand}</p>
+                    <p className="font-semibold text-xs text-[var(--color-foreground)] truncate">{p.name}</p>
+                    <p className="text-[10px] text-[var(--color-muted-foreground)] truncate">{p.brand}</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between pt-1 border-t border-zinc-900 text-[11px]">
-                  <span className="text-emerald-400 font-mono font-medium">
+                <div className="flex items-center justify-between pt-1 border-t border-[var(--color-border)] text-[11px]">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-mono font-medium">
                     {(p as ProductWithPrices).lowestPrice ? `$${(p as ProductWithPrices).lowestPrice}` : 'N/A'}
                   </span>
                   <span
                     className={`text-[10px] font-mono ${
-                      isSelected ? 'text-emerald-400 font-bold' : 'text-zinc-500'
+                      isSelected ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-[var(--color-muted-foreground)]'
                     }`}
                   >
                     {isSelected ? '✓ Selected' : '+ Add'}

@@ -115,8 +115,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      <div className="relative flex items-center p-1.5 rounded-xl bg-zinc-950/70 border border-zinc-900 focus-within:border-zinc-700 transition-all shadow-lg backdrop-blur-md">
-        <Search className="h-5 w-5 text-zinc-500 ml-3.5 flex-shrink-0" aria-hidden="true" />
+      <div className="relative flex items-center p-1.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-ring)] transition-all shadow-md backdrop-blur-md">
+        <Search className="h-5 w-5 text-[var(--color-muted-foreground)] ml-3.5 flex-shrink-0" aria-hidden="true" />
         <input
           type="text"
           placeholder={placeholder}
@@ -132,17 +132,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           aria-label="Search products, brands, or categories"
           aria-autocomplete="list"
           aria-expanded={showDropdown}
-          className="w-full px-3.5 py-2 bg-transparent text-zinc-100 placeholder-zinc-500 focus:outline-none text-sm font-medium"
+          className="w-full px-3.5 py-2 bg-transparent text-[var(--color-foreground)] placeholder-[var(--color-muted-foreground)] focus:outline-none text-sm font-medium"
         />
         {loadingSuggestions && (
-          <Loader2 className="h-4 w-4 text-zinc-500 animate-spin mr-2" aria-hidden="true" />
+          <Loader2 className="h-4 w-4 text-[var(--color-muted-foreground)] animate-spin mr-2" aria-hidden="true" />
         )}
         {localInput && (
           <button
             type="button"
             onClick={handleClear}
             aria-label="Clear search input"
-            className="p-1.5 hover:bg-zinc-900 rounded-lg text-zinc-500 hover:text-white mr-1 transition-colors cursor-pointer"
+            className="p-1.5 hover:bg-[var(--color-surface-accent)] rounded-lg text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] mr-1 transition-colors cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
@@ -154,9 +154,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         <div 
           role="listbox" 
           aria-label="Search suggestions"
-          className="absolute left-0 right-0 top-full mt-2 rounded-xl bg-zinc-950/95 border border-zinc-800 shadow-2xl backdrop-blur-xl z-50 overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-2 duration-150"
+          className="absolute left-0 right-0 top-full mt-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-2xl backdrop-blur-xl z-50 overflow-hidden py-1.5 animate-in fade-in slide-in-from-top-2 duration-150"
         >
-          <div className="px-3 py-1 text-[10px] uppercase font-bold tracking-wider text-zinc-500 border-b border-zinc-900">
+          <div className="px-3 py-1 text-[10px] uppercase font-bold tracking-wider text-[var(--color-muted-foreground)] border-b border-[var(--color-border)]">
             Suggestions
           </div>
           {suggestions.map((s, idx) => (
@@ -167,14 +167,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               onClick={() => handleSelect(s)}
               onMouseEnter={() => setHighlightedIndex(idx)}
               className={`flex items-center justify-between px-3.5 py-2.5 cursor-pointer text-xs transition-colors ${
-                highlightedIndex === idx ? 'bg-zinc-900 text-white' : 'text-zinc-300 hover:bg-zinc-900/60'
+                highlightedIndex === idx
+                  ? 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)]'
+                  : 'text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)]/60'
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 {renderIcon(s.type)}
                 <span className="font-medium truncate">{s.text}</span>
               </div>
-              <span className="text-[10px] uppercase font-semibold text-zinc-500 ml-2 flex-shrink-0">
+              <span className="text-[10px] uppercase font-semibold text-[var(--color-muted-foreground)] ml-2 flex-shrink-0">
                 {s.type.toLowerCase()}
               </span>
             </div>

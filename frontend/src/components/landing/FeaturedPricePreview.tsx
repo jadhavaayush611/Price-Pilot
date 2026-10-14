@@ -109,22 +109,22 @@ export const FeaturedPricePreview: React.FC<FeaturedPricePreviewProps> = ({ init
       <div 
         role="status"
         aria-label="Loading price intelligence preview"
-        className="w-full rounded-2xl bg-zinc-950/80 border border-zinc-900 p-4 sm:p-5 shadow-xl animate-pulse space-y-3.5"
+        className="w-full rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] p-4 sm:p-5 shadow-md animate-pulse space-y-3.5"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="h-10 w-10 rounded-xl bg-zinc-900/80 border border-zinc-800/80" />
+            <div className="h-10 w-10 rounded-xl bg-[var(--color-surface-accent)]/50 border border-[var(--color-border)]" />
             <div className="space-y-1.5">
-              <div className="h-2.5 w-16 bg-zinc-900 rounded" />
-              <div className="h-3.5 w-32 bg-zinc-900 rounded" />
+              <div className="h-2.5 w-16 bg-[var(--color-surface-accent)]/60 rounded" />
+              <div className="h-3.5 w-32 bg-[var(--color-surface-accent)]/60 rounded" />
             </div>
           </div>
-          <div className="h-4 w-20 bg-zinc-900 rounded" />
+          <div className="h-4 w-20 bg-[var(--color-surface-accent)]/60 rounded" />
         </div>
-        <div className="h-20 w-full bg-zinc-900/40 rounded-xl border border-zinc-900/50" />
-        <div className="flex items-center justify-between pt-2 border-t border-zinc-900/60">
-          <div className="h-2.5 w-24 bg-zinc-900 rounded" />
-          <div className="h-2.5 w-16 bg-zinc-900 rounded" />
+        <div className="h-20 w-full bg-[var(--color-surface-accent)]/30 rounded-xl border border-[var(--color-border)]/50" />
+        <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]">
+          <div className="h-2.5 w-24 bg-[var(--color-surface-accent)]/50 rounded" />
+          <div className="h-2.5 w-16 bg-[var(--color-surface-accent)]/50 rounded" />
         </div>
       </div>
     );
@@ -136,13 +136,13 @@ export const FeaturedPricePreview: React.FC<FeaturedPricePreviewProps> = ({ init
       <div 
         role="region"
         aria-label="Price history preview"
-        className="w-full rounded-2xl bg-zinc-950/60 border border-zinc-900/80 p-5 text-center space-y-2"
+        className="w-full rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] p-5 text-center space-y-2"
       >
-        <div className="flex items-center justify-center gap-2 text-zinc-400 text-xs font-semibold">
-          <Activity className="w-4 h-4 text-emerald-400" />
+        <div className="flex items-center justify-center gap-2 text-[var(--color-foreground)] text-xs font-semibold">
+          <Activity className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
           <span>Price Intelligence Preview</span>
         </div>
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-[var(--color-muted-foreground)]">
           Real-time catalog pricing data is continually monitored across all verified retailers.
         </p>
       </div>
@@ -241,12 +241,12 @@ export const FeaturedPricePreview: React.FC<FeaturedPricePreviewProps> = ({ init
   return (
     <div 
       onClick={() => navigate(`/product/${product.id}`)}
-      className="w-full rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700/80 p-4 sm:p-5 shadow-xl transition-all duration-300 group cursor-pointer text-left"
+      className="w-full rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-primary)] p-4 sm:p-5 shadow-md transition-all duration-300 group cursor-pointer text-left"
     >
       {/* Product Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="h-10 w-10 rounded-xl overflow-hidden bg-zinc-900/60 border border-zinc-800 p-1 shrink-0 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-xl overflow-hidden bg-[var(--color-surface-accent)]/40 border border-[var(--color-border)] p-1 shrink-0 flex items-center justify-center">
             <ProductImage
               src={product.imageUrl}
               alt={product.name}
@@ -256,12 +256,12 @@ export const FeaturedPricePreview: React.FC<FeaturedPricePreviewProps> = ({ init
             />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+            <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-muted-foreground)] font-bold uppercase tracking-wider">
               <span>{product.brand}</span>
-              <span className="text-zinc-600">·</span>
-              <span className="text-zinc-400 font-medium">Price History</span>
+              <span className="text-[var(--color-border)]">·</span>
+              <span className="text-[var(--color-muted-foreground)] font-medium">Price History</span>
             </div>
-            <h4 className="text-xs sm:text-sm font-bold text-zinc-100 group-hover:text-white truncate mt-0.5">
+            <h4 className="text-xs sm:text-sm font-bold text-[var(--color-foreground)] group-hover:text-[var(--color-primary)] truncate mt-0.5 transition-colors">
               {product.name}
             </h4>
           </div>
@@ -269,11 +269,11 @@ export const FeaturedPricePreview: React.FC<FeaturedPricePreviewProps> = ({ init
 
         {/* Current Price */}
         <div className="text-right shrink-0">
-          <span className="text-xs sm:text-sm font-extrabold font-mono text-white block">
+          <span className="text-xs sm:text-sm font-extrabold font-mono text-[var(--color-foreground)] block">
             {formatPrice(displayCurrent, currency)}
           </span>
           {displayOriginal && displayOriginal > displayCurrent && (
-            <span className="text-[10px] text-zinc-500 line-through font-mono block">
+            <span className="text-[10px] text-[var(--color-muted-foreground)]/70 line-through font-mono block">
               {formatPrice(displayOriginal, currency)}
             </span>
           )}
@@ -307,14 +307,14 @@ export const FeaturedPricePreview: React.FC<FeaturedPricePreviewProps> = ({ init
             cx={lastX} 
             cy={lastY} 
             r="3.5" 
-            className="fill-emerald-400 stroke-zinc-950 stroke-2" 
+            className="fill-emerald-500 stroke-[var(--color-surface)] stroke-2"
           />
         </svg>
       </div>
 
       {/* Footer: Timeline & Trend */}
-      <div className="flex items-center justify-between pt-2 border-t border-zinc-900/80 text-[11px] font-mono">
-        <span className="text-zinc-500 text-[10px]">
+      <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)] text-[11px] font-mono">
+        <span className="text-[var(--color-muted-foreground)] text-[10px]">
           {displaySeries.length > 1 ? `${displaySeries.length} recorded points` : 'Recorded trajectory'}
         </span>
 
@@ -323,7 +323,7 @@ export const FeaturedPricePreview: React.FC<FeaturedPricePreviewProps> = ({ init
             <TrendIcon className="w-3.5 h-3.5" />
             {trendLabel}
           </span>
-          <span className="text-zinc-400 group-hover:text-emerald-400 transition-colors flex items-center font-sans font-medium text-xs">
+          <span className="text-[var(--color-muted-foreground)] group-hover:text-[var(--color-primary)] transition-colors flex items-center font-sans font-medium text-xs">
             View <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
           </span>
         </div>

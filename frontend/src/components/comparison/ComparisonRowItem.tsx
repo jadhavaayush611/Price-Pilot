@@ -11,41 +11,41 @@ export const ComparisonRowItem: React.FC<ComparisonRowItemProps> = ({ row, produ
     const isHighlighted = row.highlightedProductIds?.includes(productId) || (row.isHighlight && row.highlightedProductIds?.length === 0);
 
     if (!isHighlighted) {
-      return <span className="text-zinc-300">{val}</span>;
+      return <span className="text-[var(--color-foreground)]">{val}</span>;
     }
 
     switch (row.rowType) {
       case 'LOWEST_PRICE':
         return (
-          <div className="inline-flex items-center gap-1 font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-1 rounded-lg text-xs font-mono shadow-sm shadow-emerald-950/30">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs font-mono shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>{val}</span>
-            <span className="ml-1 text-[9px] uppercase font-mono tracking-wider text-emerald-300 bg-emerald-900/80 px-1 rounded">Best Price</span>
+            <span className="ml-1 text-[9px] uppercase font-mono tracking-wider text-emerald-800 dark:text-emerald-300 bg-emerald-500/20 px-1 rounded">Best Price</span>
           </div>
         );
       case 'HIGHEST_DISCOUNT':
         return (
-          <div className="inline-flex items-center gap-1 font-semibold text-teal-300 bg-teal-950/60 border border-teal-800/60 px-2.5 py-1 rounded-lg text-xs font-mono shadow-sm shadow-teal-950/30">
+          <div className="inline-flex items-center gap-1 font-semibold text-teal-700 dark:text-teal-300 bg-teal-500/15 border border-teal-500/30 px-2.5 py-1 rounded-lg text-xs font-mono shadow-sm">
             <span>{val}</span>
-            <span className="ml-1 text-[9px] uppercase font-mono tracking-wider text-teal-300 bg-teal-900/80 px-1 rounded">Top Discount</span>
+            <span className="ml-1 text-[9px] uppercase font-mono tracking-wider text-teal-800 dark:text-teal-300 bg-teal-500/20 px-1 rounded">Top Discount</span>
           </div>
         );
       case 'HIGHEST_RATING':
         return (
-          <div className="inline-flex items-center gap-1 font-semibold text-amber-300 bg-amber-950/60 border border-amber-800/60 px-2.5 py-1 rounded-lg text-xs shadow-sm shadow-amber-950/30">
+          <div className="inline-flex items-center gap-1 font-semibold text-amber-800 dark:text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-lg text-xs shadow-sm">
             <span>★ {val}</span>
-            <span className="ml-1 text-[9px] uppercase font-mono tracking-wider text-amber-300 bg-amber-900/80 px-1 rounded">Top Rated</span>
+            <span className="ml-1 text-[9px] uppercase font-mono tracking-wider text-amber-900 dark:text-amber-300 bg-amber-500/20 px-1 rounded">Top Rated</span>
           </div>
         );
       case 'AVAILABILITY':
         return (
-          <div className="inline-flex items-center gap-1 font-semibold text-blue-300 bg-blue-950/60 border border-blue-800/60 px-2.5 py-1 rounded-lg text-xs shadow-sm shadow-blue-950/30">
+          <div className="inline-flex items-center gap-1 font-semibold text-blue-700 dark:text-blue-300 bg-blue-500/15 border border-blue-500/30 px-2.5 py-1 rounded-lg text-xs shadow-sm">
             <span>{val}</span>
           </div>
         );
       default:
         return (
-          <span className="font-semibold text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2.5 py-1 rounded-lg text-xs">
+          <span className="font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs">
             {val}
           </span>
         );
@@ -53,12 +53,12 @@ export const ComparisonRowItem: React.FC<ComparisonRowItemProps> = ({ row, produ
   };
 
   return (
-    <tr className={`border-b border-zinc-900/60 ${row.isHighlight ? 'bg-zinc-900/40' : 'hover:bg-zinc-900/20'} transition-colors`}>
-      <td className="py-3.5 px-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider bg-zinc-950/90 sticky left-0 z-10 border-r border-zinc-900 shadow-lg">
+    <tr className={`border-b border-[var(--color-border)] ${row.isHighlight ? 'bg-[var(--color-surface-accent)]/40' : 'hover:bg-[var(--color-surface-accent)]/20'} transition-colors`}>
+      <td className="py-3.5 px-4 text-xs font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider bg-[var(--color-surface)]/95 sticky left-0 z-10 border-r border-[var(--color-border)] shadow-sm">
         <div className="flex items-center gap-2">
           <span>{row.featureName}</span>
           {row.isHighlight && (
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" title="Highlighted comparison metric" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Highlighted comparison metric" />
           )}
         </div>
       </td>

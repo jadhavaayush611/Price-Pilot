@@ -55,17 +55,17 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   if (isInvalidSrc || hasError) {
     return (
       <div
-        className={`flex flex-col items-center justify-center bg-zinc-900/50 border border-zinc-800/60 rounded-xl select-none overflow-hidden ${getAspectClass()} ${containerClassName} ${fallbackClassName}`}
+        className={`flex flex-col items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl select-none overflow-hidden ${getAspectClass()} ${containerClassName} ${fallbackClassName}`}
         aria-label={alt || 'Product placeholder'}
         role="img"
         onClick={onClick}
       >
         <div className="flex flex-col items-center justify-center p-3 text-center space-y-1.5">
-          <div className="p-2 rounded-lg bg-zinc-800/60 text-zinc-500 border border-zinc-700/40 shadow-inner">
+          <div className="p-2 rounded-lg bg-[var(--color-surface-accent)] text-[var(--color-muted-foreground)] border border-[var(--color-border)] shadow-inner">
             <Package className="w-5 h-5" aria-hidden="true" />
           </div>
           {showFallbackText && (
-            <span className="text-[10px] text-zinc-500 font-mono tracking-tight max-w-[120px] truncate">
+            <span className="text-[10px] text-[var(--color-muted-foreground)] font-mono tracking-tight max-w-[120px] truncate">
               {fallbackText || alt || 'PricePilot'}
             </span>
           )}
@@ -81,10 +81,10 @@ export const ProductImage: React.FC<ProductImageProps> = ({
     >
       {isLoading && (
         <div
-          className="absolute inset-0 bg-zinc-900/40 animate-pulse flex items-center justify-center z-10"
+          className="absolute inset-0 bg-[var(--color-surface-accent)]/40 animate-pulse flex items-center justify-center z-10"
           aria-hidden="true"
         >
-          <Package className="w-4 h-4 text-zinc-700 animate-pulse" />
+          <Package className="w-4 h-4 text-[var(--color-muted-foreground)] animate-pulse" />
         </div>
       )}
       <img
