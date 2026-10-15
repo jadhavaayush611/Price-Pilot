@@ -188,7 +188,7 @@ export const ComparisonPage: React.FC = () => {
         </div>
 
         {/* Action Toolbar */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           <button
             onClick={() => setShowSavedDrawer(!showSavedDrawer)}
             className="px-4 py-2 text-xs font-semibold bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-foreground)] rounded-xl transition-all flex items-center gap-2 shadow-sm"
@@ -294,7 +294,10 @@ export const ComparisonPage: React.FC = () => {
       {loading ? (
         <ComparisonSkeleton />
       ) : comparisonData ? (
-        <ComparisonTable comparison={comparisonData} />
+        <ComparisonTable
+          comparison={comparisonData}
+          onRemoveProduct={(id) => handleSelectionChange(selectedIds.filter(i => i !== id))}
+        />
       ) : selectedIds.length === 1 ? (
         <div className="p-12 text-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-muted-foreground)] space-y-2">
           <p className="text-[var(--color-foreground)] font-semibold text-sm">1 product selected</p>

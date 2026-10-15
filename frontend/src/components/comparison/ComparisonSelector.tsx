@@ -79,16 +79,16 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           {selectedIds.length > 0 && (
             <button
               onClick={clearAll}
-              className="px-3 py-1.5 text-xs bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] rounded-lg transition-colors cursor-pointer"
+              className="px-3 py-1.5 text-xs bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] rounded-lg transition-colors cursor-pointer shrink-0"
             >
               Clear Selection
             </button>
           )}
-          <div className="relative w-full sm:w-64">
+          <div className="relative flex-1 sm:w-64 min-w-0">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--color-muted-foreground)]" />
             <input
               type="text"
