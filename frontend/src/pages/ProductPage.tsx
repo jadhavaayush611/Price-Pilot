@@ -181,6 +181,18 @@ export const ProductPage: React.FC = () => {
     setIsTrackingModalOpen(true);
   };
 
+  // Close modal on Escape key press
+  useEffect(() => {
+    if (!isTrackingModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsTrackingModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isTrackingModalOpen]);
+
   const handleSaveTracking = async (e: React.FormEvent) => {
     e.preventDefault();
     const target = parseFloat(targetPriceInput);
@@ -265,44 +277,44 @@ export const ProductPage: React.FC = () => {
     return (
       <div className="flex flex-col gap-8 py-6 max-w-5xl mx-auto w-full">
         {/* Back Link Skeleton */}
-        <div className="h-4 w-28 bg-zinc-900 rounded-lg animate-pulse" />
+        <div className="h-4 w-28 bg-[var(--color-surface-accent)] rounded-lg animate-pulse" />
         
         {/* Product Info Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-b border-zinc-900 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-b border-[var(--color-border)] pb-12">
           {/* Image skeleton */}
-          <div className="aspect-[4/3] rounded-2xl bg-zinc-950 border border-zinc-900 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-900/20 to-transparent -translate-x-full animate-shimmer" />
+          <div className="aspect-[4/3] rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
           </div>
           
           {/* Details skeleton */}
           <div className="flex flex-col gap-6 justify-center">
             <div className="flex flex-col gap-3">
-              <div className="h-5 w-24 bg-zinc-900 rounded-lg relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-900/20 to-transparent -translate-x-full animate-shimmer" />
+              <div className="h-5 w-24 bg-[var(--color-surface-accent)] rounded-lg relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
               </div>
-              <div className="h-9 w-5/6 bg-zinc-900 rounded-xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-900/20 to-transparent -translate-x-full animate-shimmer" />
+              <div className="h-9 w-5/6 bg-[var(--color-surface-accent)] rounded-xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
               </div>
-              <div className="h-4 w-1/3 bg-zinc-900 rounded-lg relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-900/20 to-transparent -translate-x-full animate-shimmer" />
+              <div className="h-4 w-1/3 bg-[var(--color-surface-accent)] rounded-lg relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <div className="h-3.5 w-full bg-zinc-900 rounded relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-900/20 to-transparent -translate-x-full animate-shimmer" />
+              <div className="h-3.5 w-full bg-[var(--color-surface-accent)] rounded relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
               </div>
-              <div className="h-3.5 w-5/6 bg-zinc-900 rounded relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-900/20 to-transparent -translate-x-full animate-shimmer" />
+              <div className="h-3.5 w-5/6 bg-[var(--color-surface-accent)] rounded relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-2">
-              <div className="h-16 bg-zinc-950 border border-zinc-900 rounded-xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-900/20 to-transparent -translate-x-full animate-shimmer" />
+              <div className="h-16 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
               </div>
-              <div className="h-16 bg-zinc-950 border border-zinc-900 rounded-xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-900/20 to-transparent -translate-x-full animate-shimmer" />
+              <div className="h-16 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
               </div>
             </div>
           </div>
@@ -310,11 +322,11 @@ export const ProductPage: React.FC = () => {
 
         {/* Comparative Table/Cards Skeleton */}
         <div className="flex flex-col gap-4">
-          <div className="h-5 w-40 bg-zinc-900 rounded-lg relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-900/20 to-transparent -translate-x-full animate-shimmer" />
+          <div className="h-5 w-40 bg-[var(--color-surface-accent)] rounded-lg relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
           </div>
-          <div className="h-[250px] bg-zinc-950 border border-zinc-900 rounded-2xl relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-900/20 to-transparent -translate-x-full animate-shimmer" />
+          <div className="h-[250px] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
           </div>
         </div>
       </div>
@@ -324,16 +336,16 @@ export const ProductPage: React.FC = () => {
   if (!product) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-5 text-center max-w-md mx-auto">
-        <div className="h-12 w-12 rounded-2xl bg-zinc-950 border border-zinc-900 flex items-center justify-center text-rose-500 shadow-lg">
+        <div className="h-12 w-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center text-rose-500 shadow-lg">
           <AlertCircle className="h-6 w-6" />
         </div>
-        <h2 className="text-xl font-bold text-white tracking-tight">Product Unreachable</h2>
-        <p className="text-zinc-500 text-xs leading-relaxed">
+        <h2 className="text-xl font-bold text-[var(--color-foreground)] tracking-tight">Product Unreachable</h2>
+        <p className="text-[var(--color-muted-foreground)] text-xs leading-relaxed">
           The product listing data is currently offline or the unique ID does not exist in our catalog indices.
         </p>
         <button
           onClick={() => navigate('/search')}
-          className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 hover:bg-zinc-100 hover:text-black border border-zinc-800 hover:border-white text-xs font-semibold rounded-xl text-zinc-300 transition-all cursor-pointer shadow-md active:scale-95"
+          className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-surface-accent)] hover:bg-[var(--color-foreground)] hover:text-[var(--color-background)] border border-[var(--color-border)] text-xs font-semibold rounded-xl text-[var(--color-foreground)] transition-all cursor-pointer shadow-md active:scale-95"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Search Engine
         </button>
@@ -352,7 +364,7 @@ export const ProductPage: React.FC = () => {
       <div>
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-xs font-bold text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer group"
+          className="inline-flex items-center gap-2 text-xs font-bold text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors cursor-pointer group"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" /> 
           Back to listings
@@ -360,17 +372,18 @@ export const ProductPage: React.FC = () => {
       </div>
 
       {/* Product Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center border-b border-zinc-900/60 pb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center border-b border-[var(--color-border)] pb-12">
         {/* Left: Product Image */}
         <motion.div 
           variants={childVariants}
-          className="aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-900/80 shadow-2xl relative group"
+          className="aspect-[4/3] rounded-2xl overflow-hidden bg-[var(--color-surface)] border border-[var(--color-border)] shadow-2xl relative group"
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent pointer-events-none z-10" />
           <ProductImage
             src={product.imageUrl}
             alt={product.name}
             className="w-full h-full object-contain p-4 group-hover:scale-102 transition-transform duration-700"
+            containerClassName="w-full h-full"
             showFallbackText
             fallbackText={product.brand}
           />
@@ -382,131 +395,133 @@ export const ProductPage: React.FC = () => {
           className="flex flex-col gap-6"
         >
           <div>
-            <span className="px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-400 font-bold tracking-widest uppercase shadow-inner">
-              {product.category}
-            </span>
-            <div className="flex items-start justify-between gap-4 mt-4 mb-2">
-              <h1 className="text-3xl font-extrabold tracking-tight text-white leading-tight">
-                {product.name}
-              </h1>
-              <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                <button
-                  onClick={handleOpenTrackingModal}
-                  className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer active:scale-95 ${
-                    isTracking
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
-                      : 'bg-white hover:bg-zinc-200 text-black border-transparent font-extrabold shadow-md'
-                  }`}
-                  title="Track Price & Get Notified"
-                >
-                  <Bell className={`h-4 w-4 ${isTracking ? 'fill-current' : ''}`} />
-                  <span>{isTracking ? `Tracking at ${formatPrice(watchlistEntry?.targetPrice || 0, currency)}` : 'Track Price'}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    const el = document.getElementById('alternatives-section');
-                    if (el) {
-                      el.scrollIntoView({ behavior: 'smooth' });
-                    } else {
-                      navigate(`/product/${product.id}/alternatives`);
-                    }
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-950/50 text-emerald-400 text-xs font-bold transition-all cursor-pointer active:scale-95"
-                  title="Discover qualified product alternatives"
-                >
-                  <Split className="h-4 w-4 text-emerald-400" />
-                  <span>Find Alternatives</span>
-                </button>
-
-                <button
-                  onClick={() => navigate(`/compare?ids=${product.id}`)}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-bold transition-all cursor-pointer active:scale-95"
-                  title="Compare with other products"
-                >
-                  <Layers className="h-4 w-4 text-zinc-400" />
-                  <span>Compare</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    const params = new URLSearchParams({
-                      productId: product.id,
-                      query: 'Analyze price history, deals, and purchase timing for ' + product.name
-                    });
-                    navigate(`/assistant?${params.toString()}`);
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-950/30 hover:bg-indigo-950/60 text-indigo-300 text-xs font-bold transition-all cursor-pointer active:scale-95"
-                  title="Ask Shopping Decision Assistant"
-                >
-                  <Bot className="h-4 w-4 text-indigo-400" />
-                  <span>Ask AI</span>
-                </button>
-
-                <button
-                  onClick={handleToggleSave}
-                  disabled={saving}
-                  className={`flex items-center justify-center p-2.5 rounded-xl border transition-all cursor-pointer active:scale-95 shrink-0 ${
-                    isSaved 
-                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20' 
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
-                  }`}
-                  title={isSaved ? "Remove from Saved" : "Save Product"}
-                >
-                  <Heart className={`h-4.5 w-4.5 ${isSaved ? 'fill-current text-rose-500' : ''} ${saving ? 'animate-pulse' : ''}`} />
-                </button>
-              </div>
+            <div className="flex items-center gap-3">
+              <span className="px-2.5 py-1 rounded bg-[var(--color-surface-accent)] border border-[var(--color-border)] text-[10px] text-[var(--color-muted-foreground)] font-bold tracking-widest uppercase shadow-inner">
+                {product.category}
+              </span>
+              <span className="text-xs font-bold tracking-wider text-[var(--color-muted-foreground)] uppercase">
+                Brand: {product.brand}
+              </span>
             </div>
-            <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-zinc-500 uppercase">
-              <span>Brand: {product.brand}</span>
+
+            <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-foreground)] leading-tight mt-3">
+              {product.name}
+            </h1>
+
+            <div className="flex items-center gap-2 mt-4 flex-wrap">
+              <button
+                onClick={handleOpenTrackingModal}
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                  isTracking
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                    : 'bg-[var(--color-foreground)] hover:opacity-90 text-[var(--color-background)] border-transparent font-extrabold shadow-md'
+                }`}
+                title="Track Price & Get Notified"
+              >
+                <Bell className={`h-4 w-4 ${isTracking ? 'fill-current' : ''}`} />
+                <span>{isTracking ? `Tracking at ${formatPrice(watchlistEntry?.targetPrice || 0, currency)}` : 'Track Price'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const el = document.getElementById('alternatives-section');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    navigate(`/product/${product.id}/alternatives`);
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-all cursor-pointer active:scale-95"
+                title="Discover qualified product alternatives"
+              >
+                <Split className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                <span>Find Alternatives</span>
+              </button>
+
+              <button
+                onClick={() => navigate(`/compare?ids=${product.id}`)}
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] text-[var(--color-foreground)] text-xs font-bold transition-all cursor-pointer active:scale-95"
+                title="Compare with other products"
+              >
+                <Layers className="h-4 w-4 text-[var(--color-muted-foreground)]" />
+                <span>Compare</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    productId: product.id,
+                    query: 'Analyze price history, deals, and purchase timing for ' + product.name
+                  });
+                  navigate(`/assistant?${params.toString()}`);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 text-xs font-bold transition-all cursor-pointer active:scale-95"
+                title="Ask Shopping Decision Assistant"
+              >
+                <Bot className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
+                <span>Ask AI</span>
+              </button>
+
+              <button
+                onClick={handleToggleSave}
+                disabled={saving}
+                className={`flex items-center justify-center p-2.5 rounded-xl border transition-all cursor-pointer active:scale-95 shrink-0 ${
+                  isSaved
+                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 dark:text-rose-400 hover:bg-rose-500/20'
+                    : 'bg-[var(--color-surface-accent)] border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:border-[var(--color-border)]'
+                }`}
+                title={isSaved ? "Remove from Saved" : "Save Product"}
+              >
+                <Heart className={`h-4.5 w-4.5 ${isSaved ? 'fill-current text-rose-500' : ''} ${saving ? 'animate-pulse' : ''}`} />
+              </button>
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Overview</h3>
-            <p className="text-sm text-zinc-400 leading-relaxed font-normal">
+            <h3 className="text-xs font-bold text-[var(--color-muted-foreground)] uppercase tracking-widest">Overview</h3>
+            <p className="text-sm text-[var(--color-muted-foreground)] leading-relaxed font-normal">
               {product.description}
             </p>
           </div>
 
           {/* Quick Stats & Unified Intelligence Badges */}
           {sortedPrices.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-zinc-950/40 border border-zinc-900/80 backdrop-blur-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] backdrop-blur-sm">
               <div className="flex flex-col">
-                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Best Price</span>
-                <span className="text-lg font-extrabold text-emerald-400">
+                <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider mb-0.5">Best Price</span>
+                <span className="text-lg font-extrabold text-emerald-500 dark:text-emerald-400">
                   {formatPrice(lowestPriceLocal, currency)}
                 </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Market Range</span>
-                <span className="text-xs font-bold text-zinc-300 mt-1 truncate">
+                <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider mb-0.5">Market Range</span>
+                <span className="text-xs font-bold text-[var(--color-foreground)] mt-1 truncate">
                   {formatPrice(lowestPriceLocal, currency)} - {formatPrice(highestPriceLocal, currency)}
                 </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Intelligence</span>
+                <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider mb-0.5">Intelligence</span>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase ${
                     analytics?.dealQuality === 'GOOD_DEAL'
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                       : analytics?.dealQuality === 'FAIR_PRICE'
-                      ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
-                      : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30'
+                      : 'bg-[var(--color-surface-accent)] text-[var(--color-muted-foreground)] border-[var(--color-border)]'
                   }`}>
                     {analytics?.dealQuality ? analytics.dealQuality.replace(/_/g, ' ') : 'VERIFIED'}
                   </span>
                   {analytics?.trend && (
-                    <span className="text-[10px] font-semibold text-zinc-400 flex items-center gap-0.5">
-                      {analytics.trend === 'FALLING' ? <TrendingDown size={11} className="text-emerald-400" /> : analytics.trend === 'RISING' ? <TrendingUp size={11} className="text-rose-400" /> : null}
+                    <span className="text-[10px] font-semibold text-[var(--color-muted-foreground)] flex items-center gap-0.5">
+                      {analytics.trend === 'FALLING' ? <TrendingDown size={11} className="text-emerald-500 dark:text-emerald-400" /> : analytics.trend === 'RISING' ? <TrendingUp size={11} className="text-rose-500 dark:text-rose-400" /> : null}
                       {analytics.trend}
                     </span>
                   )}
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-0.5">Availability</span>
-                <span className="text-xs font-semibold text-zinc-200 mt-1">
+                <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider mb-0.5">Availability</span>
+                <span className="text-xs font-semibold text-[var(--color-foreground)] mt-1">
                   {sortedPrices.length} {sortedPrices.length === 1 ? 'Offer' : 'Offers'} Available
                 </span>
               </div>
@@ -520,26 +535,26 @@ export const ProductPage: React.FC = () => {
         variants={childVariants}
         className="flex flex-col gap-6"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-900/60 pb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--color-border)] pb-5">
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5 text-zinc-400" />
+            <h2 className="text-xl font-bold text-[var(--color-foreground)] tracking-tight flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-[var(--color-muted-foreground)]" />
               Compare Seller Prices
             </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">Aggregated retail offers verified in real-time</p>
+            <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">Aggregated retail offers verified in real-time</p>
           </div>
 
           <div className="flex items-center gap-3.5 self-end sm:self-auto">
             {/* Currency Selector */}
-            <div className="flex items-center rounded-xl bg-zinc-950/80 border border-zinc-900 p-1 gap-1">
+            <div className="flex items-center rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-1 gap-1">
               {(['USD', 'INR', 'EUR', 'GBP', 'JPY'] as CurrencyCode[]).map((cur) => (
                 <button
                   key={cur}
                   onClick={() => setCurrency(cur)}
                   className={`px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
                     currency === cur
-                      ? 'bg-zinc-850 text-white border border-zinc-800 shadow-inner'
-                      : 'text-zinc-500 hover:text-zinc-300'
+                      ? 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] border border-[var(--color-border)] shadow-inner'
+                      : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
                   }`}
                 >
                   {CURRENCY_SYMBOLS[cur]} {cur}
@@ -548,13 +563,13 @@ export const ProductPage: React.FC = () => {
             </div>
 
             {/* Layout View Mode Switcher */}
-            <div className="flex items-center rounded-xl bg-zinc-950/80 border border-zinc-900 p-1">
+            <div className="flex items-center rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-1">
               <button
                 onClick={() => setViewMode('card')}
                 className={`p-1.5 rounded-lg transition-all ${
                   viewMode === 'card'
-                    ? 'bg-zinc-855 text-white border border-zinc-800 shadow-inner'
-                    : 'text-zinc-500 hover:text-zinc-300'
+                    ? 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] border border-[var(--color-border)] shadow-inner'
+                    : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
                 }`}
                 title="Card Grid View"
               >
@@ -564,8 +579,8 @@ export const ProductPage: React.FC = () => {
                 onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded-lg transition-all ${
                   viewMode === 'table'
-                    ? 'bg-zinc-855 text-white border border-zinc-800 shadow-inner'
-                    : 'text-zinc-500 hover:text-zinc-300'
+                    ? 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] border border-[var(--color-border)] shadow-inner'
+                    : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
                 }`}
                 title="Detailed Table View"
               >
@@ -603,12 +618,12 @@ export const ProductPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden rounded-2xl border border-zinc-900 bg-zinc-950/30 shadow-2xl backdrop-blur-xl animate-fade-in"
+                className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl backdrop-blur-xl animate-fade-in"
               >
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-zinc-900 bg-zinc-950/60 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                      <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-accent)] text-[10px] font-bold uppercase tracking-widest text-[var(--color-muted-foreground)]">
                         <th className="px-6 py-4.5">Seller</th>
                         <th className="px-6 py-4.5">Listed Price</th>
                         <th className="px-6 py-4.5">Savings & Difference</th>
@@ -616,7 +631,7 @@ export const ProductPage: React.FC = () => {
                         <th className="px-6 py-4.5 text-right">Direct Storefront</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-900/60 text-sm">
+                    <tbody className="divide-y divide-[var(--color-border)] text-sm">
                       {sortedPrices.map((price) => {
                         const isLowest = price.id === lowestPriceId;
                         const currentPriceLocal = getDisplayPrice(price.currentPrice, currency);
@@ -629,110 +644,110 @@ export const ProductPage: React.FC = () => {
                         return (
                           <tr
                             key={price.id}
-                            className={`transition-colors duration-200 hover:bg-zinc-900/10 ${
-                              isLowest ? 'bg-emerald-500/[0.015]' : ''
+                            className={`transition-colors duration-200 hover:bg-[var(--color-surface-accent)]/50 ${
+                              isLowest ? 'bg-emerald-500/[0.03]' : ''
                             }`}
                           >
                             {/* Seller Logo & Name */}
-                            <td className="px-6 py-4.5 flex items-center gap-3.5 font-medium text-white">
-                              <div className="h-7 w-14 flex items-center justify-center bg-zinc-950 border border-zinc-900 rounded-lg p-1 shadow-sm overflow-hidden">
+                            <td className="px-6 py-4.5 flex items-center gap-3.5 font-medium text-[var(--color-foreground)]">
+                              <div className="h-7 w-14 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-1 shadow-sm overflow-hidden">
                                 <ProductImage
-                                  src={price.seller?.logoUrl}
-                                  alt={price.seller?.name || 'Seller'}
-                                  className="max-h-full max-w-full object-contain filter brightness-95"
-                                  showFallbackText
-                                  fallbackText={price.seller?.name?.substring(0, 3) || 'SEL'}
-                                />
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="font-semibold text-zinc-200">{price.seller?.name}</span>
-                                {isLowest && (
-                                  <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-emerald-400 mt-0.5 tracking-wide uppercase">
-                                    <Sparkles className="h-2.5 w-2.5" /> Best Deal
-                                  </span>
-                                )}
-                              </div>
-                            </td>
+                                   src={price.seller?.logoUrl}
+                                   alt={price.seller?.name || 'Seller'}
+                                   className="max-h-full max-w-full object-contain filter brightness-95"
+                                   showFallbackText
+                                   fallbackText={price.seller?.name?.substring(0, 3) || 'SEL'}
+                                 />
+                               </div>
+                               <div className="flex flex-col">
+                                 <span className="font-semibold text-[var(--color-foreground)]">{price.seller?.name}</span>
+                                 {isLowest && (
+                                   <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-emerald-500 dark:text-emerald-400 mt-0.5 tracking-wide uppercase">
+                                     <Sparkles className="h-2.5 w-2.5" /> Best Deal
+                                   </span>
+                                 )}
+                               </div>
+                             </td>
 
-                            {/* Price & Original Price */}
-                            <td className="px-6 py-4.5">
-                              <div className="flex items-baseline gap-2">
-                                <span className="font-extrabold text-white text-base">
-                                  {formatPrice(currentPriceLocal, currency)}
-                                </span>
-                                {price.originalPrice > price.currentPrice && (
-                                  <span className="text-xs text-zinc-500 line-through font-normal">
-                                    {formatPrice(originalPriceLocal, currency)}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
+                             {/* Price & Original Price */}
+                             <td className="px-6 py-4.5">
+                               <div className="flex items-baseline gap-2">
+                                 <span className="font-extrabold text-[var(--color-foreground)] text-base">
+                                   {formatPrice(currentPriceLocal, currency)}
+                                 </span>
+                                 {price.originalPrice > price.currentPrice && (
+                                   <span className="text-xs text-[var(--color-muted-foreground)] line-through font-normal">
+                                     {formatPrice(originalPriceLocal, currency)}
+                                   </span>
+                                 )}
+                               </div>
+                             </td>
 
-                            {/* Savings & Difference */}
-                            <td className="px-6 py-4.5">
-                              <div className="flex flex-col gap-1">
-                                {savings > 0 ? (
-                                  <span className="inline-flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
-                                    <Tag className="h-3 w-3" /> Save {formatPrice(savings, currency)} ({price.discountPercentage.toFixed(0)}% off)
-                                  </span>
-                                ) : (
-                                  <span className="text-zinc-500 text-xs">Standard Price</span>
-                                )}
-                                {!isLowest && diffFromLowest > 0 && (
-                                  <span className="text-[10px] text-rose-400/90 font-semibold">
-                                    {formatPrice(diffFromLowest, currency)} more than best deal
-                                  </span>
-                                )}
-                                {isLowest && (
-                                  <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                                    <Sparkles className="h-2.5 w-2.5 animate-pulse" /> Lowest price guaranteed
-                                  </span>
-                                )}
-                              </div>
-                            </td>
+                             {/* Savings & Difference */}
+                             <td className="px-6 py-4.5">
+                               <div className="flex flex-col gap-1">
+                                 {savings > 0 ? (
+                                   <span className="inline-flex items-center gap-1.5 text-emerald-500 dark:text-emerald-400 text-xs font-bold">
+                                     <Tag className="h-3 w-3" /> Save {formatPrice(savings, currency)} ({price.discountPercentage.toFixed(0)}% off)
+                                   </span>
+                                 ) : (
+                                   <span className="text-[var(--color-muted-foreground)] text-xs">Standard Price</span>
+                                 )}
+                                 {!isLowest && diffFromLowest > 0 && (
+                                   <span className="text-[10px] text-rose-500 dark:text-rose-400/90 font-semibold">
+                                     {formatPrice(diffFromLowest, currency)} more than best deal
+                                   </span>
+                                 )}
+                                 {isLowest && (
+                                   <span className="text-[10px] text-emerald-500 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                                     <Sparkles className="h-2.5 w-2.5 animate-pulse" /> Lowest verified price
+                                   </span>
+                                 )}
+                               </div>
+                             </td>
 
-                            {/* Last Updated */}
-                            <td className="px-6 py-4.5 text-zinc-500 text-xs">
-                              <span className="inline-flex items-center gap-1.5 font-medium">
-                                <Clock className="h-3.5 w-3.5 text-zinc-600" /> {price.lastUpdated}
-                              </span>
-                            </td>
+                             {/* Last Updated */}
+                             <td className="px-6 py-4.5 text-[var(--color-muted-foreground)] text-xs">
+                               <span className="inline-flex items-center gap-1.5 font-medium">
+                                 <Clock className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" /> {price.lastUpdated}
+                               </span>
+                             </td>
 
-                            {/* Redirect button */}
-                            <td className="px-6 py-4.5 text-right">
-                              <a
-                                href={price.productUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={() => apiService.trackSellerClick(price.id)}
-                                className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border transition-all active:scale-95 ${
-                                  isLowest
-                                    ? 'bg-white text-black hover:bg-zinc-200 border-white shadow-md'
-                                    : 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border-zinc-800 hover:text-white'
-                                }`}
-                              >
-                                Visit Seller
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-12 px-6 border border-zinc-900 border-dashed rounded-2xl bg-zinc-950/10 text-center">
-            <ShoppingBag className="h-8 w-8 text-zinc-600 mb-3" />
-            <h4 className="text-sm font-semibold text-zinc-300 mb-1">No Active Sellers</h4>
-            <p className="text-xs text-zinc-500 max-w-xs leading-relaxed">
-              We couldn't locate any live purchase links for this product listing. Please check back later.
-            </p>
-          </div>
-        )}
+                             {/* Redirect button */}
+                             <td className="px-6 py-4.5 text-right">
+                               <a
+                                 href={price.productUrl}
+                                 target="_blank"
+                                 rel="noopener noreferrer"
+                                 onClick={() => apiService.trackSellerClick(price.id)}
+                                 className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border transition-all active:scale-95 ${
+                                   isLowest
+                                     ? 'bg-[var(--color-foreground)] text-[var(--color-background)] hover:opacity-90 border-[var(--color-foreground)] shadow-md'
+                                     : 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] hover:bg-[var(--color-surface)] border-[var(--color-border)]'
+                                 }`}
+                               >
+                                 Visit Seller
+                                 <ExternalLink className="h-3 w-3" />
+                               </a>
+                             </td>
+                           </tr>
+                         );
+                       })}
+                     </tbody>
+                   </table>
+                 </div>
+               </motion.div>
+             )}
+           </AnimatePresence>
+         ) : (
+           <div className="flex flex-col items-center justify-center py-12 px-6 border border-[var(--color-border)] border-dashed rounded-2xl bg-[var(--color-surface)] text-center">
+             <ShoppingBag className="h-8 w-8 text-[var(--color-muted-foreground)] mb-3" />
+             <h4 className="text-sm font-semibold text-[var(--color-foreground)] mb-1">No Active Sellers</h4>
+             <p className="text-xs text-[var(--color-muted-foreground)] max-w-xs leading-relaxed">
+               We couldn't locate any live purchase links for this product listing. Please check back later.
+             </p>
+           </div>
+         )}
       </motion.div>
 
       {product && (
@@ -740,58 +755,58 @@ export const ProductPage: React.FC = () => {
           variants={childVariants}
           className="flex flex-col gap-6"
         >
-          <div className="border-b border-zinc-900 pb-5">
-            <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-              <Activity className="h-5 w-5 text-zinc-400" />
+          <div className="border-b border-[var(--color-border)] pb-5">
+            <h2 className="text-xl font-bold text-[var(--color-foreground)] tracking-tight flex items-center gap-2">
+              <Activity className="h-5 w-5 text-[var(--color-muted-foreground)]" />
               Product Interaction & Metrics
             </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">Real-time demand analytics and price volatility indicators</p>
+            <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">Real-time demand analytics and price volatility indicators</p>
           </div>
 
           {analyticsLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map(n => (
-                <div key={n} className="h-20 rounded-xl bg-zinc-950/40 border border-zinc-900 animate-pulse" />
+                <div key={n} className="h-20 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] animate-pulse" />
               ))}
             </div>
           ) : !analytics ? (
-            <div className="p-4 border border-zinc-900 rounded-xl bg-zinc-950/10 text-center text-xs text-zinc-500">
+            <div className="p-4 border border-[var(--color-border)] rounded-xl bg-[var(--color-surface)] text-center text-xs text-[var(--color-muted-foreground)]">
               Analytics data is currently unavailable for this product.
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {/* Views */}
-              <div className="p-4 rounded-xl bg-zinc-950/40 border border-zinc-900 flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider block">Views</span>
-                  <span className="text-xl font-bold text-zinc-100 font-mono">{analytics.viewCount}</span>
+                  <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider block">Views</span>
+                  <span className="text-xl font-bold text-[var(--color-foreground)] font-mono">{analytics.viewCount}</span>
                 </div>
-                <Eye className="h-4 w-4 text-zinc-500" />
+                <Eye className="h-4 w-4 text-[var(--color-muted-foreground)]" />
               </div>
 
               {/* Saves */}
-              <div className="p-4 rounded-xl bg-zinc-950/40 border border-zinc-900 flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider block">Saves</span>
-                  <span className="text-xl font-bold text-rose-400 font-mono">{analytics.saveCount}</span>
+                  <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider block">Saves</span>
+                  <span className="text-xl font-bold text-rose-500 dark:text-rose-400 font-mono">{analytics.saveCount}</span>
                 </div>
                 <Heart className="h-4 w-4 text-rose-500/80" />
               </div>
 
               {/* Watchlists */}
-              <div className="p-4 rounded-xl bg-zinc-950/40 border border-zinc-900 flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider block">Watchlists</span>
-                  <span className="text-xl font-bold text-emerald-400 font-mono">{analytics.watchlistCount}</span>
+                  <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider block">Watchlists</span>
+                  <span className="text-xl font-bold text-emerald-500 dark:text-emerald-400 font-mono">{analytics.watchlistCount}</span>
                 </div>
                 <Bell className="h-4 w-4 text-emerald-500/80" />
               </div>
 
               {/* Trending */}
-              <div className="p-4 rounded-xl bg-zinc-950/40 border border-zinc-900 flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider block">Trending Score</span>
-                  <span className="text-xl font-bold text-amber-400 font-mono">{analytics.trendingScore}</span>
+                  <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider block">Trending Score</span>
+                  <span className="text-xl font-bold text-amber-500 dark:text-amber-400 font-mono">{analytics.trendingScore}</span>
                 </div>
                 <Sparkles className="h-4 w-4 text-amber-500/80" />
               </div>
@@ -803,16 +818,16 @@ export const ProductPage: React.FC = () => {
       {product && analytics && (analytics.historicalMin !== undefined || analytics.purchaseSignal) && (
         <motion.div
           variants={childVariants}
-          className="w-full rounded-3xl border border-zinc-900 bg-zinc-950/40 p-6 shadow-xl backdrop-blur-xl mt-8 space-y-4 text-left"
+          className="w-full rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-xl backdrop-blur-xl mt-8 space-y-4 text-left"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-900/60 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-xl bg-emerald-950/60 border border-emerald-800/40 flex items-center justify-center text-emerald-400">
+              <div className="h-8 w-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <Sparkles className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white tracking-tight">Price Intelligence</h3>
-                <p className="text-xs text-zinc-400">Real-time market valuation and purchase timing</p>
+                <h3 className="text-base font-bold text-[var(--color-foreground)] tracking-tight">Price Intelligence</h3>
+                <p className="text-xs text-[var(--color-muted-foreground)]">Real-time market valuation and purchase timing</p>
               </div>
             </div>
 
@@ -820,19 +835,19 @@ export const ProductPage: React.FC = () => {
               {analytics.purchaseSignal && (
                 <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border flex items-center gap-1.5 ${
                   analytics.purchaseSignal === 'BUY_NOW'
-                    ? 'bg-emerald-950 border-emerald-700/60 text-emerald-300'
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-300'
                     : analytics.purchaseSignal === 'GOOD_TIME'
-                    ? 'bg-teal-950 border-teal-700/60 text-teal-300'
+                    ? 'bg-teal-500/10 border-teal-500/30 text-teal-600 dark:text-teal-300'
                     : analytics.purchaseSignal === 'WAIT'
-                    ? 'bg-amber-950 border-amber-700/60 text-amber-300'
-                    : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-300'
+                    : 'bg-[var(--color-surface-accent)] border-[var(--color-border)] text-[var(--color-muted-foreground)]'
                 }`}>
                   {analytics.purchaseSignal.replace(/_/g, ' ')}
                 </span>
               )}
               <Link
                 to={`/analytics/${product.id}`}
-                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 px-3 py-1 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors"
+                className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 px-3 py-1 rounded-lg bg-[var(--color-surface-accent)] border border-[var(--color-border)] hover:border-[var(--color-border)] transition-colors"
               >
                 Full Analytics &rarr;
               </Link>
@@ -840,9 +855,9 @@ export const ProductPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-3">
-              <span className="text-[11px] text-zinc-500 font-medium block">Current Best Price</span>
-              <span className="text-lg font-bold font-mono text-zinc-100">
+            <div className="bg-[var(--color-surface-accent)] border border-[var(--color-border)] rounded-xl p-3">
+              <span className="text-[11px] text-[var(--color-muted-foreground)] font-medium block">Current Best Price</span>
+              <span className="text-lg font-bold font-mono text-[var(--color-foreground)]">
                 {analytics?.currentPrice
                   ? formatPrice(getDisplayPrice(analytics.currentPrice, currency), currency)
                   : lowestPriceUsd > 0
@@ -850,17 +865,17 @@ export const ProductPage: React.FC = () => {
                   : 'N/A'}
               </span>
             </div>
-            <div className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-3">
-              <span className="text-[11px] text-zinc-500 font-medium block">Historical Average</span>
-              <span className="text-lg font-bold font-mono text-indigo-400">
+            <div className="bg-[var(--color-surface-accent)] border border-[var(--color-border)] rounded-xl p-3">
+              <span className="text-[11px] text-[var(--color-muted-foreground)] font-medium block">Historical Average</span>
+              <span className="text-lg font-bold font-mono text-indigo-500 dark:text-indigo-400">
                 {analytics.historicalAvg
                   ? formatPrice(getDisplayPrice(analytics.historicalAvg, currency), currency)
                   : 'N/A'}
               </span>
             </div>
-            <div className="bg-zinc-900/40 border border-zinc-900 rounded-xl p-3">
-              <span className="text-[11px] text-zinc-500 font-medium block">Historical Low</span>
-              <span className="text-lg font-bold font-mono text-emerald-400">
+            <div className="bg-[var(--color-surface-accent)] border border-[var(--color-border)] rounded-xl p-3">
+              <span className="text-[11px] text-[var(--color-muted-foreground)] font-medium block">Historical Low</span>
+              <span className="text-lg font-bold font-mono text-emerald-500 dark:text-emerald-400">
                 {analytics.historicalMin
                   ? formatPrice(getDisplayPrice(analytics.historicalMin, currency), currency)
                   : 'N/A'}
@@ -869,7 +884,7 @@ export const ProductPage: React.FC = () => {
           </div>
 
           {analytics.purchaseSignalReason && (
-            <p className="text-xs text-zinc-300 leading-relaxed italic bg-zinc-900/30 p-3 rounded-lg border border-zinc-900">
+            <p className="text-xs text-[var(--color-muted-foreground)] leading-relaxed italic bg-[var(--color-surface-accent)]/50 p-3 rounded-lg border border-[var(--color-border)]">
               "{analytics.purchaseSignalReason}"
             </p>
           )}
@@ -881,14 +896,14 @@ export const ProductPage: React.FC = () => {
       )}
 
       {product && (
-        <section id="alternatives-section" aria-label="Alternative Products" className="flex flex-col gap-6 mt-12 border-t border-zinc-900 pt-12 text-left">
+        <section id="alternatives-section" aria-label="Alternative Products" className="flex flex-col gap-6 mt-12 border-t border-[var(--color-border)] pt-12 text-left">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Layers className="h-5 w-5 text-emerald-400" />
+              <h2 className="text-xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
+                <Layers className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
                 Qualified Alternatives & Upgrades
               </h2>
-              <p className="text-xs text-zinc-400 mt-1">
+              <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
                 Factual alternatives ranked by semantic similarity, price competitiveness, and deal intelligence
               </p>
             </div>
@@ -901,18 +916,18 @@ export const ProductPage: React.FC = () => {
                   onClick={() => setAltPersonalized(!altPersonalized)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     altPersonalized
-                      ? 'bg-indigo-950 text-indigo-200 border border-indigo-700/60 shadow-inner'
-                      : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                      ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-200 border border-indigo-500/30 shadow-inner'
+                      : 'bg-[var(--color-surface-accent)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] border border-[var(--color-border)]'
                   }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                   <span>Personalized</span>
                 </button>
               )}
 
               <Link
                 to={`/product/${product.id}/alternatives`}
-                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors"
+                className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 px-3 py-1.5 rounded-xl bg-[var(--color-surface-accent)] border border-[var(--color-border)] hover:border-[var(--color-border)] transition-colors"
               >
                 Explore All Alternatives &rarr;
               </Link>
@@ -964,42 +979,47 @@ export const ProductPage: React.FC = () => {
 
             {/* Modal content */}
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="tracking-modal-title"
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ type: 'spring', duration: 0.3 }}
-              className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-zinc-900 bg-zinc-950 p-6 shadow-2xl"
+              className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-2xl focus:outline-none"
             >
               {/* Close button */}
               <button
+                type="button"
                 onClick={() => setIsTrackingModalOpen(false)}
-                className="absolute top-4 right-4 p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 transition-all cursor-pointer"
+                aria-label="Close tracking modal"
+                className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none transition-all cursor-pointer"
               >
                 <X className="h-4.5 w-4.5" />
               </button>
 
               <div className="flex items-center gap-2 mb-4">
-                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 dark:text-emerald-400">
                   <Bell className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white leading-none">
+                  <h3 id="tracking-modal-title" className="text-base font-bold text-[var(--color-foreground)] leading-none">
                     {isTracking ? 'Edit Price Watchlist' : 'Set Price Watchlist'}
                   </h3>
-                  <p className="text-[11px] text-zinc-500 mt-1">
+                  <p className="text-[11px] text-[var(--color-muted-foreground)] mt-1">
                     Get alerted when this product drops below your target price.
                   </p>
                 </div>
               </div>
 
-              <div className="mb-4 p-3.5 rounded-xl bg-zinc-900/40 border border-zinc-900 flex items-center justify-between">
+              <div className="mb-4 p-3.5 rounded-xl bg-[var(--color-surface-accent)] border border-[var(--color-border)] flex items-center justify-between">
                 <div className="flex flex-col">
-                  <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Product</span>
-                  <span className="text-xs font-semibold text-zinc-200 line-clamp-1 mt-0.5">{product.name}</span>
+                  <span className="text-[9px] text-[var(--color-muted-foreground)] font-bold uppercase tracking-wider">Product</span>
+                  <span className="text-xs font-semibold text-[var(--color-foreground)] line-clamp-1 mt-0.5">{product.name}</span>
                 </div>
                 <div className="flex flex-col text-right shrink-0">
-                  <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">Best Price</span>
-                  <span className="text-sm font-extrabold text-emerald-400 mt-0.5">
+                  <span className="text-[9px] text-[var(--color-muted-foreground)] font-bold uppercase tracking-wider">Best Price</span>
+                  <span className="text-sm font-extrabold text-emerald-500 dark:text-emerald-400 mt-0.5">
                     {formatPrice(lowestPriceLocal || (product.prices?.[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0), currency)}
                   </span>
                 </div>
@@ -1007,11 +1027,11 @@ export const ProductPage: React.FC = () => {
 
               <form onSubmit={handleSaveTracking} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
-                  <label htmlFor="targetPrice" className="text-xs font-bold text-zinc-400">
+                  <label htmlFor="targetPrice" className="text-xs font-bold text-[var(--color-foreground)]">
                     Target Price ({CURRENCY_SYMBOLS[currency]})
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-500 font-bold">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[var(--color-muted-foreground)] font-bold">
                       {CURRENCY_SYMBOLS[currency]}
                     </span>
                     <input
@@ -1021,14 +1041,14 @@ export const ProductPage: React.FC = () => {
                       placeholder="Enter target price"
                       value={targetPriceInput}
                       onChange={(e) => setTargetPriceInput(e.target.value)}
-                      className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-bold text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-700 transition-colors"
+                      className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-[var(--color-surface-accent)] border border-[var(--color-border)] text-sm font-bold text-[var(--color-foreground)] placeholder-[var(--color-muted-foreground)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] transition-colors"
                     />
                   </div>
                 </div>
 
                 {/* Quick Discounts Suggestions */}
                 <div className="flex flex-col gap-2">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Quick Select Target</span>
+                  <span className="text-[10px] font-bold text-[var(--color-muted-foreground)] uppercase tracking-wider">Quick Select Target</span>
                   <div className="grid grid-cols-3 gap-2">
                     {[0.95, 0.9, 0.85].map((factor) => {
                       const best = lowestPriceLocal || (product.prices?.[0] ? getDisplayPrice(product.prices[0].currentPrice, currency) : 0);
@@ -1039,7 +1059,7 @@ export const ProductPage: React.FC = () => {
                           key={factor}
                           type="button"
                           onClick={() => setTargetPriceInput(discounted.toString())}
-                          className="px-2 py-1.5 rounded-lg border border-zinc-900 hover:border-zinc-800 bg-zinc-955 hover:bg-zinc-900 text-[10px] font-bold text-zinc-400 hover:text-white transition-all cursor-pointer text-center"
+                          className="px-2 py-1.5 rounded-lg border border-[var(--color-border)] hover:border-[var(--color-border)] bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] text-[10px] font-bold text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none transition-all cursor-pointer text-center"
                         >
                           {pct}% Off ({formatPrice(discounted, currency)})
                         </button>
@@ -1049,19 +1069,19 @@ export const ProductPage: React.FC = () => {
                 </div>
 
                 {trackingError && (
-                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-400 flex items-start gap-2">
+                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-500 dark:text-rose-400 flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                     <span>{trackingError}</span>
                   </div>
                 )}
 
-                <div className="flex items-center justify-between gap-3 mt-2 pt-4 border-t border-zinc-900">
+                <div className="flex items-center justify-between gap-3 mt-2 pt-4 border-t border-[var(--color-border)]">
                   {isTracking ? (
                     <button
                       type="button"
                       onClick={handleRemoveTracking}
                       disabled={isSubmittingTracking}
-                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 text-xs font-bold focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:outline-none transition-all cursor-pointer disabled:opacity-50"
                     >
                       <Trash2 className="h-4 w-4" />
                       <span>Remove</span>
@@ -1075,14 +1095,14 @@ export const ProductPage: React.FC = () => {
                       type="button"
                       onClick={() => setIsTrackingModalOpen(false)}
                       disabled={isSubmittingTracking}
-                      className="px-4 py-2.5 text-xs font-bold text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                      className="px-4 py-2.5 text-xs font-bold text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none transition-colors cursor-pointer"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmittingTracking}
-                      className="px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-extrabold transition-all shadow-md cursor-pointer active:scale-95 disabled:opacity-50"
+                      className="px-5 py-2.5 rounded-xl bg-[var(--color-foreground)] hover:opacity-90 text-[var(--color-background)] text-xs font-extrabold focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none transition-all shadow-md cursor-pointer active:scale-95 disabled:opacity-50"
                     >
                       {isSubmittingTracking ? 'Saving...' : isTracking ? 'Update Track' : 'Start Tracking'}
                     </button>

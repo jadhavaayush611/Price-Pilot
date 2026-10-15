@@ -70,7 +70,7 @@ export const AlternativeList: React.FC<AlternativeListProps> = ({
       {/* Strategy / Type Filter Tabs */}
       {onSelectType && (
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          <span className="text-xs font-semibold text-zinc-500 shrink-0 mr-1">Strategy:</span>
+          <span className="text-xs font-semibold text-[var(--color-muted-foreground)] shrink-0 mr-1">Strategy:</span>
           {ALTERNATIVE_TYPES.map(({ type, label }) => {
             const isActive = selectedType === type;
             return (
@@ -80,8 +80,8 @@ export const AlternativeList: React.FC<AlternativeListProps> = ({
                 onClick={() => onSelectType(type)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 ${
                   isActive
-                    ? 'bg-zinc-100 text-black shadow-sm font-bold'
-                    : 'bg-zinc-900/80 text-zinc-400 hover:text-zinc-200 border border-zinc-800 hover:border-zinc-700'
+                    ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-sm font-bold'
+                    : 'bg-[var(--color-surface)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] border border-[var(--color-border)] hover:bg-[var(--color-surface-accent)]'
                 }`}
               >
                 {label}
@@ -93,9 +93,9 @@ export const AlternativeList: React.FC<AlternativeListProps> = ({
 
       {/* Source Product Context Banner */}
       {sourceContext && (
-        <div className="bg-zinc-950/80 border border-zinc-900 p-4 rounded-2xl flex items-center justify-between gap-4 flex-wrap">
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] p-4 rounded-2xl flex items-center justify-between gap-4 flex-wrap shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 p-1 flex items-center justify-center shrink-0 overflow-hidden">
+            <div className="w-12 h-12 rounded-xl bg-[var(--color-surface-accent)] border border-[var(--color-border)] p-1 flex items-center justify-center shrink-0 overflow-hidden">
               <ProductImage
                 src={sourceContext.imageUrl}
                 alt={sourceContext.name}
@@ -105,11 +105,11 @@ export const AlternativeList: React.FC<AlternativeListProps> = ({
               />
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block">
+              <span className="text-[10px] uppercase tracking-wider text-[var(--color-muted-foreground)] font-bold block">
                 Finding alternatives for
               </span>
-              <h3 className="text-sm font-bold text-white line-clamp-1">{sourceContext.name}</h3>
-              <span className="text-xs text-zinc-400">
+              <h3 className="text-sm font-bold text-[var(--color-foreground)] line-clamp-1">{sourceContext.name}</h3>
+              <span className="text-xs text-[var(--color-muted-foreground)]">
                 {sourceContext.brand} {sourceContext.category ? `· ${sourceContext.category}` : ''}
               </span>
             </div>
@@ -117,8 +117,8 @@ export const AlternativeList: React.FC<AlternativeListProps> = ({
 
           {sourceContext.currentBestPrice !== undefined && (
             <div className="text-right">
-              <span className="text-[10px] text-zinc-500 uppercase font-medium block">Current Best Price</span>
-              <span className="text-sm font-bold font-mono text-zinc-200">
+              <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-medium block">Current Best Price</span>
+              <span className="text-sm font-bold font-mono text-[var(--color-foreground)]">
                 {formatPrice(getDisplayPrice(sourceContext.currentBestPrice, currency), currency)}
               </span>
             </div>
@@ -128,22 +128,22 @@ export const AlternativeList: React.FC<AlternativeListProps> = ({
 
       {/* Pipeline Explanation / Applied Notes Banner */}
       {response && response.appliedNotes && response.appliedNotes.length > 0 && (
-        <div className="bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800 p-4 rounded-2xl flex items-start gap-3 shadow-md">
+        <div className="bg-[var(--color-surface-accent)] border border-[var(--color-border)] p-4 rounded-2xl flex items-start gap-3 shadow-sm">
           {isPersonalized ? (
-            <UserCheck className="w-5 h-5 text-indigo-400 mt-0.5 shrink-0" />
+            <UserCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mt-0.5 shrink-0" />
           ) : (
-            <Sparkles className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+            <Sparkles className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
           )}
           <div className="space-y-1 text-xs flex-1">
-            <span className="font-semibold text-zinc-200">
+            <span className="font-semibold text-[var(--color-foreground)]">
               {isPersonalized
                 ? 'Personalized Alternative Intelligence'
                 : `Discovery Insights (${formatAlternativeType(response.alternativeType)})`}
             </span>
-            <ul className="space-y-0.5 text-zinc-300">
+            <ul className="space-y-0.5 text-[var(--color-muted-foreground)]">
               {response.appliedNotes.map((note, idx) => (
                 <li key={idx} className="flex items-start gap-1.5">
-                  <span className="text-emerald-400">•</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">•</span>
                   <span>{note}</span>
                 </li>
               ))}
@@ -154,10 +154,10 @@ export const AlternativeList: React.FC<AlternativeListProps> = ({
 
       {/* Empty State */}
       {alternatives.length === 0 ? (
-        <div className="p-12 text-center bg-zinc-955 border border-zinc-900 rounded-2xl space-y-2">
-          <Layers className="w-8 h-8 text-zinc-600 mx-auto" />
-          <h4 className="text-sm font-semibold text-zinc-300">No alternatives found</h4>
-          <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+        <div className="p-12 text-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl space-y-2">
+          <Layers className="w-8 h-8 text-[var(--color-muted-foreground)] mx-auto" />
+          <h4 className="text-sm font-semibold text-[var(--color-foreground)]">No alternatives found</h4>
+          <p className="text-xs text-[var(--color-muted-foreground)] max-w-sm mx-auto">
             {isPersonalized
               ? 'No personalized alternatives found matching your preferences for this category.'
               : 'No qualifying product alternatives found for this selection.'}

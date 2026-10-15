@@ -64,10 +64,10 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
   return (
     <article
       aria-label={`Alternative product: ${alternative.name}`}
-      className={`group bg-zinc-950/80 backdrop-blur-sm border rounded-2xl p-5 transition-all duration-300 flex flex-col justify-between hover:shadow-xl ${
+      className={`group bg-[var(--color-surface)] backdrop-blur-sm border rounded-2xl p-5 transition-all duration-300 flex flex-col justify-between hover:shadow-md ${
         hasPersonalization
-          ? 'border-indigo-900/50 hover:border-indigo-700/70'
-          : 'border-zinc-900 hover:border-zinc-700'
+          ? 'border-indigo-500/40 hover:border-indigo-500/70'
+          : 'border-[var(--color-border)] hover:border-[var(--color-ring)]/40'
       }`}
     >
       <div className="space-y-4">
@@ -76,26 +76,26 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
           <div className="flex items-center gap-1.5 flex-wrap">
             {/* Alternative Type Badge */}
             {alternative.reasonCodes && alternative.reasonCodes.length > 0 ? (
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-950/80 border border-emerald-700/50 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                <Award className="w-3 h-3 text-emerald-400" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                <Award className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                 <span>{formatAlternativeType(alternative.reasonCodes[0])}</span>
               </span>
             ) : (
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-950/80 border border-emerald-700/50 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                <Award className="w-3 h-3 text-emerald-400" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                <Award className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                 <span>Alternative</span>
               </span>
             )}
 
             {/* Personalized Indicator */}
             {hasPersonalization && (
-              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300 bg-indigo-950/60 border border-indigo-700/40 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <Sparkles className="w-2.5 h-2.5 text-indigo-400" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5 text-indigo-600 dark:text-indigo-400" />
                 <span>Personalized</span>
               </span>
             )}
 
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted-foreground)] bg-[var(--color-surface-accent)] border border-[var(--color-border)] px-2 py-0.5 rounded">
               {alternative.brand}
             </span>
           </div>
@@ -106,19 +106,19 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
               title={hasPersonalization
                 ? `Personalized Score: ${displayedScore}/100 (Base: ${Math.round(alternative.alternativeScore)}${alternative.personalizationAdjustment ? `, Adjustment: ${alternative.personalizationAdjustment >= 0 ? '+' : ''}${alternative.personalizationAdjustment.toFixed(1)}` : ''})`
                 : `Alternative Score: ${displayedScore}/100`}
-              className="text-zinc-200 font-semibold bg-zinc-900/80 border border-zinc-800 px-2 py-0.5 rounded flex items-center gap-1"
+              className="text-[var(--color-foreground)] font-semibold bg-[var(--color-surface-accent)] border border-[var(--color-border)] px-2 py-0.5 rounded flex items-center gap-1"
             >
               <span>Score:</span>
-              <strong className={hasPersonalization ? 'text-indigo-400' : 'text-emerald-400'}>
+              <strong className={hasPersonalization ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400'}>
                 {displayedScore}
               </strong>
-              <span className="text-zinc-500">/100</span>
+              <span className="text-[var(--color-muted-foreground)]">/100</span>
             </span>
           </div>
         </div>
 
         {/* Product Image */}
-        <div className="h-44 w-full bg-zinc-900/40 rounded-xl p-3 flex items-center justify-center group-hover:scale-[1.02] transition-transform overflow-hidden border border-zinc-900/60">
+        <div className="h-44 w-full bg-[var(--color-surface-accent)] rounded-xl p-3 flex items-center justify-center group-hover:scale-[1.02] transition-transform overflow-hidden border border-[var(--color-border)]">
           <ProductImage
             src={alternative.imageUrl}
             alt={alternative.name}
@@ -131,49 +131,49 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
         {/* Product Identity & Objective Facts */}
         <div className="space-y-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="text-sm font-semibold text-zinc-100 line-clamp-2 group-hover:text-white transition-colors">
+            <h3 className="text-sm font-semibold text-[var(--color-foreground)] line-clamp-2 transition-colors">
               {alternative.name}
             </h3>
             {alternative.rating !== undefined && alternative.rating > 0 && (
-              <span className="shrink-0 flex items-center gap-1 text-xs font-semibold text-amber-400 bg-amber-950/30 border border-amber-800/30 px-1.5 py-0.5 rounded">
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+              <span className="shrink-0 flex items-center gap-1 text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded">
+                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                 <span>{alternative.rating.toFixed(1)}</span>
               </span>
             )}
           </div>
           {alternative.description && (
-            <p className="text-xs text-zinc-400 line-clamp-2">{alternative.description}</p>
+            <p className="text-xs text-[var(--color-muted-foreground)] line-clamp-2">{alternative.description}</p>
           )}
         </div>
 
         {/* Backend Price Comparison Callout */}
         {alternative.priceDifference !== undefined && (
-          <div className="flex items-center gap-2 p-2 rounded-xl bg-zinc-900/40 border border-zinc-800/60 text-xs">
+          <div className="flex items-center gap-2 p-2 rounded-xl bg-[var(--color-surface-accent)] border border-[var(--color-border)] text-xs">
             {alternative.priceDifference < 0 ? (
-              <span className="inline-flex items-center gap-1 text-emerald-400 font-bold">
-                <TrendingDown className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                <TrendingDown className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 Save {formatPrice(getDisplayPrice(Math.abs(alternative.priceDifference), currency), currency)}
                 {alternative.priceDifferencePercentage !== undefined && (
-                  <span className="text-emerald-500/80 font-normal">
+                  <span className="text-emerald-600/80 dark:text-emerald-400/80 font-normal">
                     ({Math.abs(Math.round(alternative.priceDifferencePercentage))}% less)
                   </span>
                 )}
               </span>
             ) : alternative.priceDifference > 0 ? (
-              <span className="inline-flex items-center gap-1 text-zinc-300 font-medium">
-                <TrendingUp className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              <span className="inline-flex items-center gap-1 text-[var(--color-foreground)] font-medium">
+                <TrendingUp className="w-3.5 h-3.5 text-[var(--color-muted-foreground)] shrink-0" />
                 +{formatPrice(getDisplayPrice(alternative.priceDifference, currency), currency)}
                 {alternative.priceDifferencePercentage !== undefined && (
-                  <span className="text-zinc-500 font-normal">
+                  <span className="text-[var(--color-muted-foreground)] font-normal">
                     (+{Math.round(alternative.priceDifferencePercentage)}%)
                   </span>
                 )}
               </span>
             ) : (
-              <span className="text-zinc-400 font-medium">Same price as current product</span>
+              <span className="text-[var(--color-muted-foreground)] font-medium">Same price as current product</span>
             )}
             {alternative.semanticSimilarityScore !== undefined && alternative.semanticSimilarityScore > 0 && (
-              <span className="ml-auto text-[10px] text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded font-mono">
+              <span className="ml-auto text-[10px] text-[var(--color-muted-foreground)] bg-[var(--color-surface)] border border-[var(--color-border)] px-1.5 py-0.5 rounded font-mono">
                 {Math.round(alternative.semanticSimilarityScore * 100)}% Match
               </span>
             )}
@@ -182,39 +182,39 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
 
         {/* Backend Primary Explanation */}
         {alternative.primaryExplanation && (
-          <p className="text-xs text-zinc-300 italic bg-zinc-900/40 p-2.5 rounded-xl border border-zinc-800/60 leading-relaxed">
+          <p className="text-xs text-[var(--color-foreground)] italic bg-[var(--color-surface-accent)]/50 p-2.5 rounded-xl border border-[var(--color-border)] leading-relaxed">
             "{alternative.primaryExplanation}"
           </p>
         )}
 
         {/* Personalized Evidence Section ("Matches Your Preferences") */}
         {alternative.personalizedEvidence && (
-          <section aria-label="Why this matches your preferences" className="bg-indigo-950/20 border border-indigo-900/40 rounded-xl p-3 space-y-2">
-            <h4 className="text-xs font-bold text-indigo-300 flex items-center gap-1.5 uppercase tracking-wide">
-              <UserCheck className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+          <section aria-label="Why this matches your preferences" className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3 space-y-2">
+            <h4 className="text-xs font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5 uppercase tracking-wide">
+              <UserCheck className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
               Matches Your Preferences
             </h4>
             {alternative.personalizedEvidence.summary && (
-              <p className="text-xs text-indigo-200/90 leading-relaxed">
+              <p className="text-xs text-indigo-800 dark:text-indigo-200 leading-relaxed">
                 {alternative.personalizedEvidence.summary}
               </p>
             )}
             {alternative.personalizedEvidence.reasons && alternative.personalizedEvidence.reasons.length > 0 && (
-              <ul className="space-y-1 text-xs text-zinc-300">
+              <ul className="space-y-1 text-xs text-[var(--color-foreground)]">
                 {alternative.personalizedEvidence.reasons.map((reason, idx) => (
                   <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-indigo-400 font-bold shrink-0">★</span>
-                    <span className="text-zinc-200">{reason.reason || reason.dimension}</span>
+                    <span className="text-indigo-600 dark:text-indigo-400 font-bold shrink-0">★</span>
+                    <span className="text-[var(--color-foreground)]">{reason.reason || reason.dimension}</span>
                   </li>
                 ))}
               </ul>
             )}
             {alternative.personalizedEvidence.supportingFactors && alternative.personalizedEvidence.supportingFactors.length > 0 && (
-              <ul className="space-y-1 text-xs text-zinc-300">
+              <ul className="space-y-1 text-xs text-[var(--color-foreground)]">
                 {alternative.personalizedEvidence.supportingFactors.map((factor, idx) => (
                   <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-emerald-400 font-bold shrink-0">✓</span>
-                    <span className="text-zinc-300">{factor}</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+                    <span className="text-[var(--color-muted-foreground)]">{factor}</span>
                   </li>
                 ))}
               </ul>
@@ -224,15 +224,15 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
 
         {/* Trade-offs Section (if provided by backend) */}
         {alternative.personalizedEvidence?.tradeOffs && alternative.personalizedEvidence.tradeOffs.length > 0 && (
-          <section aria-label="Trade-offs" className="bg-amber-950/20 border border-amber-900/40 rounded-xl p-3 space-y-2">
-            <h4 className="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wide">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <section aria-label="Trade-offs" className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 space-y-2">
+            <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5 uppercase tracking-wide">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
               Trade-offs to Consider
             </h4>
-            <ul className="space-y-1 text-xs text-zinc-300">
+            <ul className="space-y-1 text-xs text-[var(--color-foreground)]">
               {alternative.personalizedEvidence.tradeOffs.map((tradeOff, idx) => (
                 <li key={idx} className="flex items-start gap-1.5">
-                  <span className="text-amber-400 shrink-0">•</span>
+                  <span className="text-amber-600 dark:text-amber-400 shrink-0">•</span>
                   <span>{tradeOff}</span>
                 </li>
               ))}
@@ -246,9 +246,9 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
             {alternative.evidence.map((ev, idx) => (
               <span
                 key={idx}
-                className="text-[10px] px-2 py-0.5 rounded border flex items-center gap-1 text-zinc-300 bg-zinc-900/60 border-zinc-800"
+                className="text-[10px] px-2 py-0.5 rounded border flex items-center gap-1 text-[var(--color-muted-foreground)] bg-[var(--color-surface-accent)] border-[var(--color-border)]"
               >
-                <Tag className="w-2.5 h-2.5 text-zinc-400" />
+                <Tag className="w-2.5 h-2.5 text-[var(--color-muted-foreground)]" />
                 <span>{ev.description || ev.category}</span>
               </span>
             ))}
@@ -257,15 +257,15 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
       </div>
 
       {/* Footer / Factual Price & Actions */}
-      <div className="pt-4 mt-4 border-t border-zinc-900 flex items-center justify-between gap-2">
+      <div className="pt-4 mt-4 border-t border-[var(--color-border)] flex items-center justify-between gap-2">
         <div>
-          <span className="text-[10px] text-zinc-500 block uppercase font-medium">Best Offer</span>
+          <span className="text-[10px] text-[var(--color-muted-foreground)] block uppercase font-medium">Best Offer</span>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-sm font-bold font-mono text-zinc-100">
+            <span className="text-sm font-bold font-mono text-[var(--color-foreground)]">
               {displayPrice !== undefined ? formatPrice(displayPrice, currency) : 'Check sellers'}
             </span>
             {originalDisplayPrice !== undefined && displayPrice !== undefined && originalDisplayPrice > displayPrice && (
-              <span className="text-xs text-zinc-500 line-through font-mono">
+              <span className="text-xs text-[var(--color-muted-foreground)] line-through font-mono">
                 {formatPrice(originalDisplayPrice, currency)}
               </span>
             )}
@@ -276,7 +276,7 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
           {sourceProductId && (
             <Link
               to={`/compare?ids=${sourceProductId},${alternative.id}`}
-              className="p-2 text-zinc-400 hover:text-white bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700 rounded-xl transition-all"
+              className="p-2 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] bg-[var(--color-surface-accent)] border border-[var(--color-border)] rounded-xl transition-all shadow-sm"
               title="Compare with current product"
             >
               <Layers className="w-3.5 h-3.5" />
@@ -284,7 +284,7 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
           )}
           <Link
             to={`/product/${alternative.id}`}
-            className="px-3.5 py-1.5 text-xs font-semibold text-zinc-100 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-600 hover:bg-zinc-800 active:scale-[0.98] transition-all"
+            className="px-3.5 py-1.5 text-xs font-semibold text-[var(--color-primary-foreground)] bg-[var(--color-primary)] rounded-xl hover:opacity-90 active:scale-[0.98] transition-all shadow-sm"
           >
             View Details
           </Link>
