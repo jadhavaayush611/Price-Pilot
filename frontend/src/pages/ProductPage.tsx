@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductWithPrices, Watchlist, ProductAnalytics, AlternativeResponse, AlternativeType } from '../types';
@@ -39,13 +39,16 @@ export const ProductPage: React.FC = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Watchlist specific states
+  // Watchlist specific states & dialog accessibility refs
   const [isTracking, setIsTracking] = useState(false);
   const [watchlistEntry, setWatchlistEntry] = useState<Watchlist | null>(null);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
   const [targetPriceInput, setTargetPriceInput] = useState('');
   const [trackingError, setTrackingError] = useState<string | null>(null);
   const [isSubmittingTracking, setIsSubmittingTracking] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const triggerElementRef = useRef<HTMLElement | null>(null);
+  const targetPriceInputRef = useRef<HTMLInputElement>(null);
 
   // Analytics states
   const [analytics, setAnalytics] = useState<ProductAnalytics | null>(null);
@@ -169,7 +172,10 @@ export const ProductPage: React.FC = () => {
       navigate('/login', { state: { from: { pathname: `/product/${id}` } } });
       return;
     }
-    
+
+    // Capture triggering element for accessible focus restoration
+    triggerElementRef.current = document.activeElement as HTMLElement | null;
+
     // Set default target price if not set
     if (watchlistEntry) {
       setTargetPriceInput(watchlistEntry.targetPrice.toString());
@@ -181,16 +187,55 @@ export const ProductPage: React.FC = () => {
     setIsTrackingModalOpen(true);
   };
 
-  // Close modal on Escape key press
+  // Keyboard accessibility: Escape dismissal, focus trapping, and focus restoration
   useEffect(() => {
     if (!isTrackingModalOpen) return;
+
+    // Auto-focus target price input upon dialog mount
+    const timer = setTimeout(() => {
+      targetPriceInputRef.current?.focus();
+    }, 50);
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsTrackingModalOpen(false);
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        if (!dialogRef.current) return;
+        const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+      // Restore focus to trigger element when dialog closes
+      if (triggerElementRef.current && typeof triggerElementRef.current.focus === 'function') {
+        triggerElementRef.current.focus();
+      }
+    };
   }, [isTrackingModalOpen]);
 
   const handleSaveTracking = async (e: React.FormEvent) => {
@@ -275,7 +320,13 @@ export const ProductPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-8 py-6 max-w-5xl mx-auto w-full">
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading product details"
+        className="flex flex-col gap-8 py-6 max-w-5xl mx-auto w-full"
+      >
+        <span className="sr-only">Loading product details...</span>
         {/* Back Link Skeleton */}
         <div className="h-4 w-28 bg-[var(--color-surface-accent)] rounded-lg animate-pulse" />
         
@@ -295,25 +346,36 @@ export const ProductPage: React.FC = () => {
               <div className="h-9 w-5/6 bg-[var(--color-surface-accent)] rounded-xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
               </div>
-              <div className="h-4 w-1/3 bg-[var(--color-surface-accent)] rounded-lg relative overflow-hidden">
+            </div>
+
+            {/* Price stats skeleton */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)]">
+              {[1, 2, 3, 4].map(n => (
+                <div key={n} className="h-12 bg-[var(--color-surface-accent)] rounded-xl relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
+                </div>
+              ))}
+            </div>
+
+            {/* Action buttons skeleton */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="h-10 w-28 bg-[var(--color-surface-accent)] rounded-xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
+              </div>
+              <div className="h-10 w-36 bg-[var(--color-surface-accent)] rounded-xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
+              </div>
+              <div className="h-10 w-24 bg-[var(--color-surface-accent)] rounded-xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
               </div>
             </div>
 
+            {/* Overview skeleton */}
             <div className="flex flex-col gap-2">
               <div className="h-3.5 w-full bg-[var(--color-surface-accent)] rounded relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
               </div>
-              <div className="h-3.5 w-5/6 bg-[var(--color-surface-accent)] rounded relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mt-2">
-              <div className="h-16 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
-              </div>
-              <div className="h-16 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl relative overflow-hidden">
+              <div className="h-3.5 w-4/5 bg-[var(--color-surface-accent)] rounded relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/30 to-transparent -translate-x-full animate-shimmer" />
               </div>
             </div>
@@ -335,17 +397,22 @@ export const ProductPage: React.FC = () => {
 
   if (!product) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-5 text-center max-w-md mx-auto">
-        <div className="h-12 w-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center text-rose-500 shadow-lg">
+      <div
+        role="alert"
+        className="flex flex-col items-center justify-center py-16 px-6 gap-5 text-center max-w-md mx-auto my-12 rounded-3xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xl"
+      >
+        <div className="h-12 w-12 rounded-2xl bg-[var(--color-surface-accent)] border border-[var(--color-border)] flex items-center justify-center text-rose-500 shadow-md">
           <AlertCircle className="h-6 w-6" />
         </div>
-        <h2 className="text-xl font-bold text-[var(--color-foreground)] tracking-tight">Product Unreachable</h2>
-        <p className="text-[var(--color-muted-foreground)] text-xs leading-relaxed">
-          The product listing data is currently offline or the unique ID does not exist in our catalog indices.
-        </p>
+        <div>
+          <h2 className="text-xl font-bold text-[var(--color-foreground)] tracking-tight">Product Unreachable</h2>
+          <p className="text-[var(--color-muted-foreground)] text-xs leading-relaxed mt-1.5">
+            The product listing data is currently offline or the unique ID does not exist in our catalog indices.
+          </p>
+        </div>
         <button
           onClick={() => navigate('/search')}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-surface-accent)] hover:bg-[var(--color-foreground)] hover:text-[var(--color-background)] border border-[var(--color-border)] text-xs font-semibold rounded-xl text-[var(--color-foreground)] transition-all cursor-pointer shadow-md active:scale-95"
+          className="flex items-center gap-2 px-5 py-2.5 bg-[var(--color-foreground)] hover:opacity-90 text-[var(--color-background)] border border-transparent text-xs font-bold rounded-xl transition-all cursor-pointer shadow-md active:scale-95 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Search Engine
         </button>
@@ -404,92 +471,17 @@ export const ProductPage: React.FC = () => {
               </span>
             </div>
 
-            <h1 className="text-3xl font-extrabold tracking-tight text-[var(--color-foreground)] leading-tight mt-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--color-foreground)] leading-tight mt-3 break-words">
               {product.name}
             </h1>
-
-            <div className="flex items-center gap-2 mt-4 flex-wrap">
-              <button
-                onClick={handleOpenTrackingModal}
-                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer active:scale-95 ${
-                  isTracking
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
-                    : 'bg-[var(--color-foreground)] hover:opacity-90 text-[var(--color-background)] border-transparent font-extrabold shadow-md'
-                }`}
-                title="Track Price & Get Notified"
-              >
-                <Bell className={`h-4 w-4 ${isTracking ? 'fill-current' : ''}`} />
-                <span>{isTracking ? `Tracking at ${formatPrice(watchlistEntry?.targetPrice || 0, currency)}` : 'Track Price'}</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  const el = document.getElementById('alternatives-section');
-                  if (el) {
-                    el.scrollIntoView({ behavior: 'smooth' });
-                  } else {
-                    navigate(`/product/${product.id}/alternatives`);
-                  }
-                }}
-                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-all cursor-pointer active:scale-95"
-                title="Discover qualified product alternatives"
-              >
-                <Split className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
-                <span>Find Alternatives</span>
-              </button>
-
-              <button
-                onClick={() => navigate(`/compare?ids=${product.id}`)}
-                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] text-[var(--color-foreground)] text-xs font-bold transition-all cursor-pointer active:scale-95"
-                title="Compare with other products"
-              >
-                <Layers className="h-4 w-4 text-[var(--color-muted-foreground)]" />
-                <span>Compare</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  const params = new URLSearchParams({
-                    productId: product.id,
-                    query: 'Analyze price history, deals, and purchase timing for ' + product.name
-                  });
-                  navigate(`/assistant?${params.toString()}`);
-                }}
-                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 text-xs font-bold transition-all cursor-pointer active:scale-95"
-                title="Ask Shopping Decision Assistant"
-              >
-                <Bot className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
-                <span>Ask AI</span>
-              </button>
-
-              <button
-                onClick={handleToggleSave}
-                disabled={saving}
-                className={`flex items-center justify-center p-2.5 rounded-xl border transition-all cursor-pointer active:scale-95 shrink-0 ${
-                  isSaved
-                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 dark:text-rose-400 hover:bg-rose-500/20'
-                    : 'bg-[var(--color-surface-accent)] border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:border-[var(--color-border)]'
-                }`}
-                title={isSaved ? "Remove from Saved" : "Save Product"}
-              >
-                <Heart className={`h-4.5 w-4.5 ${isSaved ? 'fill-current text-rose-500' : ''} ${saving ? 'animate-pulse' : ''}`} />
-              </button>
-            </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <h3 className="text-xs font-bold text-[var(--color-muted-foreground)] uppercase tracking-widest">Overview</h3>
-            <p className="text-sm text-[var(--color-muted-foreground)] leading-relaxed font-normal">
-              {product.description}
-            </p>
-          </div>
-
-          {/* Quick Stats & Unified Intelligence Badges */}
-          {sortedPrices.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] backdrop-blur-sm">
+          {/* Price Summary & Intelligence Strip */}
+          {sortedPrices.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xs">
               <div className="flex flex-col">
                 <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider mb-0.5">Best Price</span>
-                <span className="text-lg font-extrabold text-emerald-500 dark:text-emerald-400">
+                <span className="text-xl sm:text-2xl font-extrabold text-emerald-500 dark:text-emerald-400">
                   {formatPrice(lowestPriceLocal, currency)}
                 </span>
               </div>
@@ -526,7 +518,89 @@ export const ProductPage: React.FC = () => {
                 </span>
               </div>
             </div>
+          ) : (
+            <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-[var(--color-surface-accent)] border border-[var(--color-border)] text-xs text-[var(--color-muted-foreground)]">
+              <AlertCircle className="h-4 w-4 shrink-0 text-[var(--color-muted-foreground)]" />
+              <span>No active seller offers listed for this product at this time.</span>
+            </div>
           )}
+
+          {/* Primary & Supporting Actions */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              onClick={handleOpenTrackingModal}
+              className={`flex items-center gap-1.5 min-h-[40px] px-4 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer active:scale-95 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
+                isTracking
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                  : 'bg-[var(--color-foreground)] hover:opacity-90 text-[var(--color-background)] border-transparent font-extrabold shadow-md'
+              }`}
+              title="Track Price & Get Notified"
+            >
+              <Bell className={`h-4 w-4 ${isTracking ? 'fill-current' : ''}`} />
+              <span>{isTracking ? `Tracking at ${formatPrice(watchlistEntry?.targetPrice || 0, currency)}` : 'Track Price'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const el = document.getElementById('alternatives-section');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  navigate(`/product/${product.id}/alternatives`);
+                }
+              }}
+              className="flex items-center gap-1.5 min-h-[40px] px-3.5 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition-all cursor-pointer active:scale-95 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
+              title="Discover qualified product alternatives"
+            >
+              <Split className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+              <span>Find Alternatives</span>
+            </button>
+
+            <button
+              onClick={() => navigate(`/compare?ids=${product.id}`)}
+              className="flex items-center gap-1.5 min-h-[40px] px-3.5 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] text-[var(--color-foreground)] text-xs font-bold transition-all cursor-pointer active:scale-95 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none"
+              title="Compare with other products"
+            >
+              <Layers className="h-4 w-4 text-[var(--color-muted-foreground)]" />
+              <span>Compare</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const params = new URLSearchParams({
+                  productId: product.id,
+                  query: 'Analyze price history, deals, and purchase timing for ' + product.name
+                });
+                navigate(`/assistant?${params.toString()}`);
+              }}
+              className="flex items-center gap-1.5 min-h-[40px] px-3.5 py-2.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 text-xs font-bold transition-all cursor-pointer active:scale-95 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
+              title="Ask Shopping Decision Assistant"
+            >
+              <Bot className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
+              <span>Ask AI</span>
+            </button>
+
+            <button
+              onClick={handleToggleSave}
+              disabled={saving}
+              className={`flex items-center justify-center min-h-[40px] min-w-[40px] p-2.5 rounded-xl border transition-all cursor-pointer active:scale-95 shrink-0 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
+                isSaved
+                  ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 dark:text-rose-400 hover:bg-rose-500/20'
+                  : 'bg-[var(--color-surface-accent)] border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:border-[var(--color-border)]'
+              }`}
+              title={isSaved ? "Remove from Saved" : "Save Product"}
+              aria-label={isSaved ? "Remove from Saved" : "Save Product"}
+            >
+              <Heart className={`h-4.5 w-4.5 ${isSaved ? 'fill-current text-rose-500' : ''} ${saving ? 'animate-pulse' : ''}`} />
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h3 className="text-xs font-bold text-[var(--color-muted-foreground)] uppercase tracking-widest">Overview</h3>
+            <p className="text-sm text-[var(--color-muted-foreground)] leading-relaxed font-normal">
+              {product.description}
+            </p>
+          </div>
         </motion.div>
       </div>
 
@@ -541,7 +615,7 @@ export const ProductPage: React.FC = () => {
               <ShoppingBag className="h-5 w-5 text-[var(--color-muted-foreground)]" />
               Compare Seller Prices
             </h2>
-            <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">Aggregated retail offers verified in real-time</p>
+            <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">Aggregated retail offers from tracked stores</p>
           </div>
 
           <div className="flex items-center gap-3.5 self-end sm:self-auto">
@@ -591,7 +665,8 @@ export const ProductPage: React.FC = () => {
         </div>
 
         {sortedPrices.length > 0 ? (
-          <AnimatePresence mode="wait">
+          <>
+            <AnimatePresence mode="wait">
             {viewMode === 'card' ? (
               <motion.div
                 key="card-grid"
@@ -700,7 +775,7 @@ export const ProductPage: React.FC = () => {
                                  )}
                                  {isLowest && (
                                    <span className="text-[10px] text-emerald-500 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                                     <Sparkles className="h-2.5 w-2.5 animate-pulse" /> Lowest verified price
+                                     <Sparkles className="h-2.5 w-2.5 animate-pulse" /> Lowest listed base price
                                    </span>
                                  )}
                                </div>
@@ -739,6 +814,10 @@ export const ProductPage: React.FC = () => {
                </motion.div>
              )}
            </AnimatePresence>
+           <p className="text-xs text-[var(--color-muted-foreground)] text-center sm:text-left mt-2">
+             Listed prices represent base prices. Additional shipping, taxes, and fees may apply at merchant checkout.
+           </p>
+         </>
          ) : (
            <div className="flex flex-col items-center justify-center py-12 px-6 border border-[var(--color-border)] border-dashed rounded-2xl bg-[var(--color-surface)] text-center">
              <ShoppingBag className="h-8 w-8 text-[var(--color-muted-foreground)] mb-3" />
@@ -760,7 +839,7 @@ export const ProductPage: React.FC = () => {
               <Activity className="h-5 w-5 text-[var(--color-muted-foreground)]" />
               Product Interaction & Metrics
             </h2>
-            <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">Real-time demand analytics and price volatility indicators</p>
+            <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">Catalog demand analytics and price trend indicators</p>
           </div>
 
           {analyticsLoading ? (
@@ -827,7 +906,7 @@ export const ProductPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-base font-bold text-[var(--color-foreground)] tracking-tight">Price Intelligence</h3>
-                <p className="text-xs text-[var(--color-muted-foreground)]">Real-time market valuation and purchase timing</p>
+                <p className="text-xs text-[var(--color-muted-foreground)]">Market valuation and purchase timing analysis</p>
               </div>
             </div>
 
@@ -979,9 +1058,11 @@ export const ProductPage: React.FC = () => {
 
             {/* Modal content */}
             <motion.div
+              ref={dialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="tracking-modal-title"
+              aria-describedby="tracking-modal-description"
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -1006,7 +1087,7 @@ export const ProductPage: React.FC = () => {
                   <h3 id="tracking-modal-title" className="text-base font-bold text-[var(--color-foreground)] leading-none">
                     {isTracking ? 'Edit Price Watchlist' : 'Set Price Watchlist'}
                   </h3>
-                  <p className="text-[11px] text-[var(--color-muted-foreground)] mt-1">
+                  <p id="tracking-modal-description" className="text-[11px] text-[var(--color-muted-foreground)] mt-1">
                     Get alerted when this product drops below your target price.
                   </p>
                 </div>
@@ -1035,6 +1116,7 @@ export const ProductPage: React.FC = () => {
                       {CURRENCY_SYMBOLS[currency]}
                     </span>
                     <input
+                      ref={targetPriceInputRef}
                       id="targetPrice"
                       type="number"
                       required

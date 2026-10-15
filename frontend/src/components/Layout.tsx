@@ -48,7 +48,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-2 group shrink-0">
-              <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-zinc-900 via-zinc-700 to-zinc-500 dark:from-white dark:via-zinc-200 dark:to-zinc-400 bg-clip-text text-transparent group-hover:opacity-90 transition-all">
+              <span className="font-extrabold text-xl tracking-tight text-[var(--color-foreground)] group-hover:opacity-90 transition-all">
                 PricePilot
               </span>
             </Link>

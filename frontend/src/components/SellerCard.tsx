@@ -118,9 +118,12 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
           {isBestDeal && (
             <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Lowest verified price</span>
+              <span>Lowest listed base price</span>
             </div>
           )}
+          <p className="text-[10px] text-[var(--color-muted-foreground)] font-normal mt-1">
+            Base price. Shipping, taxes, and other fees may apply at checkout.
+          </p>
         </div>
       </div>
 
