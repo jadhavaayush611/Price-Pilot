@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ProductPrice } from '../types';
-import { ExternalLink, Sparkles, Tag, Clock, TrendingUp } from 'lucide-react';
+import { ExternalLink, Sparkles, Tag, Clock, TrendingUp, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatPrice, getDisplayPrice, type CurrencyCode } from '../currency';
 import { apiService } from '../services/api';
@@ -87,9 +87,14 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
       {/* Middle Section: Prices & Calculations */}
       <div className="flex flex-col gap-2 py-3.5 border-t border-b border-[var(--color-border)] my-2">
         <div className="flex items-baseline justify-between">
-          <span className="text-2xl font-black text-[var(--color-foreground)] tracking-tight">
-            {formatPrice(currentPriceLocal, currency)}
-          </span>
+          <div className="flex flex-col">
+            <span className="text-2xl font-black text-[var(--color-foreground)] tracking-tight">
+              {formatPrice(currentPriceLocal, currency)}
+            </span>
+            <span className="text-[10px] font-medium text-[var(--color-muted-foreground)]">
+              Listed base price
+            </span>
+          </div>
           {originalPriceLocal > currentPriceLocal && (
             <span className="text-xs text-[var(--color-muted-foreground)] line-through font-normal">
               {formatPrice(originalPriceLocal, currency)}
@@ -97,7 +102,7 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
           )}
         </div>
 
-        {/* Calculations */}
+        {/* Calculations & Status */}
         <div className="flex flex-col gap-1 text-[11px] font-semibold">
           {/* Savings calculation */}
           {savings > 0 && (
@@ -121,8 +126,17 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
               <span>Lowest listed base price</span>
             </div>
           )}
-          <p className="text-[10px] text-[var(--color-muted-foreground)] font-normal mt-1">
-            Base price. Shipping, taxes, and other fees may apply at checkout.
+
+          {/* Availability / Stock Status when known */}
+          {(price as { inStock?: boolean }).inStock !== undefined && (
+            <div className={`flex items-center gap-1.5 ${(price as { inStock?: boolean }).inStock ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>
+              {(price as { inStock?: boolean }).inStock ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
+              <span>{(price as { inStock?: boolean }).inStock ? 'In Stock' : 'Out of Stock'}</span>
+            </div>
+          )}
+
+          <p className="text-[10px] text-[var(--color-muted-foreground)] font-normal mt-0.5">
+            Base price &middot; Fees may apply at checkout
           </p>
         </div>
       </div>
@@ -134,7 +148,8 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => apiService.trackSellerClick(price.id)}
-          className={`flex items-center justify-center gap-2 w-full py-3 px-4 text-xs font-bold rounded-xl border transition-all active:scale-[0.98] ${
+          aria-label={`Visit ${price.seller?.name || 'Seller'} storefront`}
+          className={`flex items-center justify-center gap-2 w-full py-3 px-4 text-xs font-bold rounded-xl border transition-all active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
             isBestDeal
               ? 'bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] border-transparent shadow-sm'
               : 'bg-[var(--color-surface)] hover:bg-[var(--color-surface-accent)] text-[var(--color-foreground)] border-[var(--color-border)]'

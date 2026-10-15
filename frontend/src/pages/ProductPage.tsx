@@ -2,9 +2,9 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductWithPrices, Watchlist, ProductAnalytics, AlternativeResponse, AlternativeType } from '../types';
-import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity, Bot, Layers, TrendingUp, TrendingDown, Split } from 'lucide-react';
+import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity, Bot, Layers, TrendingUp, TrendingDown, Split, CheckCircle2, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice, getSavedCurrency, saveCurrency, getDisplayPrice, type CurrencyCode, CURRENCY_SYMBOLS } from '../currency';
+import { formatPrice, getSavedCurrency, saveCurrency, getDisplayPrice, type CurrencyCode, CURRENCY_SYMBOLS, CURRENCY_METADATA } from '../currency';
 import { SellerCard } from '../components/SellerCard';
 import { useAuth } from '../context/AuthContext';
 import { PriceHistorySection } from '../components/PriceHistorySection';
@@ -620,45 +620,63 @@ export const ProductPage: React.FC = () => {
 
           <div className="flex items-center gap-3.5 self-end sm:self-auto">
             {/* Currency Selector */}
-            <div className="flex items-center rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-1 gap-1">
-              {(['USD', 'INR', 'EUR', 'GBP', 'JPY'] as CurrencyCode[]).map((cur) => (
-                <button
-                  key={cur}
-                  onClick={() => setCurrency(cur)}
-                  className={`px-2 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
-                    currency === cur
-                      ? 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] border border-[var(--color-border)] shadow-inner'
-                      : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
-                  }`}
-                >
-                  {CURRENCY_SYMBOLS[cur]} {cur}
-                </button>
-              ))}
+            <div
+              className="flex items-center rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-1 gap-1"
+              role="radiogroup"
+              aria-label="Display currency selector"
+            >
+              {(['USD', 'INR', 'EUR', 'GBP', 'JPY'] as CurrencyCode[]).map((cur) => {
+                const isSelected = currency === cur;
+                return (
+                  <button
+                    key={cur}
+                    onClick={() => setCurrency(cur)}
+                    role="radio"
+                    aria-checked={isSelected}
+                    aria-label={`Display prices in ${CURRENCY_METADATA[cur]?.name || cur} (${CURRENCY_SYMBOLS[cur]})`}
+                    className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
+                      isSelected
+                        ? 'bg-[var(--color-foreground)] text-[var(--color-background)] shadow-xs'
+                        : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)]'
+                    }`}
+                  >
+                    {CURRENCY_SYMBOLS[cur]} {cur}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Layout View Mode Switcher */}
-            <div className="flex items-center rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-1">
+            <div
+              className="flex items-center rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] p-1 gap-1"
+              role="group"
+              aria-label="Seller offers view mode"
+            >
               <button
                 onClick={() => setViewMode('card')}
-                className={`p-1.5 rounded-lg transition-all ${
+                aria-pressed={viewMode === 'card'}
+                aria-label="Card Grid View"
+                className={`p-1.5 rounded-lg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
                   viewMode === 'card'
-                    ? 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] border border-[var(--color-border)] shadow-inner'
-                    : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
+                    ? 'bg-[var(--color-foreground)] text-[var(--color-background)] shadow-xs'
+                    : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)]'
                 }`}
                 title="Card Grid View"
               >
-                <LayoutGrid className="h-4.5 w-4.5" />
+                <LayoutGrid className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg transition-all ${
+                aria-pressed={viewMode === 'table'}
+                aria-label="Detailed Table View"
+                className={`p-1.5 rounded-lg transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
                   viewMode === 'table'
-                    ? 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] border border-[var(--color-border)] shadow-inner'
-                    : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
+                    ? 'bg-[var(--color-foreground)] text-[var(--color-background)] shadow-xs'
+                    : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)]'
                 }`}
                 title="Detailed Table View"
               >
-                <List className="h-4.5 w-4.5" />
+                <List className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -696,14 +714,14 @@ export const ProductPage: React.FC = () => {
                 className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl backdrop-blur-xl animate-fade-in"
               >
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse min-w-[620px]">
                     <thead>
                       <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-accent)] text-[10px] font-bold uppercase tracking-widest text-[var(--color-muted-foreground)]">
-                        <th className="px-6 py-4.5">Seller</th>
-                        <th className="px-6 py-4.5">Listed Price</th>
-                        <th className="px-6 py-4.5">Savings & Difference</th>
-                        <th className="px-6 py-4.5">Sync Frequency</th>
-                        <th className="px-6 py-4.5 text-right">Direct Storefront</th>
+                        <th scope="col" className="px-6 py-4.5">Seller</th>
+                        <th scope="col" className="px-6 py-4.5">Listed Base Price</th>
+                        <th scope="col" className="px-6 py-4.5">Savings & Difference</th>
+                        <th scope="col" className="px-6 py-4.5">Sync Frequency</th>
+                        <th scope="col" className="px-6 py-4.5 text-right">Direct Storefront</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--color-border)] text-sm">
@@ -756,6 +774,7 @@ export const ProductPage: React.FC = () => {
                                    </span>
                                  )}
                                </div>
+                               <span className="text-[10px] text-[var(--color-muted-foreground)] block font-medium">Base price</span>
                              </td>
 
                              {/* Savings & Difference */}
@@ -778,6 +797,12 @@ export const ProductPage: React.FC = () => {
                                      <Sparkles className="h-2.5 w-2.5 animate-pulse" /> Lowest listed base price
                                    </span>
                                  )}
+                                 {(price as { inStock?: boolean }).inStock !== undefined && (
+                                   <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${(price as { inStock?: boolean }).inStock ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>
+                                     {(price as { inStock?: boolean }).inStock ? <CheckCircle2 className="h-2.5 w-2.5" /> : <AlertCircle className="h-2.5 w-2.5" />}
+                                     {(price as { inStock?: boolean }).inStock ? 'In Stock' : 'Out of Stock'}
+                                   </span>
+                                 )}
                                </div>
                              </td>
 
@@ -795,7 +820,8 @@ export const ProductPage: React.FC = () => {
                                  target="_blank"
                                  rel="noopener noreferrer"
                                  onClick={() => apiService.trackSellerClick(price.id)}
-                                 className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border transition-all active:scale-95 ${
+                                 aria-label={`Visit ${price.seller?.name || 'Seller'} storefront`}
+                                 className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
                                    isLowest
                                      ? 'bg-[var(--color-foreground)] text-[var(--color-background)] hover:opacity-90 border-[var(--color-foreground)] shadow-md'
                                      : 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] hover:bg-[var(--color-surface)] border-[var(--color-border)]'
@@ -814,9 +840,12 @@ export const ProductPage: React.FC = () => {
                </motion.div>
              )}
            </AnimatePresence>
-           <p className="text-xs text-[var(--color-muted-foreground)] text-center sm:text-left mt-2">
-             Listed prices represent base prices. Additional shipping, taxes, and fees may apply at merchant checkout.
-           </p>
+           <div className="flex items-center gap-2 mt-3 text-xs text-[var(--color-muted-foreground)]">
+             <Info className="h-3.5 w-3.5 shrink-0 text-[var(--color-muted-foreground)]" />
+             <p>
+               Listed prices represent base prices in {CURRENCY_METADATA[currency]?.name || currency}. Additional shipping, taxes, and merchant fees may apply at checkout.
+             </p>
+           </div>
          </>
          ) : (
            <div className="flex flex-col items-center justify-center py-12 px-6 border border-[var(--color-border)] border-dashed rounded-2xl bg-[var(--color-surface)] text-center">
