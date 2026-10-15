@@ -46,6 +46,11 @@ export const SearchPage: React.FC = () => {
   const activeRequestRef = useRef<string>('');
   const activeUserIdRef = useRef<string | null>(user?.id || null);
 
+  // Mobile filter sheet refs
+  const filterTriggerRef = useRef<HTMLButtonElement>(null);
+  const filterDialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   const hasActiveFilters = 
     urlCategory !== 'All' || 
     urlBrand !== 'All' || 
@@ -54,6 +59,66 @@ export const SearchPage: React.FC = () => {
     urlInStock || 
     urlDealQuality !== 'All' || 
     (urlSort !== 'default' && urlSort !== 'relevance');
+
+  // Active filter count calculated strictly from URL state
+  const activeFilterCount = [
+    urlCategory !== 'All',
+    urlBrand !== 'All',
+    urlMinPrice !== '',
+    urlMaxPrice !== '',
+    urlInStock,
+    urlDealQuality !== 'All',
+    urlSort !== 'default' && urlSort !== 'relevance'
+  ].filter(Boolean).length;
+
+  // Manage background scroll lock and focus restoration when mobile filter sheet opens/closes
+  useEffect(() => {
+    if (showMobileFilters) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      const timer = setTimeout(() => {
+        closeButtonRef.current?.focus();
+      }, 50);
+
+      return () => {
+        clearTimeout(timer);
+        document.body.style.overflow = prevOverflow;
+        filterTriggerRef.current?.focus();
+      };
+    }
+  }, [showMobileFilters]);
+
+  // Dialog keydown handler for Escape dismissal and Tab focus trapping
+  const handleDialogKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setShowMobileFilters(false);
+      return;
+    }
+
+    if (e.key === 'Tab' && filterDialogRef.current) {
+      const focusable = filterDialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+  };
 
   // Handle user authentication transitions (login/logout)
   useEffect(() => {
@@ -252,7 +317,7 @@ export const SearchPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-6 py-2">
       {/* Sticky Search Header */}
-      <header className="sticky top-16 z-30 backdrop-blur-md bg-[var(--color-background)]/85 py-3.5 border-b border-[var(--color-border)] -mx-4 px-4 sm:-mx-6 sm:px-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between transition-all">
+      <header className="sticky top-16 z-30 backdrop-blur-md bg-[var(--color-background)]/90 py-3 border-b border-[var(--color-border)] -mx-4 px-4 sm:-mx-6 sm:px-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between transition-all">
         <div>
           <h1 className="text-lg font-bold tracking-tight text-[var(--color-foreground)] m-0">
             {query ? `Search: "${query}"` : 'Discover Products'}
@@ -264,9 +329,9 @@ export const SearchPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
           {/* Mode Switcher */}
-          <div className="flex items-center gap-1 bg-[var(--color-surface)] p-1 rounded-xl border border-[var(--color-border)] shrink-0">
+          <div className="flex items-center gap-1 bg-[var(--color-surface)] p-1 rounded-xl border border-[var(--color-border)] shrink-0 self-start sm:self-auto">
             <button
               type="button"
               onClick={() => updateParams({ personalized: null })}
@@ -299,23 +364,30 @@ export const SearchPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="w-full sm:w-64 md:w-80">
-            <SearchBar value={query} onChange={handleKeywordChange} />
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex-1 sm:w-64 md:w-80 min-w-0">
+              <SearchBar value={query} onChange={handleKeywordChange} />
+            </div>
+
+            {/* Mobile Filters Trigger Button */}
+            <button
+              ref={filterTriggerRef}
+              type="button"
+              onClick={() => setShowMobileFilters(true)}
+              aria-expanded={showMobileFilters}
+              aria-controls="mobile-filter-sheet"
+              aria-label={activeFilterCount > 0 ? `Filters (${activeFilterCount} active)` : "Filters"}
+              className="lg:hidden shrink-0 flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface-accent)] text-xs font-semibold text-[var(--color-foreground)] cursor-pointer active:scale-95 transition-all focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+              <span>Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-emerald-500 text-white dark:bg-emerald-500 dark:text-zinc-950">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
           </div>
-          
-          {/* Mobile Filters Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setShowMobileFilters(!showMobileFilters)}
-            aria-expanded={showMobileFilters}
-            className="lg:hidden flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl hover:bg-[var(--color-surface-accent)] text-sm font-semibold text-[var(--color-foreground)] cursor-pointer active:scale-95 transition-all"
-          >
-            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-            <span>Filters</span>
-            {hasActiveFilters && (
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-            )}
-          </button>
         </div>
       </header>
 
@@ -420,41 +492,122 @@ export const SearchPage: React.FC = () => {
         </div>
       )}
 
+      {/* Mobile Dedicated Filter Sheet / Modal Dialog */}
+      <AnimatePresence>
+        {showMobileFilters && (
+          <div className="lg:hidden fixed inset-0 z-[60] flex justify-end" onKeyDown={handleDialogKeyDown}>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setShowMobileFilters(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              aria-hidden="true"
+            />
+
+            {/* Slide-over Sheet */}
+            <motion.div
+              ref={filterDialogRef}
+              role="dialog"
+              aria-modal="true"
+              id="mobile-filter-sheet"
+              aria-labelledby="mobile-filter-heading"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="relative w-full max-w-sm h-full bg-[var(--color-surface)] border-l border-[var(--color-border)] shadow-2xl flex flex-col z-10"
+            >
+              {/* Sheet Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-md shrink-0">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+                  <h2 id="mobile-filter-heading" className="text-sm font-bold uppercase tracking-wider text-[var(--color-foreground)]">
+                    Filters &amp; Sort
+                  </h2>
+                  {activeFilterCount > 0 && (
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                      ({activeFilterCount} active)
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={handleResetFilters}
+                      className="text-xs font-semibold text-[var(--color-muted-foreground)] hover:text-emerald-500 transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none rounded-lg px-2 py-1 cursor-pointer"
+                    >
+                      Reset
+                    </button>
+                  )}
+                  <button
+                    ref={closeButtonRef}
+                    type="button"
+                    onClick={() => setShowMobileFilters(false)}
+                    aria-label="Close filters"
+                    className="p-1.5 rounded-xl text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none transition-colors cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Sheet Body (Scrollable filters) */}
+              <div className="flex-1 overflow-y-auto px-5 py-4 overscroll-contain">
+                <SearchFilters
+                  categories={availableCategories}
+                  brands={availableBrands}
+                  selectedCategory={urlCategory}
+                  selectedBrand={urlBrand}
+                  minPrice={urlMinPrice}
+                  maxPrice={urlMaxPrice}
+                  inStockOnly={urlInStock}
+                  dealQuality={urlDealQuality}
+                  sortBy={urlSort}
+                  onCategoryChange={handleCategoryChange}
+                  onBrandChange={handleBrandChange}
+                  onMinPriceChange={handleMinPriceChange}
+                  onMaxPriceChange={handleMaxPriceChange}
+                  onInStockToggle={handleInStockToggle}
+                  onDealQualityChange={handleDealQualityChange}
+                  onSortChange={handleSortChange}
+                  onReset={handleResetFilters}
+                  className="flex flex-col gap-6"
+                  showTitle={false}
+                  idPrefix="mobile"
+                />
+              </div>
+
+              {/* Sheet Footer */}
+              <div className="flex items-center gap-3 p-4 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-md shrink-0">
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
+                    className="px-4 py-2.5 rounded-xl border border-[var(--color-border)] text-xs font-semibold text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none active:scale-95"
+                  >
+                    Reset
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowMobileFilters(false)}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] text-xs font-bold transition-all shadow-sm active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none text-center cursor-pointer"
+                >
+                  {!loading ? `View ${totalElements} ${totalElements === 1 ? 'Result' : 'Results'}` : 'Apply Filters'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Main Responsive Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start mt-2">
-        {/* Mobile Expandable Filter Panel */}
-        <AnimatePresence>
-          {showMobileFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.25 }}
-              className="lg:hidden col-span-1 overflow-hidden"
-            >
-              <SearchFilters
-                categories={availableCategories}
-                brands={availableBrands}
-                selectedCategory={urlCategory}
-                selectedBrand={urlBrand}
-                minPrice={urlMinPrice}
-                maxPrice={urlMaxPrice}
-                inStockOnly={urlInStock}
-                dealQuality={urlDealQuality}
-                sortBy={urlSort}
-                onCategoryChange={handleCategoryChange}
-                onBrandChange={handleBrandChange}
-                onMinPriceChange={handleMinPriceChange}
-                onMaxPriceChange={handleMaxPriceChange}
-                onInStockToggle={handleInStockToggle}
-                onDealQualityChange={handleDealQualityChange}
-                onSortChange={handleSortChange}
-                onReset={handleResetFilters}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Sidebar Filters (Desktop only) */}
         <div className="hidden lg:block lg:col-span-1">
           <SearchFilters
@@ -475,6 +628,7 @@ export const SearchPage: React.FC = () => {
             onDealQualityChange={handleDealQualityChange}
             onSortChange={handleSortChange}
             onReset={handleResetFilters}
+            idPrefix="desktop"
           />
         </div>
 

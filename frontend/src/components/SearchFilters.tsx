@@ -30,6 +30,9 @@ interface SearchFiltersProps {
   onDealQualityChange: (quality: string) => void;
   onSortChange: (sort: string) => void;
   onReset: () => void;
+  className?: string;
+  showTitle?: boolean;
+  idPrefix?: string;
 }
 
 export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
@@ -49,7 +52,10 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
   onInStockToggle,
   onDealQualityChange,
   onSortChange,
-  onReset
+  onReset,
+  className,
+  showTitle = true,
+  idPrefix = 'desktop'
 }) => {
   const hasActiveFilters = 
     selectedCategory !== 'All' || 
@@ -77,26 +83,28 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
   return (
     <aside 
       aria-label="Product Search Filters"
-      className="flex flex-col gap-6 p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] backdrop-blur-xl sticky top-36 z-25 max-h-[calc(100vh-180px)] overflow-y-auto pr-3 shadow-sm"
+      className={className || "flex flex-col gap-6 p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] backdrop-blur-xl sticky top-36 z-25 max-h-[calc(100vh-180px)] overflow-y-auto pr-3 shadow-sm"}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-emerald-500" aria-hidden="true" />
-          <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-foreground)]">Filters & Sort</span>
+      {showTitle && (
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-foreground)]">Filters & Sort</span>
+          </div>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={onReset}
+              aria-label="Reset all search filters"
+              className="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-muted-foreground)] hover:text-emerald-500 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none rounded-lg transition-colors cursor-pointer group"
+            >
+              <RotateCcw className="h-3 w-3 group-hover:rotate-[-45deg] transition-transform" aria-hidden="true" />
+              Reset
+            </button>
+          )}
         </div>
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={onReset}
-            aria-label="Reset all search filters"
-            className="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-muted-foreground)] hover:text-emerald-500 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none rounded-lg transition-colors cursor-pointer group"
-          >
-            <RotateCcw className="h-3 w-3 group-hover:rotate-[-45deg] transition-transform" aria-hidden="true" />
-            Reset
-          </button>
-        )}
-      </div>
+      )}
 
       {/* Sort By Section */}
       <div className="flex flex-col gap-2.5">
@@ -119,7 +127,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
               >
                 <span>{opt.label}</span>
                 {isActive && (
-                  <motion.span layoutId="activeSortTick">
+                  <motion.span layoutId={`${idPrefix}-activeSortTick`}>
                     <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                   </motion.span>
                 )}
