@@ -1,385 +1,314 @@
 <div align="center">
 
-# PricePilot
-
-### Intelligent Shopping, Without the Guesswork.
+<picture>
+  <source srcset="docs/assets/banner.gif" type="image/gif">
+  <img src="docs/assets/banner.gif" alt="PricePilot — Autonomous Commerce Intelligence: Discovery, Offer Comparison, Evidence-Based Decisions" width="100%" />
+</picture>
 
 <p align="center">
-  <strong>Understand the price. Compare real offers. Personalize the decision. Know when to buy.</strong>
+  <strong>Intelligent Shopping, Grounded Evidence, Multi-Merchant Price Normalization.</strong><br/>
+  <em>Understand true product prices. Compare multi-seller listings without hidden markups. Make informed purchase decisions.</em>
 </p>
 
 <p align="center">
-  <a href="https://price-pilot-ch3q.onrender.com"><img src="https://img.shields.io/badge/Live%20Demo-Render-46E3B7.svg?style=for-the-badge&logo=render" alt="Live Demo"></a>
-  <a href="https://github.com/jadhavaayush611/Price-Pilot/releases/tag/v1.2.0"><img src="https://img.shields.io/badge/Release-v1.2.0-blue.svg?style=for-the-badge" alt="Release v1.2.0"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License MIT"></a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Java-21-orange.svg?style=flat-square&logo=openjdk" alt="Java 21">
-  <img src="https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen.svg?style=flat-square&logo=springboot" alt="Spring Boot 4.1.0">
+  <img src="https://img.shields.io/badge/Release-v1.3--offline-blueviolet.svg?style=flat-square" alt="Release v1.3 Offline">
+  <img src="https://img.shields.io/badge/Java-21_LTS-orange.svg?style=flat-square&logo=openjdk" alt="Java 21 LTS">
+  <img src="https://img.shields.io/badge/Spring_Boot-4.1.0-brightgreen.svg?style=flat-square&logo=springboot" alt="Spring Boot 4.1.0">
   <img src="https://img.shields.io/badge/React-19.2-cyan.svg?style=flat-square&logo=react" alt="React 19.2">
   <img src="https://img.shields.io/badge/TypeScript-6.0-blue.svg?style=flat-square&logo=typescript" alt="TypeScript 6.0">
-  <img src="https://img.shields.io/badge/Tailwind%20CSS-4.3-38bdf8.svg?style=flat-square&logo=tailwindcss" alt="Tailwind CSS 4.3">
-  <img src="https://img.shields.io/badge/PostgreSQL-15+-4169e1.svg?style=flat-square&logo=postgresql" alt="PostgreSQL 15+">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4.3-38bdf8.svg?style=flat-square&logo=tailwindcss" alt="Tailwind CSS 4.3">
+  <img src="https://img.shields.io/badge/Design-Midnight_Intelligence-9585FF.svg?style=flat-square" alt="Midnight Intelligence">
+  <img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="MIT License">
 </p>
 
 <p align="center">
-  <a href="https://price-pilot-ch3q.onrender.com"><strong>🚀 Launch Live Web App</strong></a> &nbsp;&bull;&nbsp;
-  <a href="https://pricepilot-backend-4sxk.onrender.com/actuator/health"><strong>⚡ Backend Health Check</strong></a> &nbsp;&bull;&nbsp;
-  <a href="#-documentation-index"><strong>📚 Documentation Index</strong></a>
+  <a href="#-project-overview"><strong>Overview</strong></a> &nbsp;&bull;&nbsp;
+  <a href="#-architecture"><strong>Architecture</strong></a> &nbsp;&bull;&nbsp;
+  <a href="#-marketplace-intelligence-subsystem-v13"><strong>Marketplace Pipeline</strong></a> &nbsp;&bull;&nbsp;
+  <a href="#-quick-start--local-development"><strong>Quick Start</strong></a> &nbsp;&bull;&nbsp;
+  <a href="#-audit--test-evidence"><strong>Test Evidence</strong></a> &nbsp;&bull;&nbsp;
+  <a href="#-truthful-data--release-disclosure"><strong>Data Disclosure</strong></a> &nbsp;&bull;&nbsp;
+  <a href="#-documentation-index"><strong>Documentation</strong></a>
 </p>
-
-<br/>
-
-<img src="frontend/src/assets/hero.png" alt="PricePilot Shopping Intelligence" width="720" />
 
 </div>
 
 ---
 
-<h2 align="center">The Shopping Problem</h2>
-
-<p align="center">
-Modern online shopping overwhelms consumers with scattered product listings, deceptive discounts, and opaque specifications. Price comparison platforms only answer <em>"What is the numerical price?"</em>—leaving shoppers to guess whether a deal is genuine, whether a product fits their individual needs, and whether they should buy now or wait.
-</p>
-
----
-
-<h2 align="center">Why PricePilot</h2>
-
-<table width="100%">
-<tr>
-<td width="50%" valign="top">
-
-### 🔍 True Pricing & Multi-Seller Intelligence
-Live tracking across active merchants highlights verified lowest prices and real savings, cutting through artificial markup tricks.
-
-</td>
-<td width="50%" valign="top">
-
-### ⚡ Natural-Language & Semantic Search
-Understands conversational buyer intent (e.g. *"lightweight laptop with long battery life under ₹60,000"*) through local deterministic vector matching.
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### ⚖️ Side-by-Side Comparison Matrix
-Compare 2 to 5 products simultaneously with structured spec matrices, feature trade-offs, and objective category winner scoring.
-
-</td>
-<td width="50%" valign="top">
-
-### 🎯 Preference-Driven Personalization
-Factors explicit user preferences (preferred brands, budget limits, decision priorities) and behavioral signals to tailor product rankings.
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### 📊 Price Analytics & Trajectory
-Visual price fluctuation timelines across days and months with automated deal quality ratings and data-driven buy/wait guidance.
-
-</td>
-<td width="50%" valign="top">
-
-### 🤖 Evidence-Grounded AI Assistant
-Conversational shopping companion that reasons strictly over verified catalog specifications and live merchant offers without hallucination.
-
-</td>
-</tr>
-</table>
+> [!IMPORTANT]
+> ### 🛡️ Truthful Data & Release Disclosure (v1.3)
+> - **Current Implementation Scope**: PricePilot v1.3 is **complete with explicit exceptions for the agreed offline marketplace scope**.
+> - **Data Provenance**: All marketplace listings, retailer prices, and seller records are served exclusively from **offline seed catalog fixtures** and **simulated demonstration adapters**.
+> - **No Live Retailer Scraping**: No live external retail integrations, authorized partner feeds, or unauthorized web scraping mechanisms are connected or active.
+> - **Simulated Offer Guardrails**: Simulated offers are explicitly labeled (`Simulated Offer`, `SIMULATED DEAL (TESTING)`). Neither simulated nor stale listings can claim an unqualified green `Best Deal` badge.
+> - **Currency Conversion**: Real-time display conversion (USD, INR, EUR, GBP, JPY) applies client-side for buyer convenience; it is mathematical presentation and not a retailer-guaranteed final checkout price.
+> - **Production Readiness**: Production deployment and live environment readiness have **not** been independently established.
 
 ---
 
-<h2 align="center">The Shopping Journey</h2>
+## 🔍 Project Overview
 
-```
-Search  →  Discover  →  Compare  →  Analyze  →  Decide
-```
+PricePilot is an intelligent consumer shopping engine engineered to solve the core dilemmas of modern e-commerce: fragmented seller listings, opaque checkout fees, misleading discount claims, and unpredictable price trajectories.
 
-<table width="100%">
-<tr>
-<td width="20%" align="center"><strong>1. Search</strong><br/>Express needs in conversational natural language or structured keywords.</td>
-<td width="20%" align="center"><strong>2. Discover</strong><br/>Surface candidates ranked by semantic relevance, deal quality, and user preferences.</td>
-<td width="20%" align="center"><strong>3. Compare</strong><br/>Evaluate 2 to 5 products side-by-side with clear feature and pricing matrices.</td>
-<td width="20%" align="center"><strong>4. Analyze</strong><br/>Inspect historical price shifts and merchant offers to time the purchase.</td>
-<td width="20%" align="center"><strong>5. Decide</strong><br/>Choose the optimal product from the right seller at the right price with confidence.</td>
-</tr>
-</table>
+Unlike traditional aggregator platforms that solely scrape numerical figures, PricePilot treats pricing data as **evidence**:
+- **Normalized Multi-Seller Pricing**: Inspects base prices, separates unstated checkout fees, and attributes verified observation timestamps.
+- **Evidence-Grounded Intelligence**: Rankings, discounts, and decision suggestions are computed deterministically on the backend rather than hallucinated by generative models.
+- **Side-by-Side Spec Comparison**: Evaluates 2 to 5 candidate products across objective hardware, performance, and value metrics.
+- **Deterministic Multi-Currency Engine**: Canonical persistence in USD guarantees ranking invariance across all supported buyer currencies.
+- **Midnight Intelligence Design System**: Clean, futuristic dark and light themes crafted for high readability and responsive data density.
 
----
+<br/>
 
-<h2 align="center">Product Workflows</h2>
-
-<table width="100%">
-<tr>
-<td width="50%" valign="top">
-
-### 🔍 Intelligent Discovery
-- Natural-language query interpretation with constraint extraction
-- Hybrid search combining PostgreSQL full-text and semantic vectors
-- Multi-faceted filtering by category, brand, price range, and rating
-
-</td>
-<td width="50%" valign="top">
-
-### ⚖️ Multi-Product Comparison
-- Side-by-side comparison for 2 to 5 candidate products
-- Automated winner scoring across performance, value, and features
-- Clear trade-off analysis highlighting pros, cons, and differences
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### 📈 Price Trajectory & Analytics
-- Multi-seller offer tracking with direct merchant links
-- Interactive price histories across 30 to 90-day timeframes
-- Automated deal quality ratings (Great Deal, Fair, Above Average)
-
-</td>
-<td width="50%" valign="top">
-
-### 🤖 Grounded Shopping Assistant
-- Conversational discussion grounded in verified catalog data
-- Contextual advice based on user shopping preferences
-- Instant deterministic responses without paid third-party API dependencies
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### 🔔 Watchlists & Price Alerts
-- Target price monitoring with custom threshold configuration
-- Automated threshold validation against historical lows
-- Monitored product list with real-time price status badges
-
-</td>
-<td width="50%" valign="top">
-
-### 🌐 Multi-Currency Precision
-- Internal pricing calculations use canonical USD as source of truth
-- Real-time conversion and presentation in INR, USD, EUR, GBP, and JPY
-- Mathematical ranking invariance across all display currencies
-
-</td>
-</tr>
-</table>
+<div align="center">
+  <img src="frontend/src/assets/hero.png" alt="PricePilot Shopping Intelligence User Interface" width="800" />
+</div>
 
 ---
 
-<h2 align="center">Intelligence & Architecture</h2>
+## 🏛️ Architecture
 
-PricePilot is engineered as a clean, modular monolith with high cohesion and stateless horizontal scalability.
+PricePilot is architected as a clean modular monolith combining a high-performance Java 21 backend with a React 19 SPA.
 
 ```mermaid
-flowchart LR
-    Shopper["Shopper"] --> App["PricePilot Web App (React 19 + Vite)"]
-    App --> API["Spring Boot Backend API (Java 21)"]
-    API --> Intel["Shopping Intelligence Core"]
-    Intel --> DB[("PostgreSQL Database (Supabase)")]
+flowchart TD
+    subgraph Client["Frontend Layer (React 19 + TypeScript + Vite)"]
+        UI["Product Detail Page (ProductPage.tsx)"]
+        Card["Seller Offer Cards (SellerCard.tsx)"]
+        Badge["Provenance & Freshness Badges"]
+        Banner["Aggregator Unavailable Fallback Banner"]
+        UI --> Card
+        Card --> Badge
+        UI --> Banner
+    end
+
+    subgraph API["Backend API (Spring Boot 4.1 / Java 21)"]
+        Ctrl["ProductOffersController (GET /api/v1/products/{id}/offers)"]
+        Service["ProductOfferService"]
+        Aggregator["MarketplaceOfferAggregatorService"]
+        Normalizer["OfferNormalizer"]
+
+        Ctrl --> Service
+        Service --> Aggregator
+        Aggregator --> Normalizer
+    end
+
+    subgraph Adapters["Offline Adapter Framework"]
+        CatAdapter["CatalogOfferAdapter (Seed Catalog)"]
+        MockAdapter["MockMarketplaceOfferAdapter (Offline Simulation)"]
+        Aggregator --> CatAdapter
+        Aggregator --> MockAdapter
+    end
+
+    subgraph Storage["Persistence & Embeddings"]
+        DB[("PostgreSQL / H2 In-Memory")]
+        Vector["Local Deterministic Embedding Store (64-dim)"]
+        CatAdapter --> DB
+    end
+
+    UI -- "REST / JSON" --> Ctrl
 ```
 
-> [!IMPORTANT]
-> **Evidence-Grounded Intelligence Guarantee**: The backend is the single authoritative source of truth. Semantic search and conversational assistants consume structured relational evidence rather than replacing it. All prices, discount percentages, rankings, and eligibility determinations are calculated deterministically.
+### Component Responsibilities
 
-For complete architectural details, inspect the [System Architecture Specification](docs/ARCHITECTURE.md) and [Semantic Intelligence Architecture](docs/SEMANTIC_INTELLIGENCE_ARCHITECTURE.md).
-
----
-
-<h2 align="center">What Makes PricePilot Different</h2>
-
-<table width="100%">
-<tr>
-<td width="50%" valign="top">
-
-**🔒 Stateless Backend**<br/>
-Session state is secured via cryptographic JWTs; all backend services scale horizontally without server session coupling.
-
-</td>
-<td width="50%" valign="top">
-
-**🧠 Local Deterministic Embeddings**<br/>
-Self-contained vector generation ensures semantic search and recommendations run reliably without mandatory paid AI APIs.
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-**⚡ High-Efficiency In-Memory Caching**<br/>
-Low-footprint `ConcurrentMapCacheManager` with custom instrumentation for cache hit/miss observability without external cache overhead.
-
-</td>
-<td width="50%" valign="top">
-
-**🗄️ Deterministic Schema Migrations**<br/>
-Relational schemas and constraint validations are version-controlled and applied deterministically through Flyway (V1.0 through V1.20).
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-**💱 Currency-Aware Pricing Engine**<br/>
-Canonical USD persistence ensures sorting and ranking remain mathematically invariant regardless of user display currency.
-
-</td>
-<td width="50%" valign="top">
-
-**🖼️ Safe Image Degradation**<br/>
-Products with unverified or failed remote images render clean, accessible fallback placeholders across all viewports.
-
-</td>
-</tr>
-</table>
+1. **`ProductOffersController`**: Exposes read-only REST endpoint `GET /api/v1/products/{id}/offers`, returning ranked, normalized seller offers.
+2. **`ProductOfferService`**: Orchestrates offer queries, validates product existence, and handles 404 boundaries for unknown products.
+3. **`MarketplaceOfferAggregatorService`**: Asynchronously coordinates offer collection across registered adapters with isolated fault tolerance.
+4. **`OfferNormalizer`**: The single deterministic authority that standardizes raw seller inputs, evaluates freshness, validates currencies, and sorts canonical rankings.
+5. **Adapters (`CatalogOfferAdapter`, `MockMarketplaceOfferAdapter`)**: Encapsulate distinct data sources entirely offline without leaking provider-specific quirks into the core domain.
 
 ---
 
-<h2 align="center">Technology Stack</h2>
+## ⚡ Marketplace Intelligence Subsystem (v1.3)
 
-| Layer | Technology | Version | Purpose |
+The v1.3 release introduces a robust, resilient offline marketplace pipeline governed by strict integrity rules:
+
+### 1. Data Contract & Fee Disclosure
+- **Endpoint**: `GET /api/v1/products/{id}/offers`
+- **Fee Separation**: Base prices are strictly separated from shipping, taxes, and merchant fees. If shipping fees are unstated by a source, they remain `null` and `basePriceOnly: true` is asserted. PricePilot **never infers missing fees as zero**.
+- **Pricing Disclaimer**: All normalized offers deliver an explicit user-facing disclaimer: *"Listed base price. Additional shipping, taxes, and merchant fees may apply at checkout."*
+
+### 2. Honest Provenance & Labeling
+Every offer carries structured provenance metadata:
+- **`DEMO` / `UNVERIFIED`**: Assigned to seed catalog listings (`trustLabel: "Catalog Offer"`).
+- **`SIMULATED`**: Assigned to offline mock adapter listings (`trustLabel: "Simulated Offer"`).
+- **`liveVerified: false`**: Strictly enforced across all v1.3 offline records.
+
+### 3. Freshness Policy & The 168-Hour Boundary
+- **Freshness Invariant**: Both backend and frontend enforce exact-duration calculations against observation timestamps.
+- **Threshold**: An offer is marked stale (`isStale: true`) when its age is **strictly greater than 168 hours** (7 days). Offers at exactly 168 hours or below remain fresh.
+- **Clock Skew Tolerance**: Future timestamps within 5 minutes ahead are tolerated as clock skew; observations $> 5$ minutes in the future are rejected as untrustworthy (`observedAt: null`, labeled `"Catalog Offer (Unverified Freshness)"`).
+- **Missing Timestamps**: Offers lacking timestamps default to unverified freshness without crashing the pipeline.
+
+### 4. Deterministic Ranking & Tie-Breaking
+Offers for any given product are ranked using a mathematical three-tier invariant:
+```text
+1. Base Price (Canonical USD)       ──> ASCENDING   (Lowest price first)
+2. Discount Percentage               ──> DESCENDING  (Highest saving first)
+3. Seller Name                       ──> ASCENDING   (Lexicographic tie-breaker)
+```
+- **Currency Parity**: Only canonical USD offers participate in ranking; non-USD or undefined currencies are rejected without fabricated conversion rates.
+- **Legitimate Zero Prices**: Explicit promotional base prices of $0.00 are validly ranked #1 without being dropped as invalid inputs.
+- **Negative / Null Prices**: Strictly discarded during normalization.
+
+### 5. Deal Claims & Visual Guardrails
+- **Simulated Deals**: Labeled with amber badge `SIMULATED DEAL (TESTING)` and `Lowest simulated base price (Testing)`.
+- **Stale Deals**: Stale offers with the lowest price receive an amber badge `Lowest Stale Listed Price`.
+- **Green "Best Deal" Protection**: An unqualified green `Best Deal` badge is **strictly prohibited** on simulated, stale, or unverified-freshness offers.
+
+### 6. Adapter Failure Isolation & Offline Fallback
+- **Failure Resilience**: A failure or timeout thrown by an individual adapter is logged and isolated; surviving adapters still return valid offers.
+- **Frontend Fallback**: If the aggregator endpoint fails entirely, the frontend falls back to standard catalog pricing and displays a prominent warning banner:
+  > *Marketplace offer aggregator unavailable. Displaying catalog prices as fallback. [Catalog Fallback]*
+
+---
+
+## 🎨 Design System: Midnight Intelligence
+
+PricePilot v1.3 features the **Midnight Intelligence** visual direction, harmonized across dark and light palettes:
+
+| Design Token | Dark Theme (Default) | Light Theme | Usage |
 | :--- | :--- | :--- | :--- |
-| **Frontend** | React | 19.2.6 | Single Page Application component architecture |
-| | TypeScript | 6.0.2 | End-to-end type safety and contract enforcement |
-| | Vite | 8.1.5 | High-speed build tooling and optimized bundle generation |
-| | Tailwind CSS | 4.3.3 | Modern styling and responsive dark aesthetic |
-| | Framer Motion | 12.42.2 | Fluid animations, transitions, and micro-interactions |
-| | TanStack Query | 5.101.3 | Server state management and asynchronous caching |
-| | Lucide React | 1.25.0 | Accessible, lightweight SVG iconography |
-| **Backend** | Java | 21 LTS | Modern Java runtime standard (Eclipse Temurin) |
-| | Spring Boot | 4.1.0 | Enterprise REST API framework and container |
-| | Spring Data JPA | 4.x (Hibernate 7.4.1) | Object-relational mapping and repository abstraction |
-| | Spring Security | 7.1 | Stateless JWT authentication and route authorization |
-| | JJWT | 0.12.6 | Cryptographic JSON Web Token handling |
-| | Flyway | 9.x | Deterministic relational schema migrations (V1.0 – V1.20) |
-| | Micrometer | 1.x | Application metrics and runtime health probes |
-| **Database** | PostgreSQL | 15+ | Relational persistence, full-text indexes, and vector store |
-| **Deployment** | Render Static Site | – | Production hosting for optimized React frontend bundle |
-| | Render Web Service | – | Production containerized Spring Boot backend |
-| | Supabase | 15+ | Managed production PostgreSQL database |
-| | Docker | – | Multi-stage, non-root container builds (`eclipse-temurin:21-jre`) |
+| **Page Canvas** | `#111116` (Deep Midnight) | `#F6F6FA` (Soft Cloud) | Root document body background |
+| **Card Surface** | `#202029` (Midnight Slate) | `#FFFFFF` (Pure White) | Interactive cards, modals, selectors |
+| **Surface Accent** | `#282733` | `#ECE9FF` | Secondary buttons, hovered elements |
+| **Primary Accent** | `#9585FF` (Cyber Iris) | `#6353D9` (Deep Iris) | Key CTAs, active indicators, focus rings |
+| **Text Primary** | `#F6F5FA` | `#22222D` | Headings, primary pricing labels |
+| **Text Secondary** | `#C7C5D2` | `#555565` | Descriptions, metadata, timestamps |
+| **Subtle Border** | `#393946` | `#DCDCE5` | Card outlines, dividers, table headers |
 
 ---
 
-<h2 align="center">Quick Start</h2>
+## 🚀 Quick Start & Local Development
 
 ### Prerequisites
-* **JDK 21 LTS** ([Eclipse Temurin](https://adoptium.net/) recommended)
-* **Node.js 20+** and **npm**
-* **PostgreSQL 15+**
+- **JDK 21 LTS** ([Eclipse Temurin](https://adoptium.net/) recommended)
+- **Node.js 20+** and **npm**
+- **Git**
 
-### 1. Start the Backend
+### 1. Clone & Branch Verification
 ```bash
-cd backend
-./mvnw clean install
+git clone https://github.com/jadhavaayush611/Price-Pilot.git
+cd Price-Pilot
+git checkout develop
+```
+
+### 2. Start the Backend API
+
+#### Option A: In-Memory Offline Profile (Recommended for Demo & Quick Start)
+Runs entirely without an external PostgreSQL database using H2 in-memory storage seeded with 252 products and local embeddings:
+```bash
+# Windows
+.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local
+
+# macOS / Linux
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+```
+*API boots at `http://localhost:8080/api/v1`.*
+
+#### Option B: Development Profile (PostgreSQL + Flyway)
+Requires PostgreSQL 15+ running on port `5432` with database `pricepilot`:
+```bash
+# Windows
+.\mvnw.cmd spring-boot:run
+
+# macOS / Linux
 ./mvnw spring-boot:run
 ```
-*Windows: use `.\mvnw.cmd`* &mdash; API starts on `http://localhost:8080/api/v1`.
 
-### 2. Start the Frontend
+### 3. Start the Frontend Application
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Application starts on `http://localhost:5173/`.
+*Web application launches at `http://localhost:5173/`.*
 
-*For detailed local environment setup and configuration, see the [Installation Guide](docs/INSTALLATION.md).*
-
----
-
-<h2 align="center">Production Deployment</h2>
-
-PricePilot v1.2.0 is deployed and live in production:
-
-* **Frontend**: [https://price-pilot-ch3q.onrender.com](https://price-pilot-ch3q.onrender.com) (Render Static Site)
-* **Backend API**: [https://pricepilot-backend-4sxk.onrender.com](https://pricepilot-backend-4sxk.onrender.com) (Render Web Service)
-* **Database**: Managed PostgreSQL on Supabase (Schema V1.20)
-
-*For deployment architecture, environment variables, and Docker setup, see the [Deployment Guide](docs/DEPLOYMENT.md).*
+### 4. Verify Local Health
+- Backend Health Probe: `http://localhost:8080/actuator/health`
+- Product Listings: `http://localhost:8080/api/v1/products?page=0&size=5`
+- Marketplace Offers Endpoint: `http://localhost:8080/api/v1/products/{id}/offers`
 
 ---
 
-<h2 align="center">Product Roadmap</h2>
+## 🧪 Audit & Test Evidence
 
-```
-v1.0 — Intelligent Price Tracking
-        │
-v1.1 — Shopping Intelligence
-        │
-v1.2 — AI Shopping Companion  ◄ [Current Production Release]
-        │
-v1.3 — Marketplace Intelligence
-        │
-v1.4 — Predictive Shopping
-        │
-v2.0 — Autonomous Shopping Intelligence
+Test verification summary reported from the **PricePilot v1.3 Completion Audit** (Commit `8cea31b`):
+
+```text
+========================================================================
+PRICEPILOT v1.3 AUDIT SUMMARY
+========================================================================
+Backend Test Suite (Maven):       853 / 853 PASSED (0 failures, 0 errors)
+Frontend Test Suite (Vitest):     256 / 256 PASSED (27 test files)
+Ambient Component Tests:          32 / 32 PASSED
+Focused Offer Normalizer Tests:   34 / 34 PASSED
+Frontend Production Build:        COMPILED CLEANLY in 820ms (tsc -b && vite)
+Browser End-to-End Smoke Tests:   10 / 10 FLOWS PASSED (Edge 155 via CDP)
+========================================================================
 ```
 
-* **v2.1 Global Expansion**: Real-time multi-region forex rates and localized merchant catalogs.
-* **v2.2 Financial Intelligence**: Total cost of ownership calculators and installment optimization.
-* **v2.3 Developer Platform**: Public REST APIs, webhook alert notifications, and partner SDKs.
-* **v2.4 Retail Intelligence**: Merchant pricing dynamics and inventory trend forecasting.
+### Test Execution Commands
+
+```bash
+# Run backend test suite (from repository root)
+cd backend
+.\mvnw.cmd test
+
+# Run frontend test suite (from frontend directory)
+cd frontend
+npx vitest run
+
+# Run focused marketplace offer normalizer tests
+npx vitest run src/marketplace/offerNormalizer.test.ts
+
+# Run production build validation
+npm run build
+```
+
+### Known Quality Findings & Exceptions
+- **ESLint Status**: 40 problems reported (34 errors, 6 warnings), comprising pre-existing `react-hooks/set-state-in-effect` patterns in dashboard/preferences pages and 3 marketplace lint items (two in integration tests, one in `ProductPage.tsx`).
+- **Guest Comparison Endpoint**: Visiting `/compare` as a guest triggers an unauthenticated request to `/api/v1/compare/saved`, which returns an expected HTTP `401 Unauthorized` that is caught gracefully by the UI without breaking or crashing the view.
 
 ---
 
-<h2 align="center">Documentation Index</h2>
+## 🗺️ Product Roadmap
 
-<table width="100%">
-<tr>
-<td width="33%" valign="top">
+```text
+v1.0  ──  Core Price Tracking & Catalog Management           [COMPLETED]
+          │
+v1.1  ──  Multi-Seller Intelligence & Currency Subsystem      [COMPLETED]
+          │
+v1.2  ──  AI Shopping Companion & Semantic Decision Vectors  [COMPLETED]
+          │
+v1.3  ──  Offline Marketplace Pipeline & Design System        [CURRENT RELEASE]
+          │
+v1.4  ──  Predictive Price Analytics & Seasonal Forecasts     [PLANNED]
+          │
+v2.0  ──  Autonomous Live Retailer Partner Network            [FUTURE]
+```
 
-### 🚀 Getting Started
-- [Local Installation Guide](docs/INSTALLATION.md)
-- [Deployment Guide](docs/DEPLOYMENT.md)
-- [Production Readiness Audit](docs/PRODUCTION_READINESS.md)
-
-</td>
-<td width="33%" valign="top">
-
-### 🏛️ Architecture & Design
-- [System Architecture Overview](docs/ARCHITECTURE.md)
-- [Semantic Intelligence Architecture](docs/SEMANTIC_INTELLIGENCE_ARCHITECTURE.md)
-- [Currency Subsystem](docs/CURRENCY.md)
-- [Product Domain Design](docs/product_domain.md)
-- [Price History Architecture](docs/price_history_architecture.md)
-- [Watchlist Architecture](docs/watchlist_architecture_documentation.md)
-- [User Interaction Architecture](docs/user_interaction_architecture.md)
-- [Data Pipeline Architecture](docs/DATA_PIPELINE.md)
-- [Observability Guide](docs/OBSERVABILITY.md)
-
-</td>
-<td width="33%" valign="top">
-
-### 🤖 Intelligence & APIs
-- [REST API Documentation](docs/API_DOCUMENTATION.md)
-- [AI Assistant Architecture](docs/AI_ASSISTANT_ARCHITECTURE.md)
-- [ML Recommendation Engine](docs/ML_RECOMMENDATION_ENGINE.md)
-- [FastAPI AI Architecture](docs/FASTAPI_AI_ARCHITECTURE.md)
-- [Architecture Decisions (ADRs)](docs/DECISIONS.md)
-- [Technical Debt Register](docs/TECHNICAL_DEBT.md)
-
-</td>
-</tr>
-</table>
+### v1.3 Implementation vs. Future Live Integration
+- [x] **v1.3 Scope (Completed)**: Offline normalized offer pipeline, deterministic ranking invariants, 168h freshness boundary, honest provenance labeling, adapter fault isolation, responsive Midnight Intelligence UI.
+- [ ] **Live Integration (Future)**: Partner retail API credential contracts, bounded timeout configurations, remote rate-limiting and circuit breakers, authorized live product catalog matching.
+- [ ] **Production Infrastructure**: Staging environment verification, multi-region database migration rehearsals.
 
 ---
 
-<h2 align="center">Community & License</h2>
+## 📚 Documentation Index
 
-<p align="center">
-  <a href="CONTRIBUTING.md"><strong>Contributing Guidelines</strong></a> &nbsp;&bull;&nbsp;
-  <a href="CODE_OF_CONDUCT.md"><strong>Code of Conduct</strong></a> &nbsp;&bull;&nbsp;
-  <a href="SECURITY.md"><strong>Security Policy</strong></a> &nbsp;&bull;&nbsp;
-  <a href="LICENSE"><strong>MIT License</strong></a>
-</p>
+| Guide | Description |
+| :--- | :--- |
+| **[Backend Documentation](backend/README.md)** | Spring Boot architecture, marketplace service internals, REST endpoints, and adapter extension guide. |
+| **[Frontend Documentation](frontend/README.md)** | React component structure, Midnight Intelligence tokens, offer consumption, and responsive behavior. |
+| **[Local Installation Guide](docs/INSTALLATION.md)** | In-depth development prerequisites and environment configurations. |
+| **[System Architecture](docs/ARCHITECTURE.md)** | End-to-end monolith design and state management principles. |
+| **[Semantic Intelligence Spec](docs/SEMANTIC_INTELLIGENCE_ARCHITECTURE.md)** | Local deterministic 64-dimensional vector embedding architecture. |
+| **[Marketplace Scope & Acceptance](docs/v1.3-scope-and-acceptance.md)** | Formal v1.3 delivery criteria and data integrity constraints. |
+| **[Static Vector Banner](docs/assets/banner.svg)** | Scalable static SVG fallback banner asset for offline/vector rendering. |
 
-<p align="center">
-  PricePilot is open-source software licensed under the <a href="LICENSE">MIT License</a>.
-</p>
+---
+
+## 📄 License & Community
+
+PricePilot is open-source software licensed under the **[MIT License](LICENSE)**.
+Contributions, bug reports, and architectural proposals are welcome via the [Contributing Guidelines](CONTRIBUTING.md).

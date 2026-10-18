@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/Layout';
 import { AmbientBackground } from './components/ambient/AmbientBackground.tsx';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { initWebVitals } from './lib/webVitals';
@@ -46,14 +47,15 @@ const queryClient = new QueryClient({
 
 const PageLoader: React.FC = () => (
   <div className="flex items-center justify-center min-h-[400px] w-full">
-    <div className="h-8 w-8 rounded-full border-2 border-zinc-800 border-t-zinc-200 animate-spin" />
+    <div className="h-8 w-8 rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-primary)] animate-spin" />
   </div>
 );
 
 export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
         <Router>
           <ErrorBoundary>
             <AmbientBackground />
@@ -162,7 +164,8 @@ export const App: React.FC = () => {
         </ErrorBoundary>
       </Router>
     </AuthProvider>
-  </QueryClientProvider>
+  </ThemeProvider>
+</QueryClientProvider>
 );
 };
 

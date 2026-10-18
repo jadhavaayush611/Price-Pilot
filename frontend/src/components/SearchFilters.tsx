@@ -30,6 +30,9 @@ interface SearchFiltersProps {
   onDealQualityChange: (quality: string) => void;
   onSortChange: (sort: string) => void;
   onReset: () => void;
+  className?: string;
+  showTitle?: boolean;
+  idPrefix?: string;
 }
 
 export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
@@ -49,7 +52,10 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
   onInStockToggle,
   onDealQualityChange,
   onSortChange,
-  onReset
+  onReset,
+  className,
+  showTitle = true,
+  idPrefix = 'desktop'
 }) => {
   const hasActiveFilters = 
     selectedCategory !== 'All' || 
@@ -77,31 +83,33 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
   return (
     <aside 
       aria-label="Product Search Filters"
-      className="flex flex-col gap-6 p-5 rounded-2xl bg-zinc-950/50 border border-zinc-900 backdrop-blur-xl sticky top-36 z-25 max-h-[calc(100vh-180px)] overflow-y-auto pr-3"
+      className={className || "flex flex-col gap-6 p-5 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] backdrop-blur-xl sticky top-36 z-25 max-h-[calc(100vh-180px)] overflow-y-auto pr-3 shadow-sm"}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-zinc-900/80 pb-3">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-          <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">Filters & Sort</span>
+      {showTitle && (
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-foreground)]">Filters & Sort</span>
+          </div>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={onReset}
+              aria-label="Reset all search filters"
+              className="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-muted-foreground)] hover:text-emerald-500 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none rounded-lg transition-colors cursor-pointer group"
+            >
+              <RotateCcw className="h-3 w-3 group-hover:rotate-[-45deg] transition-transform" aria-hidden="true" />
+              Reset
+            </button>
+          )}
         </div>
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={onReset}
-            aria-label="Reset all search filters"
-            className="flex items-center gap-1 text-[11px] font-semibold text-zinc-400 hover:text-emerald-400 transition-colors cursor-pointer group"
-          >
-            <RotateCcw className="h-3 w-3 group-hover:rotate-[-45deg] transition-transform" aria-hidden="true" />
-            Reset
-          </button>
-        )}
-      </div>
+      )}
 
       {/* Sort By Section */}
       <div className="flex flex-col gap-2.5">
-        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-          <ArrowUpDown className="h-3.5 w-3.5 text-zinc-500" aria-hidden="true" /> Sort Order
+        <label className="text-[11px] font-bold text-[var(--color-muted-foreground)] uppercase tracking-wider flex items-center gap-1.5">
+          <ArrowUpDown className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" aria-hidden="true" /> Sort Order
         </label>
         <div className="flex flex-col gap-1">
           {sortOptions.map((opt) => {
@@ -111,16 +119,16 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
                 type="button"
                 key={opt.value}
                 onClick={() => onSortChange(opt.value)}
-                className={`relative flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-medium transition-all cursor-pointer ${
+                className={`relative flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-medium transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
                   isActive 
-                    ? 'bg-zinc-900 text-emerald-400 font-semibold border border-zinc-800' 
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40'
+                    ? 'bg-[var(--color-surface-accent)] text-emerald-600 dark:text-emerald-400 font-semibold border border-[var(--color-border)]'
+                    : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)]/50'
                 }`}
               >
                 <span>{opt.label}</span>
                 {isActive && (
-                  <motion.span layoutId="activeSortTick">
-                    <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+                  <motion.span layoutId={`${idPrefix}-activeSortTick`}>
+                    <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                   </motion.span>
                 )}
               </button>
@@ -130,9 +138,9 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
       </div>
 
       {/* Price Range Filter */}
-      <div className="flex flex-col gap-2.5 border-t border-zinc-900/80 pt-4">
-        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-          <DollarSign className="h-3.5 w-3.5 text-zinc-500" aria-hidden="true" /> Price Range
+      <div className="flex flex-col gap-2.5 border-t border-[var(--color-border)] pt-4">
+        <label className="text-[11px] font-bold text-[var(--color-muted-foreground)] uppercase tracking-wider flex items-center gap-1.5">
+          <DollarSign className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" aria-hidden="true" /> Price Range
         </label>
         <div className="grid grid-cols-2 gap-2">
           <div className="relative">
@@ -142,7 +150,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
               value={minPrice}
               onChange={(e) => onMinPriceChange(e.target.value)}
               aria-label="Minimum price"
-              className="w-full px-2.5 py-1.5 bg-zinc-900/60 border border-zinc-800 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700"
+              className="w-full px-2.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-foreground)] placeholder-[var(--color-muted-foreground)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus:border-transparent"
             />
           </div>
           <div className="relative">
@@ -152,16 +160,16 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
               value={maxPrice}
               onChange={(e) => onMaxPriceChange(e.target.value)}
               aria-label="Maximum price"
-              className="w-full px-2.5 py-1.5 bg-zinc-900/60 border border-zinc-800 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700"
+              className="w-full px-2.5 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-xs text-[var(--color-foreground)] placeholder-[var(--color-muted-foreground)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus:border-transparent"
             />
           </div>
         </div>
       </div>
 
       {/* Deal Quality Filter */}
-      <div className="flex flex-col gap-2.5 border-t border-zinc-900/80 pt-4">
-        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" /> Deal Quality
+      <div className="flex flex-col gap-2.5 border-t border-[var(--color-border)] pt-4">
+        <label className="text-[11px] font-bold text-[var(--color-muted-foreground)] uppercase tracking-wider flex items-center gap-1.5">
+          <Sparkles className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" /> Deal Quality
         </label>
         <div className="flex flex-col gap-1">
           {dealOptions.map((d) => {
@@ -171,14 +179,14 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
                 type="button"
                 key={d.value}
                 onClick={() => onDealQualityChange(d.value)}
-                className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-xs font-medium transition-all cursor-pointer ${
+                className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-xs font-medium transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
                   isActive
-                    ? 'bg-zinc-900 text-amber-300 font-semibold border border-zinc-800'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40'
+                    ? 'bg-[var(--color-surface-accent)] text-amber-600 dark:text-amber-300 font-semibold border border-[var(--color-border)]'
+                    : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)]/50'
                 }`}
               >
                 <span>{d.label}</span>
-                {isActive && <Check className="h-3.5 w-3.5 text-amber-300" aria-hidden="true" />}
+                {isActive && <Check className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" aria-hidden="true" />}
               </button>
             );
           })}
@@ -186,9 +194,9 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
       </div>
 
       {/* In Stock Only Toggle */}
-      <div className="flex items-center justify-between border-t border-zinc-900/80 pt-4">
-        <span className="text-xs font-medium text-zinc-300 flex items-center gap-1.5">
-          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+      <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-4">
+        <span className="text-xs font-medium text-[var(--color-foreground)] flex items-center gap-1.5">
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
           In Stock Only
         </span>
         <label className="relative inline-flex items-center cursor-pointer">
@@ -199,27 +207,27 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
             className="sr-only peer"
             aria-label="Show in-stock items only"
           />
-          <div className="w-9 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+          <div className="w-9 h-5 bg-[var(--color-surface-accent)] border border-[var(--color-border)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--color-ring)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
         </label>
       </div>
 
       {/* Filter Category Section */}
-      <div className="flex flex-col gap-2.5 border-t border-zinc-900/80 pt-4">
-        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-          <Layers className="h-3.5 w-3.5 text-zinc-500" aria-hidden="true" /> Category
+      <div className="flex flex-col gap-2.5 border-t border-[var(--color-border)] pt-4">
+        <label className="text-[11px] font-bold text-[var(--color-muted-foreground)] uppercase tracking-wider flex items-center gap-1.5">
+          <Layers className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" aria-hidden="true" /> Category
         </label>
         <div className="flex flex-col gap-1 max-h-[160px] overflow-y-auto pr-1">
           <button
             type="button"
             onClick={() => onCategoryChange('All')}
-            className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-xs font-medium transition-all cursor-pointer ${
+            className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-xs font-medium transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
               selectedCategory === 'All'
-                ? 'bg-zinc-900 text-white font-semibold'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40'
+                ? 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] font-semibold border border-[var(--color-border)]'
+                : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)]/50'
             }`}
           >
             All Categories
-            {selectedCategory === 'All' && <Check className="h-3.5 w-3.5 text-zinc-200" aria-hidden="true" />}
+            {selectedCategory === 'All' && <Check className="h-3.5 w-3.5 text-[var(--color-foreground)]" aria-hidden="true" />}
           </button>
           
           {categories.map((cat) => {
@@ -229,14 +237,14 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
                 type="button"
                 key={cat}
                 onClick={() => onCategoryChange(cat)}
-                className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-xs font-medium transition-all cursor-pointer ${
+                className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-xs font-medium transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
                   isActive
-                    ? 'bg-zinc-900 text-white font-semibold'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40'
+                    ? 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] font-semibold border border-[var(--color-border)]'
+                    : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)]/50'
                 }`}
               >
                 <span className="truncate">{cat}</span>
-                {isActive && <Check className="h-3.5 w-3.5 text-zinc-200" aria-hidden="true" />}
+                {isActive && <Check className="h-3.5 w-3.5 text-[var(--color-foreground)]" aria-hidden="true" />}
               </button>
             );
           })}
@@ -244,22 +252,22 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
       </div>
 
       {/* Filter Brand Section */}
-      <div className="flex flex-col gap-2.5 border-t border-zinc-900/80 pt-4">
-        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
-          <Tag className="h-3.5 w-3.5 text-zinc-500" aria-hidden="true" /> Brand
+      <div className="flex flex-col gap-2.5 border-t border-[var(--color-border)] pt-4">
+        <label className="text-[11px] font-bold text-[var(--color-muted-foreground)] uppercase tracking-wider flex items-center gap-1.5">
+          <Tag className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" aria-hidden="true" /> Brand
         </label>
         <div className="flex flex-col gap-1 max-h-[160px] overflow-y-auto pr-1">
           <button
             type="button"
             onClick={() => onBrandChange('All')}
-            className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-xs font-medium transition-all cursor-pointer ${
+            className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-xs font-medium transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
               selectedBrand === 'All'
-                ? 'bg-zinc-900 text-white font-semibold'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40'
+                ? 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] font-semibold border border-[var(--color-border)]'
+                : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)]/50'
             }`}
           >
             All Brands
-            {selectedBrand === 'All' && <Check className="h-3.5 w-3.5 text-zinc-200" aria-hidden="true" />}
+            {selectedBrand === 'All' && <Check className="h-3.5 w-3.5 text-[var(--color-foreground)]" aria-hidden="true" />}
           </button>
           
           {brands.map((brand) => {
@@ -269,14 +277,14 @@ export const SearchFilters: React.FC<SearchFiltersProps> = React.memo(({
                 type="button"
                 key={brand}
                 onClick={() => onBrandChange(brand)}
-                className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-xs font-medium transition-all cursor-pointer ${
+                className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-left text-xs font-medium transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
                   isActive
-                    ? 'bg-zinc-900 text-white font-semibold'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40'
+                    ? 'bg-[var(--color-surface-accent)] text-[var(--color-foreground)] font-semibold border border-[var(--color-border)]'
+                    : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)]/50'
                 }`}
               >
                 <span className="truncate">{brand}</span>
-                {isActive && <Check className="h-3.5 w-3.5 text-zinc-200" aria-hidden="true" />}
+                {isActive && <Check className="h-3.5 w-3.5 text-[var(--color-foreground)]" aria-hidden="true" />}
               </button>
             );
           })}

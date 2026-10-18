@@ -136,7 +136,7 @@ export const NotificationCenter: React.FC = () => {
           setIsOpen(!isOpen);
           if (!isOpen) fetchAlerts();
         }}
-        className="relative p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        className="relative p-2 rounded-xl text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)]"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
@@ -151,16 +151,16 @@ export const NotificationCenter: React.FC = () => {
         <div
           role="region"
           aria-label="Notifications panel"
-          className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl z-50 overflow-hidden text-left"
+          className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-2xl z-50 overflow-hidden text-left"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-850 bg-zinc-900/50">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-accent)]/30">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-foreground)]">
                 Price Alerts
               </span>
               {unreadCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 border border-emerald-800/60 text-emerald-400">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
                   {unreadCount} new
                 </span>
               )}
@@ -169,7 +169,7 @@ export const NotificationCenter: React.FC = () => {
               <button
                 type="button"
                 onClick={handleMarkAllRead}
-                className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-emerald-400 transition-colors font-medium"
+                className="flex items-center gap-1 text-[11px] text-[var(--color-muted-foreground)] hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
                 Mark all read
@@ -178,15 +178,15 @@ export const NotificationCenter: React.FC = () => {
           </div>
 
           {/* Body */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-zinc-900">
+          <div className="max-h-[380px] overflow-y-auto divide-y divide-[var(--color-border)]">
             {loading && alerts.length === 0 && (
-              <div className="p-6 text-center text-xs text-zinc-500">
+              <div className="p-6 text-center text-xs text-[var(--color-muted-foreground)]">
                 Loading alerts...
               </div>
             )}
 
             {error && (
-              <div className="p-6 text-center text-xs text-rose-400 flex items-center justify-center gap-2">
+              <div className="p-6 text-center text-xs text-rose-500 flex items-center justify-center gap-2">
                 <AlertCircle className="w-4 h-4" />
                 {error}
               </div>
@@ -194,11 +194,11 @@ export const NotificationCenter: React.FC = () => {
 
             {!loading && !error && alerts.length === 0 && (
               <div className="p-8 text-center space-y-2">
-                <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center mx-auto text-zinc-600">
+                <div className="w-10 h-10 rounded-full bg-[var(--color-surface-accent)] flex items-center justify-center mx-auto text-[var(--color-muted-foreground)]">
                   <Bell className="w-5 h-5" />
                 </div>
-                <p className="text-xs font-medium text-zinc-300">All caught up!</p>
-                <p className="text-[11px] text-zinc-500 max-w-[200px] mx-auto">
+                <p className="text-xs font-medium text-[var(--color-foreground)]">All caught up!</p>
+                <p className="text-[11px] text-[var(--color-muted-foreground)] max-w-[200px] mx-auto">
                   You have no unread price alerts for products in your watchlist.
                 </p>
               </div>
@@ -208,18 +208,18 @@ export const NotificationCenter: React.FC = () => {
               <div
                 key={alert.id}
                 onClick={() => handleAlertClick(alert)}
-                className="p-3.5 hover:bg-zinc-900/60 transition-colors cursor-pointer flex items-start gap-3 group relative"
+                className="p-3.5 hover:bg-[var(--color-surface-accent)]/50 transition-colors cursor-pointer flex items-start gap-3 group relative"
               >
-                <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-accent)] border border-[var(--color-border)] flex items-center justify-center shrink-0 mt-0.5">
                   {getAlertIcon(alert.alertType)}
                 </div>
 
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-xs font-bold text-zinc-100 truncate group-hover:text-emerald-400 transition-colors">
+                    <h4 className="text-xs font-bold text-[var(--color-foreground)] truncate group-hover:text-[var(--color-primary)] transition-colors">
                       {alert.title}
                     </h4>
-                    <span className="text-[10px] font-mono text-zinc-500 shrink-0">
+                    <span className="text-[10px] font-mono text-[var(--color-muted-foreground)] shrink-0">
                       {new Date(alert.createdAt).toLocaleDateString([], {
                         month: 'short',
                         day: 'numeric',
@@ -227,12 +227,12 @@ export const NotificationCenter: React.FC = () => {
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-zinc-400 line-clamp-2 leading-relaxed">
+                  <p className="text-[11px] text-[var(--color-muted-foreground)] line-clamp-2 leading-relaxed">
                     {alert.message}
                   </p>
 
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-1">
                       View product <ExternalLink className="w-2.5 h-2.5" />
                     </span>
 
@@ -240,7 +240,7 @@ export const NotificationCenter: React.FC = () => {
                       type="button"
                       aria-label="Mark as read"
                       onClick={(e) => handleMarkAsRead(alert.id, e)}
-                      className="text-[10px] text-zinc-500 hover:text-zinc-200 transition-colors p-1"
+                      className="text-[10px] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors p-1"
                     >
                       <Check className="w-3.5 h-3.5" />
                     </button>

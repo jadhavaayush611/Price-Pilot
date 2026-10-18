@@ -749,3 +749,5 @@ export interface AlternativeQueryParams {
   personalized?: boolean;
 }
 
+export * from '../marketplace/types';
+

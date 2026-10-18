@@ -17,6 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.pricepilot.intelligence.marketplace.dto.NormalizedOfferDTO;
+import com.pricepilot.intelligence.marketplace.service.ProductOfferService;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -28,14 +31,17 @@ public class ProductController {
     private final ProductService productService;
     private final ProductAnalyticsService productAnalyticsService;
     private final UserInteractionEventService eventService;
+    private final ProductOfferService productOfferService;
 
     public ProductController(
             ProductService productService, 
             ProductAnalyticsService productAnalyticsService,
-            UserInteractionEventService eventService) {
+            UserInteractionEventService eventService,
+            ProductOfferService productOfferService) {
         this.productService = productService;
         this.productAnalyticsService = productAnalyticsService;
         this.eventService = eventService;
+        this.productOfferService = productOfferService;
     }
 
     @PostMapping
@@ -124,6 +130,12 @@ public class ProductController {
         );
 
         return ResponseEntity.ok(product);
+    }
+
+    @GetMapping("/{id}/offers")
+    public ResponseEntity<List<NormalizedOfferDTO>> getProductOffers(@PathVariable UUID id) {
+        List<NormalizedOfferDTO> offers = productOfferService.getProductOffers(id);
+        return ResponseEntity.ok(offers);
     }
 
     @PutMapping("/{id}")

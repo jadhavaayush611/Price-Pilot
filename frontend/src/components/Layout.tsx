@@ -17,6 +17,7 @@ import {
   Shield 
 } from 'lucide-react';
 import { NotificationCenter } from './notifications/NotificationCenter';
+import { ThemeToggle } from './ThemeToggle';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,26 +29,26 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `transition-colors text-xs font-medium ${
-      isActive 
-        ? 'text-white font-semibold' 
-        : 'text-zinc-400 hover:text-zinc-100'
+      isActive
+        ? 'text-[var(--color-foreground)] font-semibold'
+        : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]'
     }`;
 
   const mobileNavLinkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
-      isActive 
-        ? 'bg-zinc-900 text-white font-semibold' 
-        : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50'
+      isActive
+        ? 'bg-[var(--color-surface)] text-[var(--color-foreground)] font-semibold shadow-xs'
+        : 'text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface)]/60'
     }`;
 
   return (
-    <div className="min-h-screen bg-transparent text-zinc-100 flex flex-col antialiased relative z-10">
+    <div className="min-h-screen bg-transparent text-[var(--color-foreground)] flex flex-col antialiased relative z-10">
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#030303]/85 border-b border-zinc-900/80">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-[var(--header-bg)] border-b border-[var(--header-border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-2 group shrink-0">
-              <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent text-xl font-extrabold tracking-tight group-hover:from-white group-hover:to-white transition-all">
+              <span className="font-extrabold text-xl tracking-tight text-[var(--color-foreground)] group-hover:opacity-90 transition-all">
                 PricePilot
               </span>
             </Link>
@@ -65,7 +66,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Tools & Personal Navigation */}
               {isAuthenticated ? (
                 <>
-                  <div className="h-3.5 w-px bg-zinc-800" />
+                  <div className="h-3.5 w-px bg-[var(--color-border)]" />
                   <div className="flex items-center gap-4">
                     <NavLink to="/assistant" className={navLinkClass}>AI Assistant</NavLink>
                     <NavLink to="/analytics" className={navLinkClass}>Analytics</NavLink>
@@ -75,7 +76,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </>
               ) : (
                 <>
-                  <div className="h-3.5 w-px bg-zinc-800" />
+                  <div className="h-3.5 w-px bg-[var(--color-border)]" />
                   <div className="flex items-center gap-4">
                     <NavLink to="/analytics" className={navLinkClass}>Analytics</NavLink>
                   </div>
@@ -85,18 +86,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Admin Section */}
               {isAuthenticated && isAdmin() && (
                 <>
-                  <div className="h-3.5 w-px bg-zinc-800" />
+                  <div className="h-3.5 w-px bg-[var(--color-border)]" />
                   <div className="flex items-center gap-3">
-                    <NavLink to="/admin/products" className={({ isActive }) => `text-[11px] font-mono px-2 py-0.5 rounded border ${isActive ? 'bg-amber-950/60 border-amber-700 text-amber-300 font-bold' : 'border-zinc-800 text-zinc-400 hover:text-amber-300'}`}>Admin</NavLink>
+                    <NavLink to="/admin/products" className={({ isActive }) => `text-[11px] font-mono px-2 py-0.5 rounded border ${isActive ? 'bg-amber-950/60 border-amber-700 text-amber-300 font-bold' : 'border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-amber-300'}`}>Admin</NavLink>
                   </div>
                 </>
               )}
             </nav>
           </div>
 
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            {/* Global Theme Toggle (accessible on desktop and mobile) */}
+            <ThemeToggle />
+
             {isAuthenticated && user ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5 sm:gap-3">
                 <NotificationCenter />
                 <NavLink to="/dashboard/v2" className={navLinkClass} title="Shopping Dashboard">
                   Dashboard
@@ -106,7 +110,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </NavLink>
                 <button
                   onClick={logout}
-                  className="px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 active:scale-[0.98] transition-all cursor-pointer"
+                  className="px-3 py-1.5 text-xs font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl hover:border-[var(--color-primary)] active:scale-[0.98] transition-all cursor-pointer"
                 >
                   Logout
                 </button>
@@ -115,13 +119,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 active:scale-[0.98] transition-all"
+                  className="px-3 py-1.5 text-xs font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl hover:border-[var(--color-primary)] active:scale-[0.98] transition-all"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="px-3.5 py-1.5 text-xs font-semibold text-black bg-white rounded-xl hover:bg-zinc-200 active:scale-[0.98] transition-all shadow-sm"
+                  className="px-3.5 py-1.5 text-xs font-semibold text-[var(--color-primary-foreground)] bg-[var(--color-primary)] rounded-xl hover:opacity-90 active:scale-[0.98] transition-all shadow-xs"
                 >
                   Register
                 </Link>
@@ -131,7 +135,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* Mobile Navigation Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"
+              className="lg:hidden p-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-foreground)] hover:border-[var(--color-primary)] transition-colors"
               aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
@@ -141,9 +145,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-zinc-900 bg-zinc-950/95 backdrop-blur-xl px-4 py-4 space-y-4">
+          <div className="lg:hidden border-t border-[var(--color-border)] bg-[var(--header-bg)] backdrop-blur-xl px-4 py-4 space-y-4">
+            {/* Mobile Theme Row */}
+            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)]">
+              <span className="text-xs font-medium text-[var(--color-foreground)]">Theme</span>
+              <ThemeToggle />
+            </div>
+
             <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 px-3 block">Shopping</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted-foreground)] px-3 block">Shopping</span>
               <NavLink to="/" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
                 <Search size={16} /> Discover
               </NavLink>
@@ -158,8 +168,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               </NavLink>
             </div>
 
-            <div className="space-y-1 pt-2 border-t border-zinc-900">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 px-3 block">Tools & Intelligence</span>
+            <div className="space-y-1 pt-2 border-t border-[var(--color-border)]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted-foreground)] px-3 block">Tools & Intelligence</span>
               <NavLink to="/analytics" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
                 <Activity size={16} /> Analytics
               </NavLink>
@@ -171,8 +181,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
 
             {isAuthenticated && (
-              <div className="space-y-1 pt-2 border-t border-zinc-900">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 px-3 block">Personal</span>
+              <div className="space-y-1 pt-2 border-t border-[var(--color-border)]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted-foreground)] px-3 block">Personal</span>
                 <NavLink to="/watchlist" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
                   <Bell size={16} /> Watchlist
                 </NavLink>
@@ -189,7 +199,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
 
             {isAuthenticated && isAdmin() && (
-              <div className="space-y-1 pt-2 border-t border-zinc-900">
+              <div className="space-y-1 pt-2 border-t border-[var(--color-border)]">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 px-3 block">Admin</span>
                 <NavLink to="/admin/products" onClick={() => setMobileMenuOpen(false)} className={mobileNavLinkClass}>
                   <Shield size={16} /> Manage Products
@@ -204,14 +214,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
 
             {/* Mobile Auth Actions */}
-            <div className="pt-3 border-t border-zinc-900 flex flex-col gap-2">
+            <div className="pt-3 border-t border-[var(--color-border)] flex flex-col gap-2">
               {isAuthenticated ? (
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
                     logout();
                   }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl transition-colors cursor-pointer"
                 >
                   Logout
                 </button>
@@ -220,14 +230,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <Link
                     to="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-center px-4 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl transition-colors text-center"
+                    className="flex items-center justify-center px-4 py-2.5 text-xs font-semibold text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl transition-colors text-center"
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-center px-4 py-2.5 text-xs font-semibold text-black bg-white rounded-xl hover:bg-zinc-200 transition-colors text-center shadow-sm"
+                    className="flex items-center justify-center px-4 py-2.5 text-xs font-semibold text-[var(--color-primary-foreground)] bg-[var(--color-primary)] rounded-xl hover:opacity-90 transition-colors text-center shadow-xs"
                   >
                     Register
                   </Link>
@@ -244,21 +254,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-900/80 bg-[#030303] py-8 text-zinc-600">
+      <footer className="border-t border-[var(--footer-border)] bg-[var(--footer-bg)] py-8 text-[var(--color-muted-foreground)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
-            <span className="text-zinc-300 font-semibold tracking-tight">PricePilot</span>
-            <span className="hidden sm:inline text-xs text-zinc-700">|</span>
-            <p className="text-xs text-zinc-400">Shopping intelligence and price comparison engine.</p>
+            <span className="text-[var(--color-foreground)] font-semibold tracking-tight">PricePilot</span>
+            <span className="hidden sm:inline text-xs text-[var(--color-border)]">|</span>
+            <p className="text-xs text-[var(--color-muted-foreground)]">Shopping intelligence and price comparison engine.</p>
           </div>
-          <div className="flex items-center gap-4 text-xs text-zinc-400">
-            <Link to="/" className="hover:text-zinc-200 transition-colors">Discover</Link>
-            <Link to="/compare" className="hover:text-zinc-200 transition-colors">Compare</Link>
-            <Link to="/recommendations" className="hover:text-zinc-200 transition-colors">Recommendations</Link>
-            <Link to="/trending" className="hover:text-zinc-200 transition-colors">Trending</Link>
-            <Link to="/analytics" className="hover:text-zinc-200 transition-colors">Analytics</Link>
+          <div className="flex items-center gap-4 text-xs text-[var(--color-muted-foreground)]">
+            <Link to="/" className="hover:text-[var(--color-foreground)] transition-colors">Discover</Link>
+            <Link to="/compare" className="hover:text-[var(--color-foreground)] transition-colors">Compare</Link>
+            <Link to="/recommendations" className="hover:text-[var(--color-foreground)] transition-colors">Recommendations</Link>
+            <Link to="/trending" className="hover:text-[var(--color-foreground)] transition-colors">Trending</Link>
+            <Link to="/analytics" className="hover:text-[var(--color-foreground)] transition-colors">Analytics</Link>
           </div>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-[var(--color-muted-foreground)]">
             &copy; {new Date().getFullYear()} PricePilot. Built for smart shoppers.
           </p>
         </div>

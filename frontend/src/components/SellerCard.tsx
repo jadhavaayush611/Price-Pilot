@@ -1,13 +1,15 @@
-import React from 'react';
-import type { ProductPrice } from '../types';
-import { ExternalLink, Sparkles, Tag, Clock, TrendingUp } from 'lucide-react';
+import React, { useMemo } from 'react';
+import type { ProductPrice, NormalizedOffer } from '../types';
+import { normalizeOffer, formatOfferObservationTime, getProvenanceBadge } from '../marketplace';
+import { ExternalLink, Sparkles, Tag, Clock, TrendingUp, CheckCircle2, AlertCircle, ShieldCheck, Database } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatPrice, getDisplayPrice, type CurrencyCode } from '../currency';
 import { apiService } from '../services/api';
 import { ProductImage } from './common/ProductImage';
 
 interface SellerCardProps {
-  price: ProductPrice;
+  price?: ProductPrice;
+  offer?: NormalizedOffer;
   isBestDeal: boolean;
   lowestPrice: number;
   currency?: CurrencyCode;
@@ -15,12 +17,23 @@ interface SellerCardProps {
 
 export const SellerCard: React.FC<SellerCardProps> = React.memo(({
   price,
+  offer,
   isBestDeal,
   lowestPrice,
   currency = 'INR',
 }) => {
-  const currentPriceLocal = getDisplayPrice(price.currentPrice, currency);
-  const originalPriceLocal = getDisplayPrice(price.originalPrice, currency);
+  const normalizedOffer = useMemo(() => {
+    if (offer) return offer;
+    if (price) return normalizeOffer(price);
+    return null;
+  }, [offer, price]);
+
+  if (!normalizedOffer) return null;
+
+  const currentPriceLocal = getDisplayPrice(normalizedOffer.pricing.basePrice, currency);
+  const originalPriceLocal = normalizedOffer.pricing.originalPrice !== undefined
+    ? getDisplayPrice(normalizedOffer.pricing.originalPrice, currency)
+    : 0;
   const lowestPriceLocal = getDisplayPrice(lowestPrice, currency);
 
   const savings = originalPriceLocal > currentPriceLocal 
@@ -28,6 +41,18 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
     : 0;
 
   const priceDiffFromLowest = currentPriceLocal - lowestPriceLocal;
+  const observationTime = formatOfferObservationTime(
+    normalizedOffer.provenance.observedAt,
+    normalizedOffer.provenance.rawLastUpdated
+  );
+  const provBadge = getProvenanceBadge(normalizedOffer.provenance);
+
+  const isSimulated = normalizedOffer.provenance.sourceType?.toLowerCase() === 'simulated' ||
+    normalizedOffer.provenance.trustLabel?.toLowerCase().includes('simulat') ||
+    normalizedOffer.source.providerName === 'mock-marketplace' ||
+    normalizedOffer.source.providerName === 'mock';
+
+  const isStaleOffer = Boolean(normalizedOffer.provenance.isStale);
 
   return (
     <motion.div
@@ -38,70 +63,109 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       className={`relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 ${
         isBestDeal
-          ? 'bg-gradient-to-br from-emerald-500/[0.03] via-zinc-950/90 to-emerald-500/[0.01] border-emerald-500/40 shadow-[0_8px_30px_rgb(16,185,129,0.06)]'
-          : 'bg-zinc-950/40 border-zinc-900 hover:border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.2)]'
+          ? isSimulated
+            ? 'bg-[var(--color-surface)] border-amber-500/40 shadow-[0_8px_30px_rgba(245,158,11,0.08)]'
+            : isStaleOffer
+            ? 'bg-[var(--color-surface)] border-amber-500/40 shadow-[0_8px_30px_rgba(245,158,11,0.08)]'
+            : 'bg-[var(--color-surface)] border-emerald-500/40 shadow-[0_8px_30px_rgba(16,185,129,0.08)]'
+          : 'bg-[var(--color-surface)] border-[var(--color-border)] hover:border-[var(--color-ring)]/40 shadow-sm'
       }`}
     >
       {/* Glow Effect for Best Deal */}
       {isBestDeal && (
-        <div className="absolute top-0 right-0 h-[100px] w-[100px] bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none" />
+        <div className={`absolute top-0 right-0 h-[100px] w-[100px] blur-[50px] rounded-full pointer-events-none ${
+          (isSimulated || isStaleOffer) ? 'bg-amber-500/10' : 'bg-emerald-500/10'
+        }`} />
       )}
 
       {/* Top Section: Seller and Badges */}
       <div className="flex items-start justify-between gap-4 mb-4">
         <div className="flex items-center gap-3.5">
           {/* Logo container */}
-          <div className="h-9 w-18 flex items-center justify-center bg-zinc-950/80 border border-zinc-900 rounded-xl p-1.5 shadow-inner overflow-hidden">
+          <div className="h-9 w-18 flex items-center justify-center bg-[var(--color-surface-accent)] border border-[var(--color-border)] rounded-xl p-1.5 shadow-inner overflow-hidden">
             <ProductImage
-              src={price.seller?.logoUrl}
-              alt={price.seller?.name || 'Seller'}
+              src={normalizedOffer.source.logoUrl}
+              alt={normalizedOffer.source.sellerName || 'Seller'}
               className="max-h-full max-w-full object-contain filter brightness-95"
               showFallbackText
-              fallbackText={price.seller?.name?.substring(0, 3) || 'SEL'}
+              fallbackText={normalizedOffer.source.sellerName?.substring(0, 3) || 'SEL'}
             />
           </div>
           
           <div className="flex flex-col">
-            <span className="font-bold text-zinc-100 text-sm">{price.seller?.name}</span>
-            <span className="inline-flex items-center gap-1 text-[10px] text-zinc-500 font-medium mt-0.5">
-              <Clock className="h-3 w-3 text-zinc-600" /> {price.lastUpdated}
+            <span className="font-bold text-[var(--color-foreground)] text-sm">{normalizedOffer.source.sellerName}</span>
+            <span className="inline-flex items-center gap-1 text-[10px] text-[var(--color-muted-foreground)] font-medium mt-0.5">
+              <Clock className="h-3 w-3 text-[var(--color-muted-foreground)]" /> {observationTime}
             </span>
           </div>
         </div>
 
-        {/* Highlights */}
+        {/* Highlights & Badges */}
         <div className="flex flex-col gap-1.5 items-end">
           {isBestDeal && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-extrabold text-emerald-400 uppercase tracking-wider shadow-[0_2px_10px_rgba(16,185,129,0.15)]">
-              <Sparkles className="h-3 w-3" /> Best Deal
+            isSimulated ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-[9px] font-extrabold text-amber-700 dark:text-amber-300 uppercase tracking-wider shadow-sm">
+                <Sparkles className="h-3 w-3" /> Simulated Deal (Testing)
+              </span>
+            ) : isStaleOffer ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-[9px] font-extrabold text-amber-700 dark:text-amber-300 uppercase tracking-wider shadow-sm">
+                <Sparkles className="h-3 w-3" /> Lowest Stale Listed Price
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider shadow-sm">
+                <Sparkles className="h-3 w-3" /> Best Deal
+              </span>
+            )
+          )}
+          {normalizedOffer.pricing.discountPercentage > 0 && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-[9px] font-extrabold text-rose-700 dark:text-rose-300 uppercase tracking-wider">
+              <Tag className="h-2.5 w-2.5" /> Save {normalizedOffer.pricing.discountPercentage.toFixed(0)}%
             </span>
           )}
-          {price.discountPercentage > 0 && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/15 text-[9px] font-extrabold text-rose-400 uppercase tracking-wider">
-              <Tag className="h-2.5 w-2.5" /> Save {price.discountPercentage.toFixed(0)}%
-            </span>
-          )}
+          {/* Honest Provenance Badge */}
+          <span
+            title={provBadge.description}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
+              normalizedOffer.provenance.isLiveVerified && !isSimulated
+                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25'
+                : provBadge.tone === 'amber'
+                ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25'
+                : 'bg-[var(--color-surface-accent)] text-[var(--color-muted-foreground)] border-[var(--color-border)]'
+            }`}
+          >
+            {normalizedOffer.provenance.isLiveVerified && !isSimulated ? (
+              <ShieldCheck className="h-2.5 w-2.5 text-emerald-500" />
+            ) : (
+              <Database className="h-2.5 w-2.5 text-[var(--color-muted-foreground)]" />
+            )}
+            {provBadge.label}
+          </span>
         </div>
       </div>
 
       {/* Middle Section: Prices & Calculations */}
-      <div className="flex flex-col gap-2 py-3.5 border-t border-b border-zinc-900/60 my-2">
+      <div className="flex flex-col gap-2 py-3.5 border-t border-b border-[var(--color-border)] my-2">
         <div className="flex items-baseline justify-between">
-          <span className="text-2xl font-black text-white tracking-tight">
-            {formatPrice(currentPriceLocal, currency)}
-          </span>
+          <div className="flex flex-col">
+            <span className="text-2xl font-black text-[var(--color-foreground)] tracking-tight">
+              {formatPrice(currentPriceLocal, currency)}
+            </span>
+            <span className="text-[10px] font-medium text-[var(--color-muted-foreground)]">
+              Listed base price
+            </span>
+          </div>
           {originalPriceLocal > currentPriceLocal && (
-            <span className="text-xs text-zinc-500 line-through font-normal">
+            <span className="text-xs text-[var(--color-muted-foreground)] line-through font-normal">
               {formatPrice(originalPriceLocal, currency)}
             </span>
           )}
         </div>
 
-        {/* Calculations */}
+        {/* Calculations & Status */}
         <div className="flex flex-col gap-1 text-[11px] font-semibold">
           {/* Savings calculation */}
           {savings > 0 && (
-            <div className="flex items-center gap-1.5 text-emerald-400/90">
+            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
               <Tag className="h-3.5 w-3.5" />
               <span>Save {formatPrice(savings, currency)}</span>
             </div>
@@ -109,32 +173,45 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
 
           {/* Difference from best price calculation */}
           {!isBestDeal && priceDiffFromLowest > 0 && (
-            <div className="flex items-center gap-1.5 text-rose-400/80">
+            <div className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
               <TrendingUp className="h-3.5 w-3.5" />
               <span>{formatPrice(priceDiffFromLowest, currency)} more than best deal</span>
             </div>
           )}
 
           {isBestDeal && (
-            <div className="flex items-center gap-1.5 text-emerald-400">
+            <div className={`flex items-center gap-1.5 ${isSimulated ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Lowest price guaranteed</span>
+              <span>{isSimulated ? 'Lowest simulated base price (Testing)' : 'Lowest listed base price'}</span>
             </div>
           )}
+
+          {/* Availability / Stock Status ONLY when explicitly known */}
+          {normalizedOffer.availability.status !== 'unknown' && (
+            <div className={`flex items-center gap-1.5 ${normalizedOffer.availability.isAvailable ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>
+              {normalizedOffer.availability.isAvailable ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
+              <span>{normalizedOffer.availability.isAvailable ? 'In Stock' : 'Out of Stock'}</span>
+            </div>
+          )}
+
+          <p className="text-[10px] text-[var(--color-muted-foreground)] font-normal mt-0.5">
+            Base price &middot; Fees may apply at checkout
+          </p>
         </div>
       </div>
 
       {/* Bottom Section: CTA */}
       <div className="mt-4 pt-1">
         <a
-          href={price.productUrl}
+          href={normalizedOffer.source.offerUrl}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => apiService.trackSellerClick(price.id)}
-          className={`flex items-center justify-center gap-2 w-full py-3 px-4 text-xs font-bold rounded-xl border transition-all active:scale-[0.98] ${
+          onClick={() => apiService.trackSellerClick(normalizedOffer.id)}
+          aria-label={`Visit ${normalizedOffer.source.sellerName || 'Seller'} storefront`}
+          className={`flex items-center justify-center gap-2 w-full py-3 px-4 text-xs font-bold rounded-xl border transition-all active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
             isBestDeal
-              ? 'bg-white hover:bg-zinc-200 text-black border-white shadow-[0_4px_12px_rgba(255,255,255,0.08)]'
-              : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border-zinc-800 hover:text-white hover:border-zinc-700'
+              ? 'bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] border-transparent shadow-sm'
+              : 'bg-[var(--color-surface)] hover:bg-[var(--color-surface-accent)] text-[var(--color-foreground)] border-[var(--color-border)]'
           }`}
         >
           Visit Seller

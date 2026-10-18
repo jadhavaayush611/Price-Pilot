@@ -74,17 +74,17 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
           {[1, 2, 3, 4, 5, 6].map((n) => (
             <div
               key={n}
-              className="h-[420px] rounded-2xl bg-zinc-950/20 border border-zinc-900/60 flex flex-col justify-between p-5 relative overflow-hidden"
+              className="h-[420px] rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] flex flex-col justify-between p-5 relative overflow-hidden"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-zinc-900/10 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-surface-accent)]/20 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
               <div>
-                <div className="aspect-[4/3] rounded-xl bg-zinc-900/40 border border-zinc-900/60 mb-4 animate-pulse" />
-                <div className="h-3 w-16 bg-zinc-900/60 rounded mb-2.5 animate-pulse" />
-                <div className="h-5 w-48 bg-zinc-900/60 rounded mb-3.5 animate-pulse" />
-                <div className="h-3.5 w-full bg-zinc-900/40 rounded mb-2 animate-pulse" />
-                <div className="h-3.5 w-3/4 bg-zinc-900/40 rounded animate-pulse" />
+                <div className="aspect-[4/3] rounded-xl bg-[var(--color-surface-accent)] border border-[var(--color-border)] mb-4 animate-pulse" />
+                <div className="h-3 w-16 bg-[var(--color-surface-accent)] rounded mb-2.5 animate-pulse" />
+                <div className="h-5 w-48 bg-[var(--color-surface-accent)] rounded mb-3.5 animate-pulse" />
+                <div className="h-3.5 w-full bg-[var(--color-surface-accent)] rounded mb-2 animate-pulse" />
+                <div className="h-3.5 w-3/4 bg-[var(--color-surface-accent)] rounded animate-pulse" />
               </div>
-              <div className="h-11 w-full bg-zinc-900/60 rounded-xl mt-4 animate-pulse" />
+              <div className="h-11 w-full bg-[var(--color-surface-accent)] rounded-xl mt-4 animate-pulse" />
             </div>
           ))}
         </div>
@@ -97,13 +97,13 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
       <motion.div 
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center justify-center py-20 px-4 border border-zinc-900/60 border-dashed rounded-2xl bg-zinc-950/10 backdrop-blur-sm text-center"
+        className="flex flex-col items-center justify-center py-20 px-4 border border-[var(--color-border)] border-dashed rounded-2xl bg-[var(--color-surface)]/50 backdrop-blur-sm text-center"
       >
-        <div className="h-12 w-12 rounded-xl bg-zinc-950 border border-zinc-900 flex items-center justify-center mb-4">
-          <Inbox className="h-6 w-6 text-zinc-500" aria-hidden="true" />
+        <div className="h-12 w-12 rounded-xl bg-[var(--color-surface-accent)] border border-[var(--color-border)] flex items-center justify-center mb-4">
+          <Inbox className="h-6 w-6 text-[var(--color-muted-foreground)]" aria-hidden="true" />
         </div>
-        <h3 className="text-zinc-200 font-semibold mb-1">No products found</h3>
-        <p className="text-xs text-zinc-500 max-w-xs leading-relaxed">
+        <h3 className="text-[var(--color-foreground)] font-semibold mb-1">No products found</h3>
+        <p className="text-xs text-[var(--color-muted-foreground)] max-w-xs leading-relaxed">
           We couldn't find any products matching your search criteria. Try adjusting your filters, budget, or spelling.
         </p>
       </motion.div>
@@ -114,14 +114,14 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
     switch (badge) {
       case 'Best Match':
         return (
-          <span key={index} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+          <span key={index} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
             <Award className="h-3 w-3" aria-hidden="true" />
             Best Match
           </span>
         );
       case 'Lowest Historical Price':
         return (
-          <span key={index} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          <span key={index} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
             <TrendingDown className="h-3 w-3" aria-hidden="true" />
             Historical Low
           </span>
@@ -129,28 +129,28 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
       case 'Best Value':
       case 'Excellent Deal':
         return (
-          <span key={index} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+          <span key={index} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             Excellent Deal
           </span>
         );
       case 'Good Deal':
         return (
-          <span key={index} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+          <span key={index} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/30">
             <Tag className="h-3 w-3" aria-hidden="true" />
             Good Deal
           </span>
         );
       case 'In Stock':
         return (
-          <span key={index} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
-            <CheckCircle className="h-2.5 w-2.5 text-emerald-400" aria-hidden="true" />
+          <span key={index} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--color-surface-accent)] text-[var(--color-foreground)] border border-[var(--color-border)]">
+            <CheckCircle className="h-2.5 w-2.5 text-emerald-500" aria-hidden="true" />
             In Stock
           </span>
         );
       default:
         return (
-          <span key={index} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-900 text-zinc-300 border border-zinc-800">
+          <span key={index} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-surface-accent)] text-[var(--color-foreground)] border border-[var(--color-border)]">
             {badge}
           </span>
         );
@@ -189,20 +189,19 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
               variants={itemVariants}
               whileHover={{ 
                 y: -4, 
-                borderColor: isItemPersonalized ? 'rgba(99, 102, 241, 0.4)' : 'var(--color-zinc-800)',
-                backgroundColor: isItemPersonalized ? 'rgba(30, 27, 75, 0.25)' : 'rgba(24, 24, 27, 0.25)'
+                borderColor: isItemPersonalized ? 'rgba(99, 102, 241, 0.4)' : 'var(--color-ring)',
               }}
-              className={`flex flex-col justify-between p-5 rounded-2xl bg-zinc-950/40 border transition-all duration-300 group cursor-pointer ${
+              className={`flex flex-col justify-between p-5 rounded-2xl bg-[var(--color-surface)] border transition-all duration-300 group cursor-pointer shadow-sm ${
                 isItemPersonalized
-                  ? 'border-indigo-900/50 hover:border-indigo-700/70 hover:shadow-[0_8px_30px_rgba(79,70,229,0.15)]'
-                  : 'border-zinc-900 hover:border-zinc-800 hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]'
+                  ? 'border-indigo-500/40 hover:border-indigo-500/70 hover:shadow-md'
+                  : 'border-[var(--color-border)] hover:border-[var(--color-ring)]/40 hover:shadow-md'
               }`}
               onClick={() => navigate(`/product/${product.id}`)}
               aria-label={`Product: ${product.name}, price from ${lowest ? formatPrice(getDisplayPrice(lowest, currency), currency) : 'not listed'}`}
             >
               <div>
                 {/* Image container */}
-                <div className="aspect-[4/3] rounded-xl overflow-hidden bg-zinc-950 border border-zinc-900 mb-4 relative">
+                <div className="aspect-[4/3] rounded-xl overflow-hidden bg-[var(--color-surface-accent)] border border-[var(--color-border)] mb-4 relative">
                   <ProductImage
                     src={product.imageUrl}
                     alt={product.name}
@@ -219,8 +218,8 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
                       }}
                       className={`absolute top-3 left-3 p-2 rounded-lg backdrop-blur-md transition-all active:scale-95 shadow-md border ${
                         isSaved
-                          ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
-                          : 'bg-zinc-950/60 border-zinc-900/80 text-zinc-400 hover:text-white hover:bg-zinc-950'
+                          ? 'bg-rose-500/20 border-rose-500/40 text-rose-500'
+                          : 'bg-[var(--color-surface)]/80 border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface)]'
                       }`}
                       title={isSaved ? "Remove from Saved" : "Save Product"}
                       aria-label={isSaved ? `Remove ${product.name} from saved` : `Save ${product.name}`}
@@ -238,15 +237,15 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
                 {/* Discovery Badges & Personalized Badges */}
                 <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
                   {isItemPersonalized && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
-                      <Sparkles className="h-3 w-3 text-indigo-400" aria-hidden="true" />
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
+                      <Sparkles className="h-3 w-3 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />
                       Personalized
                     </span>
                   )}
                   {isItemPersonalized && product.personalizedScore !== undefined && product.personalizedScore > 0 && (
                     <span 
                       title={product.personalizationAdjustment ? `Personalized Match Score: ${Math.round(product.personalizedScore)}/100 (Adjustment: +${product.personalizationAdjustment.toFixed(1)})` : `Match Score: ${Math.round(product.personalizedScore)}/100`}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-900 border border-zinc-800 text-indigo-300"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--color-surface-accent)] border border-[var(--color-border)] text-indigo-700 dark:text-indigo-300"
                     >
                       Score: {Math.round(product.personalizedScore)}/100
                     </span>
@@ -256,64 +255,64 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
 
                 {/* Brand & Category */}
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-500">
+                  <span className="text-[10px] font-bold tracking-widest uppercase text-[var(--color-muted-foreground)]">
                     {product.brand}
                   </span>
-                  <span className="h-1 w-1 rounded-full bg-zinc-800" aria-hidden="true" />
-                  <span className="text-[10px] font-semibold text-zinc-500">
+                  <span className="h-1 w-1 rounded-full bg-[var(--color-border)]" aria-hidden="true" />
+                  <span className="text-[10px] font-semibold text-[var(--color-muted-foreground)]">
                     {product.category}
                   </span>
                 </div>
                 
                 {/* Title */}
-                <h3 className="font-semibold text-zinc-100 text-base leading-snug mt-1.5 mb-2 line-clamp-2 group-hover:text-white transition-colors">
+                <h3 className="font-semibold text-[var(--color-foreground)] text-base leading-snug mt-1.5 mb-2 line-clamp-2 transition-colors">
                   {product.name}
                 </h3>
 
                 {/* Personalized Evidence (Preference Alignment) */}
                 {isItemPersonalized && product.personalizedEvidence && product.personalizedEvidence.reasons && product.personalizedEvidence.reasons.length > 0 ? (
-                  <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-indigo-950/30 border border-indigo-900/50 flex items-start gap-1.5">
-                    <Sparkles className="h-3 w-3 text-indigo-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
-                    <p className="text-[11px] text-indigo-200 line-clamp-1">
+                  <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-start gap-1.5">
+                    <Sparkles className="h-3 w-3 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                    <p className="text-[11px] text-indigo-700 dark:text-indigo-300 line-clamp-1">
                       {product.personalizedEvidence.reasons[0].reason || product.personalizedEvidence.summary}
                     </p>
                   </div>
                 ) : isItemPersonalized && product.personalizedEvidence?.summary ? (
-                  <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-indigo-950/30 border border-indigo-900/50 flex items-start gap-1.5">
-                    <Sparkles className="h-3 w-3 text-indigo-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
-                    <p className="text-[11px] text-indigo-200 line-clamp-1">
+                  <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-start gap-1.5">
+                    <Sparkles className="h-3 w-3 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                    <p className="text-[11px] text-indigo-700 dark:text-indigo-300 line-clamp-1">
                       {product.personalizedEvidence.summary}
                     </p>
                   </div>
                 ) : reasons.length > 0 ? (
                   /* Standard Discovery Reason (Factual Explainability) */
-                  <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-zinc-900/50 border border-zinc-800/80 flex items-start gap-1.5">
-                    <HelpCircle className="h-3 w-3 text-emerald-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
-                    <p className="text-[11px] text-zinc-400 line-clamp-1">
+                  <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-[var(--color-surface-accent)] border border-[var(--color-border)] flex items-start gap-1.5">
+                    <HelpCircle className="h-3 w-3 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                    <p className="text-[11px] text-[var(--color-muted-foreground)] line-clamp-1">
                       {reasons[0]}
                     </p>
                   </div>
                 ) : null}
 
-                <p className="text-xs text-zinc-400 line-clamp-2 mb-4 leading-relaxed">
+                <p className="text-xs text-[var(--color-muted-foreground)] line-clamp-2 mb-4 leading-relaxed">
                   {product.description}
                 </p>
               </div>
 
               {/* Pricing & Call to Action */}
-              <div className="border-t border-zinc-900/80 pt-4 flex items-center justify-between">
+              <div className="border-t border-[var(--color-border)] pt-4 flex items-center justify-between">
                 <div className="flex flex-col">
                   {lowest !== undefined && lowest > 0 ? (
                     <>
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider">Prices From</span>
-                      <span className="text-lg font-extrabold text-white">
+                      <span className="text-[9px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider">Prices From</span>
+                      <span className="text-lg font-extrabold text-[var(--color-foreground)]">
                         {formatPrice(getDisplayPrice(lowest, currency), currency)}
                       </span>
                     </>
                   ) : (
                     <>
-                      <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-wider">Status</span>
-                      <span className="text-xs font-semibold text-zinc-400">
+                      <span className="text-[9px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider">Status</span>
+                      <span className="text-xs font-semibold text-[var(--color-muted-foreground)]">
                         No prices listed
                       </span>
                     </>
@@ -321,7 +320,7 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-zinc-400 group-hover:text-white transition-colors flex items-center gap-1">
+                  <span className="text-xs font-medium text-[var(--color-muted-foreground)] group-hover:text-[var(--color-foreground)] transition-colors flex items-center gap-1">
                     Compare <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
                   </span>
                 </div>
@@ -335,10 +334,10 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
       {totalPages > 1 && (
         <nav 
           aria-label="Search results pagination"
-          className="flex items-center justify-between border-t border-zinc-900 pt-6 mt-2"
+          className="flex items-center justify-between border-t border-[var(--color-border)] pt-6 mt-2"
         >
-          <div className="text-xs text-zinc-500">
-            Showing Page <span className="font-semibold text-zinc-200">{page + 1}</span> of <span className="font-semibold text-zinc-200">{totalPages}</span> ({totalElements} total products)
+          <div className="text-xs text-[var(--color-muted-foreground)]">
+            Showing Page <span className="font-semibold text-[var(--color-foreground)]">{page + 1}</span> of <span className="font-semibold text-[var(--color-foreground)]">{totalPages}</span> ({totalElements} total products)
           </div>
 
           <div className="flex items-center gap-2">
@@ -347,7 +346,7 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
               disabled={page === 0}
               onClick={() => onPageChange(page - 1)}
               aria-label="Go to previous page"
-              className="px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-300 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+              className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-medium text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 shadow-sm"
             >
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" /> Prev
             </button>
@@ -357,7 +356,7 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
               disabled={page >= totalPages - 1}
               onClick={() => onPageChange(page + 1)}
               aria-label="Go to next page"
-              className="px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-300 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+              className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-xs font-medium text-[var(--color-foreground)] hover:bg-[var(--color-surface-accent)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 shadow-sm"
             >
               Next <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </button>

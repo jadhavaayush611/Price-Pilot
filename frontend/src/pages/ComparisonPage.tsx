@@ -179,24 +179,24 @@ export const ComparisonPage: React.FC = () => {
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 py-6">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-900 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--color-border)] pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Compare Products</h1>
-          <p className="text-zinc-400 text-xs mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--color-foreground)]">Compare Products</h1>
+          <p className="text-[var(--color-muted-foreground)] text-xs mt-1">
             Compare 2 to 5 products side-by-side across pricing, ratings, seller availability, and specifications.
           </p>
         </div>
 
         {/* Action Toolbar */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
           <button
             onClick={() => setShowSavedDrawer(!showSavedDrawer)}
-            className="px-4 py-2 text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 rounded-xl transition-all flex items-center gap-2 shadow-lg"
+            className="px-4 py-2 text-xs font-semibold bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-foreground)] rounded-xl transition-all flex items-center gap-2 shadow-sm"
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Saved Comparisons</span>
             {savedComparisons.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-mono">
+              <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-mono">
                 {savedComparisons.length}
               </span>
             )}
@@ -205,10 +205,10 @@ export const ComparisonPage: React.FC = () => {
           <button
             onClick={() => setShowSaveModal(true)}
             disabled={selectedIds.length < 2}
-            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all flex items-center gap-2 shadow-lg ${
+            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all flex items-center gap-2 shadow-sm ${
               selectedIds.length >= 2
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/40'
-                : 'bg-zinc-900 border border-zinc-800 text-zinc-500 cursor-not-allowed'
+                ? 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)]'
+                : 'bg-[var(--color-surface-accent)] border border-[var(--color-border)] text-[var(--color-muted-foreground)]/60 cursor-not-allowed'
             }`}
           >
             <span>Save Comparison</span>
@@ -218,60 +218,60 @@ export const ComparisonPage: React.FC = () => {
 
       {/* Save Status Notification */}
       {saveStatusMsg && (
-        <div className="p-3 rounded-lg bg-zinc-900 border border-emerald-800/60 text-emerald-300 text-xs flex justify-between items-center">
+        <div className="p-3 rounded-lg bg-[var(--color-surface)] border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs flex justify-between items-center shadow-sm">
           <span>{saveStatusMsg}</span>
-          <button onClick={() => setSaveStatusMsg(null)} className="text-zinc-500 hover:text-white">✕</button>
+          <button onClick={() => setSaveStatusMsg(null)} className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]">✕</button>
         </div>
       )}
 
       {/* Error Alert */}
       {error && (
-        <div className="p-4 rounded-xl bg-red-950/40 border border-red-900/60 text-red-300 text-sm flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-red-950/20 border border-red-500/30 text-red-700 dark:text-red-300 text-sm flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <ShieldAlert className="w-5 h-5 text-red-400 shrink-0" />
+            <ShieldAlert className="w-5 h-5 text-red-500 shrink-0" />
             <span>{error}</span>
           </div>
-          <button onClick={() => setError(null)} className="text-red-400 font-bold hover:text-red-200">✕</button>
+          <button onClick={() => setError(null)} className="text-red-500 font-bold hover:text-red-700 dark:hover:text-red-200">✕</button>
         </div>
       )}
 
       {/* Saved Comparisons Drawer */}
       {showSavedDrawer && (
-        <div className="p-5 bg-zinc-950 border border-zinc-800 rounded-2xl space-y-4 shadow-2xl animate-in fade-in duration-200">
-          <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-            <h3 className="text-sm font-bold text-zinc-200">Your Saved Comparisons</h3>
-            <button onClick={() => setShowSavedDrawer(false)} className="text-xs text-zinc-500 hover:text-white">Close</button>
+        <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl space-y-4 shadow-xl animate-in fade-in duration-200">
+          <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+            <h3 className="text-sm font-bold text-[var(--color-foreground)]">Your Saved Comparisons</h3>
+            <button onClick={() => setShowSavedDrawer(false)} className="text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]">Close</button>
           </div>
 
           {savedComparisons.length === 0 ? (
-            <p className="text-xs text-zinc-500 py-4 text-center">No saved comparisons found. Create and save comparisons above.</p>
+            <p className="text-xs text-[var(--color-muted-foreground)] py-4 text-center">No saved comparisons found. Create and save comparisons above.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {savedComparisons.map((saved) => (
-                <div key={saved.id} className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl space-y-2 flex flex-col justify-between">
+                <div key={saved.id} className="p-3 bg-[var(--color-surface-accent)]/60 border border-[var(--color-border)] rounded-xl space-y-2 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-zinc-100 truncate">{saved.name}</h4>
-                      <span className="text-[10px] text-zinc-500 font-mono">
+                      <h4 className="text-xs font-bold text-[var(--color-foreground)] truncate">{saved.name}</h4>
+                      <span className="text-[10px] text-[var(--color-muted-foreground)] font-mono">
                         {new Date(saved.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    {saved.notes && <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2">{saved.notes}</p>}
-                    <p className="text-[10px] text-emerald-400 font-mono mt-1">
+                    {saved.notes && <p className="text-[11px] text-[var(--color-muted-foreground)] mt-1 line-clamp-2">{saved.notes}</p>}
+                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono mt-1">
                       {saved.productIds?.length || 0} Products compared
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-zinc-800/60">
+                  <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]">
                     <button
                       onClick={() => handleLoadSaved(saved)}
-                      className="px-2.5 py-1 bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/60 rounded text-[11px] font-semibold transition-colors"
+                      className="px-2.5 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 rounded text-[11px] font-semibold transition-colors"
                     >
                       Load Comparison
                     </button>
                     <button
                       onClick={() => handleDeleteSaved(saved.id)}
-                      className="px-2.5 py-1 bg-zinc-800 hover:bg-red-950 hover:text-red-400 text-zinc-400 border border-zinc-700 rounded text-[11px] transition-colors"
+                      className="px-2.5 py-1 bg-[var(--color-surface)] hover:bg-red-500/15 hover:text-red-700 dark:hover:text-red-300 text-[var(--color-muted-foreground)] border border-[var(--color-border)] rounded text-[11px] transition-colors"
                     >
                       Delete
                     </button>
@@ -294,60 +294,63 @@ export const ComparisonPage: React.FC = () => {
       {loading ? (
         <ComparisonSkeleton />
       ) : comparisonData ? (
-        <ComparisonTable comparison={comparisonData} />
+        <ComparisonTable
+          comparison={comparisonData}
+          onRemoveProduct={(id) => handleSelectionChange(selectedIds.filter(i => i !== id))}
+        />
       ) : selectedIds.length === 1 ? (
-        <div className="p-12 text-center bg-zinc-950 border border-zinc-900 rounded-xl text-zinc-400 space-y-2">
-          <p className="text-zinc-200 font-semibold text-sm">1 product selected</p>
-          <p className="text-xs text-zinc-500">Select at least 1 more product from the catalog above to view side-by-side comparison.</p>
+        <div className="p-12 text-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-muted-foreground)] space-y-2">
+          <p className="text-[var(--color-foreground)] font-semibold text-sm">1 product selected</p>
+          <p className="text-xs text-[var(--color-muted-foreground)]">Select at least 1 more product from the catalog above to view side-by-side comparison.</p>
         </div>
       ) : (
-        <div className="p-12 text-center bg-zinc-950 border border-zinc-900 rounded-xl text-zinc-500 space-y-2">
-          <p className="text-zinc-300 font-semibold">Select 2 to 5 products above to compare features and prices.</p>
+        <div className="p-12 text-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[var(--color-muted-foreground)] space-y-2">
+          <p className="text-[var(--color-foreground)] font-semibold">Select 2 to 5 products above to compare features and prices.</p>
         </div>
       )}
 
       {/* Save Modal */}
       {showSaveModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <h3 className="text-base font-bold text-zinc-100">Save Product Comparison</h3>
-            <p className="text-xs text-zinc-400">Save this comparison configuration to access it anytime in your saved comparisons.</p>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-[var(--color-foreground)]">Save Product Comparison</h3>
+            <p className="text-xs text-[var(--color-muted-foreground)]">Save this comparison configuration to access it anytime in your saved comparisons.</p>
 
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">Comparison Title</label>
+                <label className="text-xs font-semibold text-[var(--color-foreground)] block mb-1">Comparison Title</label>
                 <input
                   type="text"
                   placeholder="e.g. Flagship Headphones Comparison"
                   value={saveTitle}
                   onChange={(e) => setSaveTitle(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 focus:outline-none focus:border-emerald-500/50"
+                  className="w-full px-3 py-2 text-xs bg-[var(--color-surface-accent)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)] placeholder:text-[var(--color-muted-foreground)]/60 focus:outline-none focus:border-[var(--color-primary)]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">Notes (Optional)</label>
+                <label className="text-xs font-semibold text-[var(--color-foreground)] block mb-1">Notes (Optional)</label>
                 <textarea
                   placeholder="e.g. Comparing noise cancellation and battery life..."
                   value={saveNotes}
                   onChange={(e) => setSaveNotes(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 text-xs bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-100 focus:outline-none focus:border-emerald-500/50"
+                  className="w-full px-3 py-2 text-xs bg-[var(--color-surface-accent)] border border-[var(--color-border)] rounded-lg text-[var(--color-foreground)] placeholder:text-[var(--color-muted-foreground)]/60 focus:outline-none focus:border-[var(--color-primary)]"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-900">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--color-border)]">
               <button
                 onClick={() => setShowSaveModal(false)}
-                className="px-4 py-2 text-xs bg-zinc-900 hover:bg-zinc-800 text-zinc-400 rounded-lg"
+                className="px-4 py-2 text-xs bg-[var(--color-surface-accent)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveComparison}
                 disabled={saving || !saveTitle.trim()}
-                className="px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-all disabled:opacity-50"
+                className="px-4 py-2 text-xs font-bold bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-primary-foreground)] rounded-lg transition-all disabled:opacity-50"
               >
                 {saving ? 'Saving...' : 'Confirm & Save'}
               </button>

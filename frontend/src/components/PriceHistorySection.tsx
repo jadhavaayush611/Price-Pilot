@@ -59,48 +59,48 @@ export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ produc
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="w-full rounded-3xl border border-zinc-900 bg-zinc-950/20 p-6 shadow-xl backdrop-blur-xl mt-8"
+      className="w-full rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm backdrop-blur-xl mt-8"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-5 border-b border-zinc-900/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-5 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-center text-zinc-400">
+          <div className="h-10 w-10 rounded-2xl bg-[var(--color-surface-accent)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-foreground)]">
             <History className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white tracking-tight">Price History</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">Historical tracking of price changes over time</p>
+            <h3 className="text-lg font-bold text-[var(--color-foreground)] tracking-tight">Price History</h3>
+            <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">Historical tracking of price changes over time</p>
           </div>
         </div>
         
         {!loading && totalElements > 0 && (
-          <span className="self-start sm:self-auto px-3 py-1 rounded-full bg-zinc-900 border border-zinc-850 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+          <span className="self-start sm:self-auto px-3 py-1 rounded-full bg-[var(--color-surface-accent)] border border-[var(--color-border)] text-[10px] font-bold text-[var(--color-muted-foreground)] uppercase tracking-wider">
             {totalElements} {totalElements === 1 ? 'record' : 'records'} found
           </span>
         )}
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 text-zinc-550">
-          <Loader2 className="h-8 w-8 animate-spin text-zinc-450 mb-2" />
-          <span className="text-xs font-semibold text-zinc-400">Analyzing price trends...</span>
+        <div className="flex flex-col items-center justify-center py-16 text-[var(--color-muted-foreground)]">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--color-foreground)] mb-2" />
+          <span className="text-xs font-semibold text-[var(--color-muted-foreground)]">Analyzing price trends...</span>
         </div>
       ) : history.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 px-6 border border-zinc-900 border-dashed rounded-2xl bg-zinc-950/10 text-center">
-          <div className="h-12 w-12 rounded-full bg-zinc-900/40 border border-zinc-850 flex items-center justify-center text-zinc-650 mb-3.5">
+        <div className="flex flex-col items-center justify-center py-12 px-6 border border-[var(--color-border)] border-dashed rounded-2xl bg-[var(--color-surface-accent)]/30 text-center">
+          <div className="h-12 w-12 rounded-full bg-[var(--color-surface-accent)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted-foreground)] mb-3.5">
             <History className="h-6 w-6" />
           </div>
-          <h4 className="text-sm font-semibold text-zinc-300 mb-1">No Price History Yet</h4>
-          <p className="text-xs text-zinc-550 max-w-xs leading-relaxed">
+          <h4 className="text-sm font-semibold text-[var(--color-foreground)] mb-1">No Price History Yet</h4>
+          <p className="text-xs text-[var(--color-muted-foreground)] max-w-xs leading-relaxed">
             We are actively monitoring this product's price. When a price change is detected from any seller, the history will populate here.
           </p>
         </div>
       ) : (
         <div className="flex flex-col">
-          <div className="overflow-hidden rounded-2xl border border-zinc-900 bg-zinc-950/30">
+          <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-zinc-900 bg-zinc-950/60 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                  <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-accent)] text-[10px] font-bold uppercase tracking-widest text-[var(--color-muted-foreground)]">
                     <th className="px-5 py-4">Date</th>
                     <th className="px-5 py-4">Seller</th>
                     <th className="px-5 py-4">Price Change</th>
@@ -108,7 +108,7 @@ export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ produc
                     <th className="px-5 py-4 text-right">Trend</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-900/50 text-sm">
+                <tbody className="divide-y divide-[var(--color-border)] text-sm">
                   {history.map((record) => {
                     const oldPriceLocal = getDisplayPrice(record.oldPrice, currency);
                     const newPriceLocal = getDisplayPrice(record.newPrice, currency);
@@ -117,12 +117,12 @@ export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ produc
                     return (
                       <tr 
                         key={record.id}
-                        className="transition-all hover:bg-zinc-900/20"
+                        className="transition-all hover:bg-[var(--color-surface-accent)]/40"
                       >
                         {/* Date */}
-                        <td className="px-5 py-4 font-medium text-zinc-300">
+                        <td className="px-5 py-4 font-medium text-[var(--color-foreground)]">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-3.5 w-3.5 text-zinc-500" />
+                            <Calendar className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" />
                             <span>{formatDate(record.changedAt)}</span>
                           </div>
                         </td>
@@ -130,8 +130,8 @@ export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ produc
                         {/* Seller */}
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2.5">
-                            <div className="h-5.5 px-2 rounded bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[9px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                              <ShoppingBag className="h-3 w-3 mr-1 text-zinc-550" />
+                            <div className="h-5.5 px-2 rounded bg-[var(--color-surface-accent)] border border-[var(--color-border)] flex items-center justify-center text-[9px] font-extrabold text-[var(--color-foreground)] uppercase tracking-wider">
+                              <ShoppingBag className="h-3 w-3 mr-1 text-[var(--color-muted-foreground)]" />
                               {record.sellerName}
                             </div>
                           </div>
@@ -140,11 +140,11 @@ export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ produc
                         {/* Price Change */}
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2 font-semibold">
-                            <span className="text-zinc-555 line-through text-xs">
+                            <span className="text-[var(--color-muted-foreground)] line-through text-xs">
                               {formatPrice(oldPriceLocal, currency)}
                             </span>
-                            <ArrowRight className="h-3 w-3 text-zinc-655" />
-                            <span className="text-white">
+                            <ArrowRight className="h-3 w-3 text-[var(--color-muted-foreground)]" />
+                            <span className="text-[var(--color-foreground)]">
                               {formatPrice(newPriceLocal, currency)}
                             </span>
                           </div>
@@ -152,7 +152,7 @@ export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ produc
 
                         {/* Difference */}
                         <td className="px-5 py-4">
-                          <span className={`font-bold ${isDrop ? 'text-emerald-450' : 'text-rose-500'}`}>
+                          <span className={`font-bold ${isDrop ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                             {isDrop ? '-' : '+'}{formatPrice(diffLocal, currency)}
                           </span>
                         </td>
@@ -161,8 +161,8 @@ export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ produc
                         <td className="px-5 py-4 text-right">
                           <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
                             isDrop 
-                              ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' 
-                              : 'text-rose-400 bg-rose-500/10 border border-rose-500/20'
+                              ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/30'
+                              : 'text-rose-700 dark:text-rose-300 bg-rose-500/15 border border-rose-500/30'
                           }`}>
                             {isDrop ? (
                               <>
@@ -188,21 +188,21 @@ export const PriceHistorySection: React.FC<PriceHistorySectionProps> = ({ produc
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between gap-4 mt-5 pt-3">
-              <span className="text-[11px] text-zinc-555 font-medium">
+              <span className="text-[11px] text-[var(--color-muted-foreground)] font-medium">
                 Page {currentPage + 1} of {totalPages}
               </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                   disabled={currentPage === 0}
-                  className="p-2 rounded-xl border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 hover:border-zinc-800 disabled:opacity-30 disabled:hover:bg-zinc-955 disabled:hover:border-zinc-900 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                  className="p-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-accent)] disabled:opacity-30 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-all cursor-pointer shadow-sm"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
                   disabled={currentPage === totalPages - 1}
-                  className="p-2 rounded-xl border border-zinc-900 bg-zinc-950 hover:bg-zinc-900 hover:border-zinc-800 disabled:opacity-30 disabled:hover:bg-zinc-955 disabled:hover:border-zinc-900 text-zinc-400 hover:text-white transition-all cursor-pointer"
+                  className="p-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-accent)] disabled:opacity-30 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-all cursor-pointer shadow-sm"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
