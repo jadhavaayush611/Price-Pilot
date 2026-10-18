@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import type { ProductWithPrices, Watchlist, ProductAnalytics, AlternativeResponse, AlternativeType } from '../types';
-import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity, Bot, Layers, TrendingUp, TrendingDown, Split, CheckCircle2, Info } from 'lucide-react';
+import { ArrowLeft, Clock, ExternalLink, Sparkles, Tag, AlertCircle, ShoppingBag, LayoutGrid, List, Heart, Bell, Trash2, X, Eye, Activity, Bot, Layers, TrendingUp, TrendingDown, Split, CheckCircle2, Info, ShieldCheck, Database } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, getSavedCurrency, saveCurrency, getDisplayPrice, type CurrencyCode, CURRENCY_SYMBOLS, CURRENCY_METADATA } from '../currency';
 import { SellerCard } from '../components/SellerCard';
@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { PriceHistorySection } from '../components/PriceHistorySection';
 import { AlternativeList } from '../components/alternative/AlternativeList';
 import { ProductImage } from '../components/common/ProductImage';
+import { normalizeProductOffers, formatOfferObservationTime, getProvenanceBadge } from '../marketplace';
 
 export const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,15 +25,14 @@ export const ProductPage: React.FC = () => {
     saveCurrency(currency);
   }, [currency]);
 
-  // Canonical USD sorted offers
-  const sortedPrices = useMemo(() => {
+  // Normalized marketplace offers preserving canonical USD pricing and honest provenance
+  const normalizedOffers = useMemo(() => {
     if (!product?.prices || product.prices.length === 0) return [];
-    return [...product.prices].sort((a, b) => a.currentPrice - b.currentPrice);
-  }, [product?.prices]);
+    return normalizeProductOffers(product);
+  }, [product]);
 
-  const lowestPriceUsd = sortedPrices[0]?.currentPrice || 0;
-  const highestPriceUsd = sortedPrices[sortedPrices.length - 1]?.currentPrice || 0;
-  const lowestPriceId = sortedPrices[0]?.id;
+  const lowestPriceUsd = normalizedOffers[0]?.pricing.basePrice || 0;
+  const highestPriceUsd = normalizedOffers[normalizedOffers.length - 1]?.pricing.basePrice || 0;
 
   const lowestPriceLocal = getDisplayPrice(lowestPriceUsd, currency);
   const highestPriceLocal = getDisplayPrice(highestPriceUsd, currency);
@@ -477,7 +477,7 @@ export const ProductPage: React.FC = () => {
           </div>
 
           {/* Price Summary & Intelligence Strip */}
-          {sortedPrices.length > 0 ? (
+          {normalizedOffers.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] shadow-xs">
               <div className="flex flex-col">
                 <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider mb-0.5">Best Price</span>
@@ -514,7 +514,7 @@ export const ProductPage: React.FC = () => {
               <div className="flex flex-col">
                 <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider mb-0.5">Availability</span>
                 <span className="text-xs font-semibold text-[var(--color-foreground)] mt-1">
-                  {sortedPrices.length} {sortedPrices.length === 1 ? 'Offer' : 'Offers'} Available
+                  {normalizedOffers.length} {normalizedOffers.length === 1 ? 'Offer' : 'Offers'} Available
                 </span>
               </div>
             </div>
@@ -682,7 +682,7 @@ export const ProductPage: React.FC = () => {
           </div>
         </div>
 
-        {sortedPrices.length > 0 ? (
+        {normalizedOffers.length > 0 ? (
           <>
             <AnimatePresence mode="wait">
             {viewMode === 'card' ? (
@@ -694,11 +694,11 @@ export const ProductPage: React.FC = () => {
                 transition={{ duration: 0.2 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in"
               >
-                {sortedPrices.map((price) => (
+                {normalizedOffers.map((offer) => (
                   <SellerCard
-                    key={price.id}
-                    price={price}
-                    isBestDeal={price.id === lowestPriceId}
+                    key={offer.id}
+                    offer={offer}
+                    isBestDeal={Boolean(offer.isBestDeal)}
                     lowestPrice={lowestPriceUsd}
                     currency={currency}
                   />
@@ -719,24 +719,31 @@ export const ProductPage: React.FC = () => {
                       <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-accent)] text-[10px] font-bold uppercase tracking-widest text-[var(--color-muted-foreground)]">
                         <th scope="col" className="px-6 py-4.5">Seller</th>
                         <th scope="col" className="px-6 py-4.5">Listed Base Price</th>
-                        <th scope="col" className="px-6 py-4.5">Savings & Difference</th>
-                        <th scope="col" className="px-6 py-4.5">Sync Frequency</th>
+                        <th scope="col" className="px-6 py-4.5">Savings &amp; Difference</th>
+                        <th scope="col" className="px-6 py-4.5">Observed At</th>
                         <th scope="col" className="px-6 py-4.5 text-right">Direct Storefront</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--color-border)] text-sm">
-                      {sortedPrices.map((price) => {
-                        const isLowest = price.id === lowestPriceId;
-                        const currentPriceLocal = getDisplayPrice(price.currentPrice, currency);
-                        const originalPriceLocal = getDisplayPrice(price.originalPrice, currency);
-                        const savings = originalPriceLocal > currentPriceLocal 
-                          ? originalPriceLocal - currentPriceLocal 
+                      {normalizedOffers.map((offer) => {
+                        const isLowest = Boolean(offer.isBestDeal);
+                        const currentPriceLocal = getDisplayPrice(offer.pricing.basePrice, currency);
+                        const originalPriceLocal = offer.pricing.originalPrice !== undefined
+                          ? getDisplayPrice(offer.pricing.originalPrice, currency)
                           : 0;
-                        const diffFromLowest = currentPriceLocal - lowestPriceLocal;
+                        const savings = offer.savings ? getDisplayPrice(offer.savings, currency) : 0;
+                        const diffFromLowest = offer.priceDifferenceFromLowest
+                          ? getDisplayPrice(offer.priceDifferenceFromLowest, currency)
+                          : 0;
+                        const observationTime = formatOfferObservationTime(
+                          offer.provenance.observedAt,
+                          offer.provenance.rawLastUpdated
+                        );
+                        const provBadge = getProvenanceBadge(offer.provenance);
 
                         return (
                           <tr
-                            key={price.id}
+                            key={offer.id}
                             className={`transition-colors duration-200 hover:bg-[var(--color-surface-accent)]/50 ${
                               isLowest ? 'bg-emerald-500/[0.03]' : ''
                             }`}
@@ -745,15 +752,32 @@ export const ProductPage: React.FC = () => {
                             <td className="px-6 py-4.5 flex items-center gap-3.5 font-medium text-[var(--color-foreground)]">
                               <div className="h-7 w-14 flex items-center justify-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-1 shadow-sm overflow-hidden">
                                 <ProductImage
-                                   src={price.seller?.logoUrl}
-                                   alt={price.seller?.name || 'Seller'}
+                                   src={offer.source.logoUrl}
+                                   alt={offer.source.sellerName || 'Seller'}
                                    className="max-h-full max-w-full object-contain filter brightness-95"
                                    showFallbackText
-                                   fallbackText={price.seller?.name?.substring(0, 3) || 'SEL'}
+                                   fallbackText={offer.source.sellerName?.substring(0, 3) || 'SEL'}
                                  />
                                </div>
                                <div className="flex flex-col">
-                                 <span className="font-semibold text-[var(--color-foreground)]">{price.seller?.name}</span>
+                                 <div className="flex items-center gap-2">
+                                   <span className="font-semibold text-[var(--color-foreground)]">{offer.source.sellerName}</span>
+                                   <span
+                                     title={provBadge.description}
+                                     className={`inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-semibold border ${
+                                       offer.provenance.isLiveVerified
+                                         ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25'
+                                         : 'bg-[var(--color-surface-accent)] text-[var(--color-muted-foreground)] border-[var(--color-border)]'
+                                     }`}
+                                   >
+                                     {offer.provenance.isLiveVerified ? (
+                                       <ShieldCheck className="h-2 w-2 text-emerald-500" />
+                                     ) : (
+                                       <Database className="h-2 w-2 text-[var(--color-muted-foreground)]" />
+                                     )}
+                                     {provBadge.label}
+                                   </span>
+                                 </div>
                                  {isLowest && (
                                    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-emerald-500 dark:text-emerald-400 mt-0.5 tracking-wide uppercase">
                                      <Sparkles className="h-2.5 w-2.5" /> Best Deal
@@ -768,7 +792,7 @@ export const ProductPage: React.FC = () => {
                                  <span className="font-extrabold text-[var(--color-foreground)] text-base">
                                    {formatPrice(currentPriceLocal, currency)}
                                  </span>
-                                 {price.originalPrice > price.currentPrice && (
+                                 {originalPriceLocal > currentPriceLocal && (
                                    <span className="text-xs text-[var(--color-muted-foreground)] line-through font-normal">
                                      {formatPrice(originalPriceLocal, currency)}
                                    </span>
@@ -782,7 +806,7 @@ export const ProductPage: React.FC = () => {
                                <div className="flex flex-col gap-1">
                                  {savings > 0 ? (
                                    <span className="inline-flex items-center gap-1.5 text-emerald-500 dark:text-emerald-400 text-xs font-bold">
-                                     <Tag className="h-3 w-3" /> Save {formatPrice(savings, currency)} ({price.discountPercentage.toFixed(0)}% off)
+                                     <Tag className="h-3 w-3" /> Save {formatPrice(savings, currency)} ({offer.pricing.discountPercentage.toFixed(0)}% off)
                                    </span>
                                  ) : (
                                    <span className="text-[var(--color-muted-foreground)] text-xs">Standard Price</span>
@@ -797,10 +821,10 @@ export const ProductPage: React.FC = () => {
                                      <Sparkles className="h-2.5 w-2.5 animate-pulse" /> Lowest listed base price
                                    </span>
                                  )}
-                                 {(price as { inStock?: boolean }).inStock !== undefined && (
-                                   <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${(price as { inStock?: boolean }).inStock ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>
-                                     {(price as { inStock?: boolean }).inStock ? <CheckCircle2 className="h-2.5 w-2.5" /> : <AlertCircle className="h-2.5 w-2.5" />}
-                                     {(price as { inStock?: boolean }).inStock ? 'In Stock' : 'Out of Stock'}
+                                 {offer.availability.status !== 'unknown' && (
+                                   <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${offer.availability.isAvailable ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>
+                                     {offer.availability.isAvailable ? <CheckCircle2 className="h-2.5 w-2.5" /> : <AlertCircle className="h-2.5 w-2.5" />}
+                                     {offer.availability.isAvailable ? 'In Stock' : 'Out of Stock'}
                                    </span>
                                  )}
                                </div>
@@ -809,18 +833,18 @@ export const ProductPage: React.FC = () => {
                              {/* Last Updated */}
                              <td className="px-6 py-4.5 text-[var(--color-muted-foreground)] text-xs">
                                <span className="inline-flex items-center gap-1.5 font-medium">
-                                 <Clock className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" /> {price.lastUpdated}
+                                 <Clock className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" /> {observationTime}
                                </span>
                              </td>
 
                              {/* Redirect button */}
                              <td className="px-6 py-4.5 text-right">
                                <a
-                                 href={price.productUrl}
+                                 href={offer.source.offerUrl}
                                  target="_blank"
                                  rel="noopener noreferrer"
-                                 onClick={() => apiService.trackSellerClick(price.id)}
-                                 aria-label={`Visit ${price.seller?.name || 'Seller'} storefront`}
+                                 onClick={() => apiService.trackSellerClick(offer.id)}
+                                 aria-label={`Visit ${offer.source.sellerName || 'Seller'} storefront`}
                                  className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
                                    isLowest
                                      ? 'bg-[var(--color-foreground)] text-[var(--color-background)] hover:opacity-90 border-[var(--color-foreground)] shadow-md'

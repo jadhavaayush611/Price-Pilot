@@ -1,13 +1,15 @@
-import React from 'react';
-import type { ProductPrice } from '../types';
-import { ExternalLink, Sparkles, Tag, Clock, TrendingUp, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useMemo } from 'react';
+import type { ProductPrice, NormalizedOffer } from '../types';
+import { normalizeOffer, formatOfferObservationTime, getProvenanceBadge } from '../marketplace';
+import { ExternalLink, Sparkles, Tag, Clock, TrendingUp, CheckCircle2, AlertCircle, ShieldCheck, Database } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatPrice, getDisplayPrice, type CurrencyCode } from '../currency';
 import { apiService } from '../services/api';
 import { ProductImage } from './common/ProductImage';
 
 interface SellerCardProps {
-  price: ProductPrice;
+  price?: ProductPrice;
+  offer?: NormalizedOffer;
   isBestDeal: boolean;
   lowestPrice: number;
   currency?: CurrencyCode;
@@ -15,12 +17,23 @@ interface SellerCardProps {
 
 export const SellerCard: React.FC<SellerCardProps> = React.memo(({
   price,
+  offer,
   isBestDeal,
   lowestPrice,
   currency = 'INR',
 }) => {
-  const currentPriceLocal = getDisplayPrice(price.currentPrice, currency);
-  const originalPriceLocal = getDisplayPrice(price.originalPrice, currency);
+  const normalizedOffer = useMemo(() => {
+    if (offer) return offer;
+    if (price) return normalizeOffer(price);
+    return null;
+  }, [offer, price]);
+
+  if (!normalizedOffer) return null;
+
+  const currentPriceLocal = getDisplayPrice(normalizedOffer.pricing.basePrice, currency);
+  const originalPriceLocal = normalizedOffer.pricing.originalPrice !== undefined
+    ? getDisplayPrice(normalizedOffer.pricing.originalPrice, currency)
+    : 0;
   const lowestPriceLocal = getDisplayPrice(lowestPrice, currency);
 
   const savings = originalPriceLocal > currentPriceLocal 
@@ -28,6 +41,11 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
     : 0;
 
   const priceDiffFromLowest = currentPriceLocal - lowestPriceLocal;
+  const observationTime = formatOfferObservationTime(
+    normalizedOffer.provenance.observedAt,
+    normalizedOffer.provenance.rawLastUpdated
+  );
+  const provBadge = getProvenanceBadge(normalizedOffer.provenance);
 
   return (
     <motion.div
@@ -53,34 +71,50 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
           {/* Logo container */}
           <div className="h-9 w-18 flex items-center justify-center bg-[var(--color-surface-accent)] border border-[var(--color-border)] rounded-xl p-1.5 shadow-inner overflow-hidden">
             <ProductImage
-              src={price.seller?.logoUrl}
-              alt={price.seller?.name || 'Seller'}
+              src={normalizedOffer.source.logoUrl}
+              alt={normalizedOffer.source.sellerName || 'Seller'}
               className="max-h-full max-w-full object-contain filter brightness-95"
               showFallbackText
-              fallbackText={price.seller?.name?.substring(0, 3) || 'SEL'}
+              fallbackText={normalizedOffer.source.sellerName?.substring(0, 3) || 'SEL'}
             />
           </div>
           
           <div className="flex flex-col">
-            <span className="font-bold text-[var(--color-foreground)] text-sm">{price.seller?.name}</span>
+            <span className="font-bold text-[var(--color-foreground)] text-sm">{normalizedOffer.source.sellerName}</span>
             <span className="inline-flex items-center gap-1 text-[10px] text-[var(--color-muted-foreground)] font-medium mt-0.5">
-              <Clock className="h-3 w-3 text-[var(--color-muted-foreground)]" /> {price.lastUpdated}
+              <Clock className="h-3 w-3 text-[var(--color-muted-foreground)]" /> {observationTime}
             </span>
           </div>
         </div>
 
-        {/* Highlights */}
+        {/* Highlights & Badges */}
         <div className="flex flex-col gap-1.5 items-end">
           {isBestDeal && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider shadow-sm">
               <Sparkles className="h-3 w-3" /> Best Deal
             </span>
           )}
-          {price.discountPercentage > 0 && (
+          {normalizedOffer.pricing.discountPercentage > 0 && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-[9px] font-extrabold text-rose-700 dark:text-rose-300 uppercase tracking-wider">
-              <Tag className="h-2.5 w-2.5" /> Save {price.discountPercentage.toFixed(0)}%
+              <Tag className="h-2.5 w-2.5" /> Save {normalizedOffer.pricing.discountPercentage.toFixed(0)}%
             </span>
           )}
+          {/* Honest Provenance Badge */}
+          <span
+            title={provBadge.description}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
+              normalizedOffer.provenance.isLiveVerified
+                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25'
+                : 'bg-[var(--color-surface-accent)] text-[var(--color-muted-foreground)] border-[var(--color-border)]'
+            }`}
+          >
+            {normalizedOffer.provenance.isLiveVerified ? (
+              <ShieldCheck className="h-2.5 w-2.5 text-emerald-500" />
+            ) : (
+              <Database className="h-2.5 w-2.5 text-[var(--color-muted-foreground)]" />
+            )}
+            {provBadge.label}
+          </span>
         </div>
       </div>
 
@@ -127,11 +161,11 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
             </div>
           )}
 
-          {/* Availability / Stock Status when known */}
-          {(price as { inStock?: boolean }).inStock !== undefined && (
-            <div className={`flex items-center gap-1.5 ${(price as { inStock?: boolean }).inStock ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>
-              {(price as { inStock?: boolean }).inStock ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
-              <span>{(price as { inStock?: boolean }).inStock ? 'In Stock' : 'Out of Stock'}</span>
+          {/* Availability / Stock Status ONLY when explicitly known */}
+          {normalizedOffer.availability.status !== 'unknown' && (
+            <div className={`flex items-center gap-1.5 ${normalizedOffer.availability.isAvailable ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>
+              {normalizedOffer.availability.isAvailable ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
+              <span>{normalizedOffer.availability.isAvailable ? 'In Stock' : 'Out of Stock'}</span>
             </div>
           )}
 
@@ -144,11 +178,11 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
       {/* Bottom Section: CTA */}
       <div className="mt-4 pt-1">
         <a
-          href={price.productUrl}
+          href={normalizedOffer.source.offerUrl}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => apiService.trackSellerClick(price.id)}
-          aria-label={`Visit ${price.seller?.name || 'Seller'} storefront`}
+          onClick={() => apiService.trackSellerClick(normalizedOffer.id)}
+          aria-label={`Visit ${normalizedOffer.source.sellerName || 'Seller'} storefront`}
           className={`flex items-center justify-center gap-2 w-full py-3 px-4 text-xs font-bold rounded-xl border transition-all active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:outline-none ${
             isBestDeal
               ? 'bg-[var(--color-primary)] hover:opacity-90 text-[var(--color-primary-foreground)] border-transparent shadow-sm'
