@@ -52,6 +52,8 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
     normalizedOffer.source.providerName === 'mock-marketplace' ||
     normalizedOffer.source.providerName === 'mock';
 
+  const isStaleOffer = Boolean(normalizedOffer.provenance.isStale);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -63,6 +65,8 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
         isBestDeal
           ? isSimulated
             ? 'bg-[var(--color-surface)] border-amber-500/40 shadow-[0_8px_30px_rgba(245,158,11,0.08)]'
+            : isStaleOffer
+            ? 'bg-[var(--color-surface)] border-amber-500/40 shadow-[0_8px_30px_rgba(245,158,11,0.08)]'
             : 'bg-[var(--color-surface)] border-emerald-500/40 shadow-[0_8px_30px_rgba(16,185,129,0.08)]'
           : 'bg-[var(--color-surface)] border-[var(--color-border)] hover:border-[var(--color-ring)]/40 shadow-sm'
       }`}
@@ -70,7 +74,7 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
       {/* Glow Effect for Best Deal */}
       {isBestDeal && (
         <div className={`absolute top-0 right-0 h-[100px] w-[100px] blur-[50px] rounded-full pointer-events-none ${
-          isSimulated ? 'bg-amber-500/10' : 'bg-emerald-500/10'
+          (isSimulated || isStaleOffer) ? 'bg-amber-500/10' : 'bg-emerald-500/10'
         }`} />
       )}
 
@@ -102,6 +106,10 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
             isSimulated ? (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-[9px] font-extrabold text-amber-700 dark:text-amber-300 uppercase tracking-wider shadow-sm">
                 <Sparkles className="h-3 w-3" /> Simulated Deal (Testing)
+              </span>
+            ) : isStaleOffer ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-[9px] font-extrabold text-amber-700 dark:text-amber-300 uppercase tracking-wider shadow-sm">
+                <Sparkles className="h-3 w-3" /> Lowest Stale Listed Price
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider shadow-sm">

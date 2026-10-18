@@ -849,11 +849,13 @@ export const ProductPage: React.FC = () => {
                         );
                         const provBadge = getProvenanceBadge(offer.provenance);
 
+                        const isStaleOffer = Boolean(offer.provenance.isStale);
+
                         return (
                           <tr
                             key={offer.id}
                             className={`transition-colors duration-200 hover:bg-[var(--color-surface-accent)]/50 ${
-                              isLowest ? (isSimulated ? 'bg-amber-500/[0.03]' : 'bg-emerald-500/[0.03]') : ''
+                              isLowest ? (isSimulated || isStaleOffer ? 'bg-amber-500/[0.03]' : 'bg-emerald-500/[0.03]') : ''
                             }`}
                           >
                             {/* Seller Logo & Name */}
@@ -890,9 +892,18 @@ export const ProductPage: React.FC = () => {
                                  </div>
                                  {isLowest && (
                                    <span className={`inline-flex items-center gap-1 text-[9px] font-extrabold mt-0.5 tracking-wide uppercase ${
-                                     isSimulated ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-500 dark:text-emerald-400'
+                                     isSimulated
+                                       ? 'text-amber-600 dark:text-amber-400'
+                                       : isStaleOffer
+                                       ? 'text-amber-600 dark:text-amber-400'
+                                       : 'text-emerald-500 dark:text-emerald-400'
                                    }`}>
-                                     <Sparkles className="h-2.5 w-2.5" /> {isSimulated ? 'Simulated Deal (Testing)' : 'Best Deal'}
+                                     <Sparkles className="h-2.5 w-2.5" />
+                                     {isSimulated
+                                       ? 'Simulated Deal (Testing)'
+                                       : isStaleOffer
+                                       ? 'Lowest Stale Listed Price'
+                                       : 'Best Deal'}
                                    </span>
                                  )}
                                </div>

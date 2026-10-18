@@ -71,7 +71,8 @@ public class MarketplaceOfferAggregatorService {
                 }
             } catch (Exception ex) {
                 // Adapter failure must NEVER cause loss of results from other adapters
-                log.warn("Adapter '{}' failed during offer aggregation: {}", adapter.getProviderId(), ex.getMessage());
+                log.warn("PARTIAL_AGGREGATION_FAILURE: Adapter '{}' failed during offer aggregation for product ID '{}' ({}): {}",
+                        adapter.getProviderId(), context.productId(), context.productName(), ex.getMessage(), ex);
             }
         }
 

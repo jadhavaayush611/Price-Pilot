@@ -372,6 +372,66 @@ class MarketplaceAdapterFrameworkTest {
     }
 
     @Test
+    @DisplayName("Partial failure resilience: mock offers survive catalog adapter database failure")
+    void testAggregator_mockSurvivesCatalogFailure() {
+        UUID prodId = UUID.randomUUID();
+        MarketplaceQueryContext context = MarketplaceQueryContext.of(prodId, "Resilience Phone");
+
+        when(productPriceRepository.findPricesWithSellersByProductIds(anyList()))
+                .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("Database link severed"));
+
+        mockAdapter.setEnabled(true);
+        List<NormalizedOfferDTO> offersWhenCatalogFails = aggregatorService.aggregateOffers(context);
+        // Mock adapter returns 2 offers for iPhone/Phone query context
+        assertFalse(offersWhenCatalogFails.isEmpty(), "Mock offers must survive unexpected catalog failure");
+        assertTrue(offersWhenCatalogFails.stream().allMatch(o -> o.getProvenance().getTrustLabel().contains("Simulated")),
+                "Surviving offers must remain truthfully labeled as simulated");
+    }
+
+    @Test
+    @DisplayName("Partial failure resilience: catalog offers survive mock adapter crash")
+    void testAggregator_catalogSurvivesMockFailure() {
+        UUID prodId = UUID.randomUUID();
+        MarketplaceQueryContext context = MarketplaceQueryContext.of(prodId, "Resilience Phone");
+
+        ProductEntity product = ProductEntity.builder().name("Resilience Phone").build();
+        product.setId(prodId);
+        SellerEntity seller = SellerEntity.builder().name("Resilient Catalog Store").build();
+        ProductPriceEntity price = ProductPriceEntity.builder()
+                .product(product)
+                .seller(seller)
+                .currentPrice(new BigDecimal("699.99"))
+                .build();
+        price.setId(UUID.randomUUID());
+
+        when(productPriceRepository.findPricesWithSellersByProductIds(anyList()))
+                .thenReturn(List.of(price));
+
+        MarketplaceOfferAdapter failingMockAdapter = new MarketplaceOfferAdapter() {
+            @Override
+            public String getProviderId() { return "mock-broken"; }
+            @Override
+            public String getDisplayName() { return "Broken Mock"; }
+            @Override
+            public boolean isAvailable() { return true; }
+            @Override
+            public List<RawMarketplaceOffer> fetchRawOffers(MarketplaceQueryContext ctx) {
+                throw new IllegalStateException("Simulated upstream JSON deserialization crash");
+            }
+        };
+
+        MarketplaceOfferAggregatorService customAggregator = new MarketplaceOfferAggregatorService(
+                List.of(catalogAdapter, failingMockAdapter),
+                normalizer
+        );
+
+        List<NormalizedOfferDTO> offersWhenMockFails = customAggregator.aggregateOffers(context);
+        assertEquals(1, offersWhenMockFails.size(), "Catalog offer must survive mock adapter crash");
+        assertEquals("Resilient Catalog Store", offersWhenMockFails.get(0).getSource().getSellerName());
+        assertEquals(new BigDecimal("699.99"), offersWhenMockFails.get(0).getPricing().getBasePrice());
+    }
+
+    @Test
     @DisplayName("Empty results or all-invalid offers return empty list safely without assigning best deal")
     void testAggregator_emptyOrAllInvalid() {
         UUID prodId = UUID.randomUUID();

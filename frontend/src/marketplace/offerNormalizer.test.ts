@@ -269,19 +269,63 @@ describe('Marketplace Offer Normalizer & Provenance Tests', () => {
       expect(offer.provenance.rawLastUpdated).toBeUndefined();
       expect(offer.provenance.isLiveVerified).toBe(false);
       expect(offer.provenance.verificationStatus).toBe('unverified');
+      expect(offer.provenance.trustLabel).toBe('Catalog Offer (Unverified Freshness)');
       expect(formatOfferObservationTime(offer.provenance.observedAt, offer.provenance.rawLastUpdated)).toBe('Update time unavailable');
     });
 
-    it('handles future timestamps without flagging them as stale', () => {
-      const futureDate = new Date(Date.now() + 2 * 24 * 3600 * 1000).toISOString();
-      const offer = mustNormalize({
-        ...samplePrice,
-        lastUpdated: futureDate,
-      });
+    it('168-hour boundary freshness policy (just under, exactly at, and just over 168 hours)', () => {
+      const now = Date.now();
+      const thresholdHours = DEFAULT_STALE_HOURS; // 168
+      const thresholdMs = thresholdHours * 3600 * 1000;
 
-      expect(offer.provenance.observedAt).toBe(futureDate);
-      expect(offer.provenance.isStale).toBe(false);
-      expect(offer.provenance.trustLabel).toBe('Catalog Offer');
+      // 1. Just under 168 hours (e.g. 1 second under) -> NOT stale
+      const underDate = new Date(now - thresholdMs + 1000).toISOString();
+      const offerUnder = mustNormalize({
+        ...samplePrice,
+        lastUpdated: underDate,
+      });
+      expect(offerUnder.provenance.isStale).toBe(false);
+      expect(offerUnder.provenance.trustLabel).toBe('Catalog Offer');
+
+      // 2. Exactly at 168 hours -> NOT stale (strictly greater is stale)
+      const exactDate = new Date(now - thresholdMs).toISOString();
+      const offerExact = mustNormalize({
+        ...samplePrice,
+        lastUpdated: exactDate,
+      });
+      expect(offerExact.provenance.isStale).toBe(false);
+      expect(offerExact.provenance.trustLabel).toBe('Catalog Offer');
+
+      // 3. Just over 168 hours (e.g. 1 second over) -> STALE
+      const overDate = new Date(now - thresholdMs - 1000).toISOString();
+      const offerOver = mustNormalize({
+        ...samplePrice,
+        lastUpdated: overDate,
+      });
+      expect(offerOver.provenance.isStale).toBe(true);
+      expect(offerOver.provenance.trustLabel).toBe('Catalog Offer (Stale)');
+    });
+
+    it('handles near future timestamps gracefully and rejects timestamps > 5 minutes in future', () => {
+      // 2 minutes in future: accepted (clock skew tolerance)
+      const nearFuture = new Date(Date.now() + 2 * 60 * 1000).toISOString();
+      const offerNear = mustNormalize({
+        ...samplePrice,
+        lastUpdated: nearFuture,
+      });
+      expect(offerNear.provenance.observedAt).toBe(nearFuture);
+      expect(offerNear.provenance.isStale).toBe(false);
+      expect(offerNear.provenance.trustLabel).toBe('Catalog Offer');
+
+      // 2 days in future: rejected as untrustworthy observation timestamp
+      const farFuture = new Date(Date.now() + 2 * 24 * 3600 * 1000).toISOString();
+      const offerFar = mustNormalize({
+        ...samplePrice,
+        lastUpdated: farFuture,
+      });
+      expect(offerFar.provenance.observedAt).toBeUndefined();
+      expect(offerFar.provenance.isStale).toBe(false);
+      expect(offerFar.provenance.trustLabel).toBe('Catalog Offer (Unverified Freshness)');
     });
 
     it('flags observations older than staleThresholdHours as stale without falsely implying verified source', () => {

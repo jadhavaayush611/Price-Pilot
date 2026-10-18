@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -22,11 +24,59 @@ import java.util.*;
  * - Missing shipping or checkout fees are NEVER inferred as zero.
  * - Catalog seed and demo data is labeled unverified; never claimed as live verified.
  * - Stock states are never fabricated.
+ * - Missing observation timestamps are treated as unknown freshness, never silently assumed fresh.
+ * - Future timestamps beyond 5 minutes are rejected as untrustworthy observations.
  */
 @Component
 public class OfferNormalizer {
 
-    private static final int DEFAULT_STALE_THRESHOLD_HOURS = 168; // 7 days
+    public static final int DEFAULT_STALE_THRESHOLD_HOURS = 168; // 7 days
+    private static final long MAX_ALLOWED_FUTURE_SKEW_SECONDS = 300; // 5 minutes
+
+    private final Clock clock;
+
+    public OfferNormalizer() {
+        this(Clock.systemDefaultZone());
+    }
+
+    public OfferNormalizer(Clock clock) {
+        this.clock = clock != null ? clock : Clock.systemDefaultZone();
+    }
+
+    /**
+     * Internal freshness assessment record.
+     */
+    private record FreshnessResult(
+            LocalDateTime effectiveObservedAt,
+            boolean isStale,
+            boolean isUnknownFreshness
+    ) {}
+
+    /**
+     * Truthfully assesses observation freshness:
+     * - Null timestamp -> unknown freshness (cannot be confirmed fresh).
+     * - Future timestamp > 5 mins -> rejected as untrustworthy (null observedAt, unknown freshness).
+     * - Exact duration > 168 hours -> stale. At exactly 168 hours, it is not stale.
+     */
+    private FreshnessResult assessFreshness(LocalDateTime observedAt) {
+        if (observedAt == null) {
+            return new FreshnessResult(null, false, true);
+        }
+
+        LocalDateTime now = LocalDateTime.now(clock);
+        Duration durationFromObserved = Duration.between(observedAt, now);
+
+        // If observedAt is in the future by more than 5 minutes (300 seconds)
+        if (durationFromObserved.getSeconds() < -MAX_ALLOWED_FUTURE_SKEW_SECONDS) {
+            // Untrustworthy future observation timestamp
+            return new FreshnessResult(null, false, true);
+        }
+
+        long thresholdSeconds = (long) DEFAULT_STALE_THRESHOLD_HOURS * 3600;
+        // Strictly greater than 168 hours (604,800 seconds). At exactly 168h, it is not stale.
+        boolean isStale = durationFromObserved.getSeconds() > thresholdSeconds;
+        return new FreshnessResult(observedAt, isStale, false);
+    }
 
     /**
      * Normalizes a ProductPriceResponseDTO into a NormalizedOfferDTO.
@@ -85,29 +135,32 @@ public class OfferNormalizer {
                 .pricingDisclaimer("Listed base price. Additional shipping, taxes, and merchant fees may apply at checkout.")
                 .build();
 
-        LocalDateTime observedAt = dto.getLastUpdated();
-        boolean isStale = false;
-        if (observedAt != null) {
-            LocalDateTime now = LocalDateTime.now();
-            if (observedAt.isBefore(now)) {
-                long hours = ChronoUnit.HOURS.between(observedAt, now);
-                if (hours > DEFAULT_STALE_THRESHOLD_HOURS) {
-                    isStale = true;
-                }
-            }
+        FreshnessResult freshness = assessFreshness(dto.getLastUpdated());
+        boolean isStale = freshness.isStale();
+        LocalDateTime effectiveObservedAt = freshness.effectiveObservedAt();
+
+        String trustLabel;
+        String trustDesc;
+        if (isStale) {
+            trustLabel = "Catalog Offer (Stale)";
+            trustDesc = "Catalog seed offer has exceeded the freshness window. Not a live verified retailer feed.";
+        } else if (freshness.isUnknownFreshness()) {
+            trustLabel = "Catalog Offer (Unverified Freshness)";
+            trustDesc = "Catalog seed offer with unverified observation timestamp. Not a live verified retailer feed.";
+        } else {
+            trustLabel = "Catalog Offer";
+            trustDesc = "Demonstration catalog seed offer. Not a live verified retailer feed.";
         }
 
         OfferProvenanceDTO provenance = OfferProvenanceDTO.builder()
                 .sourceType(ProvenanceType.DEMO)
                 .verificationStatus(VerificationStatus.UNVERIFIED) // Stale status does not imply a verified source
                 .liveVerified(false) // Demo/seed data is never live verified
-                .observedAt(observedAt)
-                .rawLastUpdated(observedAt != null ? observedAt.toString() : null)
+                .observedAt(effectiveObservedAt)
+                .rawLastUpdated(effectiveObservedAt != null ? effectiveObservedAt.toString() : null)
                 .stale(isStale)
-                .trustLabel(isStale ? "Catalog Offer (Stale)" : "Catalog Offer")
-                .trustDescription(isStale
-                        ? "Catalog seed offer has exceeded the freshness window. Not a live verified retailer feed."
-                        : "Demonstration catalog seed offer. Not a live verified retailer feed.")
+                .trustLabel(trustLabel)
+                .trustDescription(trustDesc)
                 .build();
 
         OfferAvailabilityDTO availability = OfferAvailabilityDTO.builder()
@@ -187,29 +240,32 @@ public class OfferNormalizer {
                 .pricingDisclaimer("Listed base price. Additional shipping, taxes, and merchant fees may apply at checkout.")
                 .build();
 
-        LocalDateTime observedAt = entity.getLastUpdated();
-        boolean isStale = false;
-        if (observedAt != null) {
-            LocalDateTime now = LocalDateTime.now();
-            if (observedAt.isBefore(now)) {
-                long hours = ChronoUnit.HOURS.between(observedAt, now);
-                if (hours > DEFAULT_STALE_THRESHOLD_HOURS) {
-                    isStale = true;
-                }
-            }
+        FreshnessResult freshness = assessFreshness(entity.getLastUpdated());
+        boolean isStale = freshness.isStale();
+        LocalDateTime effectiveObservedAt = freshness.effectiveObservedAt();
+
+        String trustLabel;
+        String trustDesc;
+        if (isStale) {
+            trustLabel = "Catalog Offer (Stale)";
+            trustDesc = "Catalog seed offer has exceeded the freshness window. Not a live verified retailer feed.";
+        } else if (freshness.isUnknownFreshness()) {
+            trustLabel = "Catalog Offer (Unverified Freshness)";
+            trustDesc = "Catalog seed offer with unverified observation timestamp. Not a live verified retailer feed.";
+        } else {
+            trustLabel = "Catalog Offer";
+            trustDesc = "Demonstration catalog seed offer. Not a live verified retailer feed.";
         }
 
         OfferProvenanceDTO provenance = OfferProvenanceDTO.builder()
                 .sourceType(ProvenanceType.DEMO)
                 .verificationStatus(VerificationStatus.UNVERIFIED) // Stale status does not imply a verified source
                 .liveVerified(false)
-                .observedAt(observedAt)
-                .rawLastUpdated(observedAt != null ? observedAt.toString() : null)
+                .observedAt(effectiveObservedAt)
+                .rawLastUpdated(effectiveObservedAt != null ? effectiveObservedAt.toString() : null)
                 .stale(isStale)
-                .trustLabel(isStale ? "Catalog Offer (Stale)" : "Catalog Offer")
-                .trustDescription(isStale
-                        ? "Catalog seed offer has exceeded the freshness window. Not a live verified retailer feed."
-                        : "Demonstration catalog seed offer. Not a live verified retailer feed.")
+                .trustLabel(trustLabel)
+                .trustDescription(trustDesc)
                 .build();
 
         OfferAvailabilityDTO availability = OfferAvailabilityDTO.builder()
@@ -307,17 +363,9 @@ public class OfferNormalizer {
                 .pricingDisclaimer("Listed base price. Additional shipping, taxes, and merchant fees may apply at checkout.")
                 .build();
 
-        LocalDateTime observedAt = raw.observationTime();
-        boolean isStale = false;
-        if (observedAt != null) {
-            LocalDateTime now = LocalDateTime.now();
-            if (observedAt.isBefore(now)) {
-                long hours = ChronoUnit.HOURS.between(observedAt, now);
-                if (hours > DEFAULT_STALE_THRESHOLD_HOURS) {
-                    isStale = true;
-                }
-            }
-        }
+        FreshnessResult freshness = assessFreshness(raw.observationTime());
+        boolean isStale = freshness.isStale();
+        LocalDateTime effectiveObservedAt = freshness.effectiveObservedAt();
 
         ProvenanceType provType = sourceType != null ? sourceType : ProvenanceType.DEMO;
         VerificationStatus verStatus;
@@ -329,32 +377,62 @@ public class OfferNormalizer {
             verStatus = VerificationStatus.UNVERIFIED;
             liveVerified = false;
             if ("mock".equalsIgnoreCase(providerId)) {
-                trustLabel = isStale ? "Simulated Offer (Stale)" : "Simulated Offer";
-                trustDesc = "Simulated offline marketplace offer for testing. Not a live verified retailer feed.";
+                if (isStale) {
+                    trustLabel = "Simulated Offer (Stale)";
+                    trustDesc = "Simulated offline marketplace offer that has exceeded the freshness window.";
+                } else if (freshness.isUnknownFreshness()) {
+                    trustLabel = "Simulated Offer (Unverified Freshness)";
+                    trustDesc = "Simulated offline marketplace offer with unverified observation timestamp.";
+                } else {
+                    trustLabel = "Simulated Offer";
+                    trustDesc = "Simulated offline marketplace offer for testing. Not a live verified retailer feed.";
+                }
             } else {
-                trustLabel = isStale ? "Catalog Offer (Stale)" : "Catalog Offer";
-                trustDesc = isStale
-                        ? "Catalog seed offer has exceeded the freshness window. Not a live verified retailer feed."
-                        : "Demonstration catalog seed offer. Not a live verified retailer feed.";
+                if (isStale) {
+                    trustLabel = "Catalog Offer (Stale)";
+                    trustDesc = "Catalog seed offer has exceeded the freshness window. Not a live verified retailer feed.";
+                } else if (freshness.isUnknownFreshness()) {
+                    trustLabel = "Catalog Offer (Unverified Freshness)";
+                    trustDesc = "Catalog seed offer with unverified observation timestamp. Not a live verified retailer feed.";
+                } else {
+                    trustLabel = "Catalog Offer";
+                    trustDesc = "Demonstration catalog seed offer. Not a live verified retailer feed.";
+                }
             }
         } else if (provType == ProvenanceType.LIVE) {
             verStatus = isStale ? VerificationStatus.STALE : VerificationStatus.VERIFIED;
-            liveVerified = !isStale;
-            trustLabel = isStale ? "Live Verified (Stale)" : "Live Verified";
-            trustDesc = "Real-time verified offer from integrated merchant endpoint.";
+            liveVerified = !isStale && !freshness.isUnknownFreshness();
+            if (isStale) {
+                trustLabel = "Live Verified (Stale)";
+                trustDesc = "Live merchant endpoint observation that has exceeded the freshness window.";
+            } else if (freshness.isUnknownFreshness()) {
+                trustLabel = "Live Feed (Unverified Freshness)";
+                trustDesc = "Live merchant feed with unverified observation timestamp.";
+            } else {
+                trustLabel = "Live Verified";
+                trustDesc = "Real-time verified offer from integrated merchant endpoint.";
+            }
         } else {
             verStatus = VerificationStatus.UNVERIFIED;
             liveVerified = false;
-            trustLabel = isStale ? "Catalog Offer (Stale)" : "Catalog Offer";
-            trustDesc = "Demonstration catalog offer. Not a live verified retailer feed.";
+            if (isStale) {
+                trustLabel = "Catalog Offer (Stale)";
+                trustDesc = "Catalog offer that has exceeded the freshness window. Not a live verified retailer feed.";
+            } else if (freshness.isUnknownFreshness()) {
+                trustLabel = "Catalog Offer (Unverified Freshness)";
+                trustDesc = "Catalog offer with unverified observation timestamp. Not a live verified retailer feed.";
+            } else {
+                trustLabel = "Catalog Offer";
+                trustDesc = "Demonstration catalog offer. Not a live verified retailer feed.";
+            }
         }
 
         OfferProvenanceDTO provenance = OfferProvenanceDTO.builder()
                 .sourceType(provType)
                 .verificationStatus(verStatus)
                 .liveVerified(liveVerified)
-                .observedAt(observedAt)
-                .rawLastUpdated(observedAt != null ? observedAt.toString() : null)
+                .observedAt(effectiveObservedAt)
+                .rawLastUpdated(effectiveObservedAt != null ? effectiveObservedAt.toString() : null)
                 .stale(isStale)
                 .trustLabel(trustLabel)
                 .trustDescription(trustDesc)

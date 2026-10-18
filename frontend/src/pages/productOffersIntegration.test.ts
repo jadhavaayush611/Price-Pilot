@@ -291,6 +291,66 @@ describe('Unit 5.5: Marketplace Product Offers Integration & Fallback Tests', ()
       expect(badge.label).toBe('Catalog Offer (Stale)');
       expect(badge.tone).toBe('amber');
     });
+
+    it('ensures stale lowest-price offers do not receive unqualified Best Deal label in UI presentation', () => {
+      const staleLowestDto: NormalizedOfferDTO = {
+        ...sampleCatalogDto,
+        isBestDeal: true,
+        pricing: {
+          ...sampleCatalogDto.pricing,
+          basePrice: 299.99,
+        },
+        provenance: {
+          ...sampleCatalogDto.provenance,
+          stale: true,
+          trustLabel: 'Catalog Offer (Stale)',
+        },
+      };
+
+      const offer = mapDtoToNormalizedOffer(staleLowestDto);
+      expect(offer.isBestDeal).toBe(true);
+      expect(offer.provenance.isStale).toBe(true);
+
+      // In SellerCard and ProductPage table, isBestDeal && isStaleOffer resolves to "Lowest Stale Listed Price" (amber)
+      const isSimulated = offer.provenance.sourceType?.toLowerCase() === 'simulated';
+      const isStale = Boolean(offer.provenance.isStale);
+      const dealLabel = isSimulated
+        ? 'Simulated Deal (Testing)'
+        : isStale
+        ? 'Lowest Stale Listed Price'
+        : 'Best Deal';
+
+      expect(dealLabel).toBe('Lowest Stale Listed Price');
+      expect(dealLabel).not.toBe('Best Deal');
+    });
+
+    it('handles all-stale offer lists without implying any is a currently reliable bargain', () => {
+      const dtos: NormalizedOfferDTO[] = [
+        {
+          ...sampleCatalogDto,
+          id: 'stale-1',
+          isBestDeal: true,
+          pricing: { ...sampleCatalogDto.pricing, basePrice: 250.0 },
+          provenance: { ...sampleCatalogDto.provenance, stale: true, trustLabel: 'Catalog Offer (Stale)' },
+        },
+        {
+          ...sampleCatalogDto,
+          id: 'stale-2',
+          isBestDeal: false,
+          pricing: { ...sampleCatalogDto.pricing, basePrice: 300.0 },
+          provenance: { ...sampleCatalogDto.provenance, stale: true, trustLabel: 'Catalog Offer (Stale)' },
+        },
+      ];
+
+      const offers = dtos.map(mapDtoToNormalizedOffer);
+      expect(offers).toHaveLength(2);
+      expect(offers.every((o) => o.provenance.isStale)).toBe(true);
+
+      // Lowest stale offer is labeled truthfully as stale listed price, not Best Deal
+      const lowestOffer = offers[0];
+      const lowestLabel = lowestOffer.provenance.isStale ? 'Lowest Stale Listed Price' : 'Best Deal';
+      expect(lowestLabel).toBe('Lowest Stale Listed Price');
+    });
   });
 
   describe('4. Currency Conversion Consistency', () => {

@@ -103,34 +103,101 @@ class OfferNormalizerTest {
     }
 
     @Test
-    @DisplayName("Future timestamps are not flagged as stale")
-    void testNormalize_futureTimestamp() {
-        ProductPriceResponseDTO dto = ProductPriceResponseDTO.builder()
+    @DisplayName("Boundary: 168 hours freshness policy (just under, exactly at, and just over 168 hours)")
+    void testNormalize_freshness168HourBoundary() {
+        LocalDateTime baseTime = LocalDateTime.of(2026, 10, 15, 12, 0, 0);
+        java.time.Instant fixedInstant = baseTime.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        java.time.Clock fixedClock = java.time.Clock.fixed(fixedInstant, java.time.ZoneId.systemDefault());
+        OfferNormalizer clockNormalizer = new OfferNormalizer(fixedClock);
+
+        // 1. Just under 168 hours (e.g., 167 hours, 59 minutes, 59 seconds ago) -> NOT stale
+        LocalDateTime justUnder = baseTime.minusHours(167).minusMinutes(59).minusSeconds(59);
+        ProductPriceResponseDTO dtoUnder = ProductPriceResponseDTO.builder()
                 .id(UUID.randomUUID())
-                .currentPrice(new BigDecimal("299.00"))
-                .lastUpdated(LocalDateTime.now().plusDays(2))
-                .seller(SellerResponseDTO.builder().name("Store Future").build())
+                .currentPrice(new BigDecimal("100.00"))
+                .lastUpdated(justUnder)
+                .seller(SellerResponseDTO.builder().name("Seller").build())
                 .build();
+        NormalizedOfferDTO offerUnder = clockNormalizer.normalize(dtoUnder);
+        assertFalse(offerUnder.getProvenance().isStale(), "Offer just under 168h must not be stale");
+        assertEquals("Catalog Offer", offerUnder.getProvenance().getTrustLabel());
 
-        NormalizedOfferDTO offer = normalizer.normalize(dto);
+        // 2. Exactly at 168 hours (168 hours, 0 seconds ago) -> NOT stale (age strictly greater than 168h is stale)
+        LocalDateTime exactlyAt = baseTime.minusHours(168);
+        ProductPriceResponseDTO dtoExact = ProductPriceResponseDTO.builder()
+                .id(UUID.randomUUID())
+                .currentPrice(new BigDecimal("100.00"))
+                .lastUpdated(exactlyAt)
+                .seller(SellerResponseDTO.builder().name("Seller").build())
+                .build();
+        NormalizedOfferDTO offerExact = clockNormalizer.normalize(dtoExact);
+        assertFalse(offerExact.getProvenance().isStale(), "Offer exactly at 168h must not be stale under existing threshold policy");
+        assertEquals("Catalog Offer", offerExact.getProvenance().getTrustLabel());
 
-        assertFalse(offer.getProvenance().isStale());
-        assertEquals("Catalog Offer", offer.getProvenance().getTrustLabel());
+        // 3. Just over 168 hours (168 hours, 1 second ago) -> STALE
+        LocalDateTime justOver = baseTime.minusHours(168).minusSeconds(1);
+        ProductPriceResponseDTO dtoOver = ProductPriceResponseDTO.builder()
+                .id(UUID.randomUUID())
+                .currentPrice(new BigDecimal("100.00"))
+                .lastUpdated(justOver)
+                .seller(SellerResponseDTO.builder().name("Seller").build())
+                .build();
+        NormalizedOfferDTO offerOver = clockNormalizer.normalize(dtoOver);
+        assertTrue(offerOver.getProvenance().isStale(), "Offer just over 168h must be stale");
+        assertEquals("Catalog Offer (Stale)", offerOver.getProvenance().getTrustLabel());
     }
 
     @Test
-    @DisplayName("Missing timestamp does not crash and produces non-stale observation")
+    @DisplayName("Future timestamps: within 5 minutes allowed, beyond 5 minutes rejected as untrustworthy")
+    void testNormalize_futureTimestamp() {
+        LocalDateTime baseTime = LocalDateTime.of(2026, 10, 15, 12, 0, 0);
+        java.time.Instant fixedInstant = baseTime.atZone(java.time.ZoneId.systemDefault()).toInstant();
+        java.time.Clock fixedClock = java.time.Clock.fixed(fixedInstant, java.time.ZoneId.systemDefault());
+        OfferNormalizer clockNormalizer = new OfferNormalizer(fixedClock);
+
+        // Near future (2 minutes ahead) -> clock skew tolerance accepted, not stale
+        LocalDateTime nearFuture = baseTime.plusMinutes(2);
+        ProductPriceResponseDTO dtoNear = ProductPriceResponseDTO.builder()
+                .id(UUID.randomUUID())
+                .currentPrice(new BigDecimal("299.00"))
+                .lastUpdated(nearFuture)
+                .seller(SellerResponseDTO.builder().name("Store Near").build())
+                .build();
+        NormalizedOfferDTO offerNear = clockNormalizer.normalize(dtoNear);
+        assertFalse(offerNear.getProvenance().isStale());
+        assertEquals(nearFuture, offerNear.getProvenance().getObservedAt());
+        assertEquals("Catalog Offer", offerNear.getProvenance().getTrustLabel());
+
+        // Far future (>5 minutes ahead, e.g. 2 days) -> rejected as untrustworthy (unverified freshness)
+        LocalDateTime farFuture = baseTime.plusDays(2);
+        ProductPriceResponseDTO dtoFar = ProductPriceResponseDTO.builder()
+                .id(UUID.randomUUID())
+                .currentPrice(new BigDecimal("299.00"))
+                .lastUpdated(farFuture)
+                .seller(SellerResponseDTO.builder().name("Store Far").build())
+                .build();
+        NormalizedOfferDTO offerFar = clockNormalizer.normalize(dtoFar);
+        assertFalse(offerFar.getProvenance().isStale());
+        assertNull(offerFar.getProvenance().getObservedAt(), "Untrustworthy future timestamp must not be stored as valid observedAt");
+        assertEquals("Catalog Offer (Unverified Freshness)", offerFar.getProvenance().getTrustLabel());
+    }
+
+    @Test
+    @DisplayName("Missing timestamp does not crash and produces truthful unverified freshness, not assumed fresh")
     void testNormalize_missingTimestamp() {
         ProductPriceResponseDTO dto = ProductPriceResponseDTO.builder()
                 .id(UUID.randomUUID())
                 .currentPrice(new BigDecimal("299.00"))
                 .lastUpdated(null)
+                .seller(SellerResponseDTO.builder().name("Demo Seller").build())
                 .build();
 
         NormalizedOfferDTO offer = normalizer.normalize(dto);
 
         assertNull(offer.getProvenance().getObservedAt());
+        assertNull(offer.getProvenance().getRawLastUpdated());
         assertFalse(offer.getProvenance().isStale());
+        assertEquals("Catalog Offer (Unverified Freshness)", offer.getProvenance().getTrustLabel());
     }
 
     @Test

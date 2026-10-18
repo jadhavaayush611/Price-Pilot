@@ -98,6 +98,7 @@ export function normalizeOffer(
   let observedAt: string | undefined = undefined;
   let rawLastUpdated: string | undefined = undefined;
   let isStale = false;
+  let isUnknownFreshness = true;
 
   if (price.lastUpdated && typeof price.lastUpdated === 'string') {
     const raw = price.lastUpdated.trim();
@@ -111,11 +112,18 @@ export function normalizeOffer(
       const hasIsoStructure = /^\d{4}-\d{2}-\d{2}/.test(raw);
 
       if (!isNaN(parsedTime) && hasIsoStructure) {
-        observedAt = new Date(parsedTime).toISOString();
-        const ageMs = Date.now() - parsedTime;
-        // Age must be strictly greater than threshold hours; future timestamps are not stale
-        if (ageMs > staleThresholdHours * 3600 * 1000) {
-          isStale = true;
+        const diffMs = Date.now() - parsedTime;
+        // If timestamp is more than 5 minutes (300,000 ms) in the future, reject as untrustworthy
+        if (diffMs < -300 * 1000) {
+          // Untrustworthy future observation timestamp: do not treat as valid observedAt
+          isUnknownFreshness = true;
+        } else {
+          observedAt = new Date(parsedTime).toISOString();
+          isUnknownFreshness = false;
+          // Age must be strictly greater than threshold hours (168h * 3600 * 1000); at exactly 168h, it is not stale
+          if (diffMs > staleThresholdHours * 3600 * 1000) {
+            isStale = true;
+          }
         }
       } else {
         // Supported relative timestamp check:
@@ -157,15 +165,26 @@ export function normalizeOffer(
     if (isStale) {
       trustLabel = 'Catalog Offer (Stale)';
       trustDescription = 'Catalog seed offer is older than the freshness window. Not a live verified retailer feed.';
+    } else if (isUnknownFreshness) {
+      trustLabel = 'Catalog Offer (Unverified Freshness)';
+      trustDescription = 'Catalog seed offer with unverified observation timestamp. Not a live verified retailer feed.';
     } else {
       trustLabel = 'Catalog Offer';
       trustDescription = 'Demonstration catalog seed offer. Not a live verified retailer feed.';
     }
   } else if (sourceType === 'live') {
-    trustLabel = 'Live Verified';
-    trustDescription = 'Real-time verified offer from integrated merchant endpoint.';
+    if (isStale) {
+      trustLabel = 'Live Verified (Stale)';
+      trustDescription = 'Live merchant feed that has exceeded the freshness window.';
+    } else if (isUnknownFreshness) {
+      trustLabel = 'Live Feed (Unverified Freshness)';
+      trustDescription = 'Live merchant feed with unverified observation timestamp.';
+    } else {
+      trustLabel = 'Live Verified';
+      trustDescription = 'Real-time verified offer from integrated merchant endpoint.';
+    }
   } else if (sourceType === 'cached') {
-    trustLabel = 'Cached Offer';
+    trustLabel = isStale ? 'Cached Offer (Stale)' : 'Cached Offer';
     trustDescription = 'Offer cached from recent observation.';
   } else if (sourceType === 'stale') {
     trustLabel = 'Stale Observation';
@@ -174,6 +193,9 @@ export function normalizeOffer(
     if (isStale) {
       trustLabel = 'User Submitted (Stale)';
       trustDescription = 'Community-contributed price observation that has exceeded the freshness window.';
+    } else if (isUnknownFreshness) {
+      trustLabel = 'User Submitted (Unverified Freshness)';
+      trustDescription = 'Community-contributed price observation with unverified timestamp.';
     } else {
       trustLabel = 'User Submitted';
       trustDescription = 'Price observation contributed by community member (unverified).';
@@ -452,7 +474,9 @@ export function mapDtoToNormalizedOffer(dto: NormalizedOfferDTO): NormalizedOffe
       observedAt: dto.provenance?.observedAt,
       rawLastUpdated: dto.provenance?.rawLastUpdated,
       isStale: Boolean(dto.provenance?.stale),
-      trustLabel: isSimulated ? 'Simulated Offer' : (dto.provenance?.trustLabel || 'Catalog Offer'),
+      trustLabel: isSimulated
+        ? (Boolean(dto.provenance?.stale) ? 'Simulated Offer (Stale)' : 'Simulated Offer')
+        : (dto.provenance?.trustLabel || 'Catalog Offer'),
       trustDescription: dto.provenance?.trustDescription || (isSimulated ? 'Simulated offline offer for demonstration and testing.' : 'Catalog demonstration data.'),
     },
     availability: {
