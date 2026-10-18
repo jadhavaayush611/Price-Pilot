@@ -4,6 +4,7 @@ import type { Product, ProductPrice, ProductWithPrices } from '../types';
 import type {
   ConvertedOfferPrices,
   NormalizedOffer,
+  NormalizedOfferDTO,
   NormalizerOptions,
   OfferAvailability,
   OfferAvailabilityStatus,
@@ -341,12 +342,25 @@ export function formatOfferObservationTime(observedAt?: string, rawLastUpdated?:
 
 /**
  * Maps provenance to UI badge styling.
+ * Guaranteed: Simulated offers are never given Live Verified status or emerald tone.
  */
 export function getProvenanceBadge(provenance: OfferProvenance): {
   label: string;
   tone: 'emerald' | 'amber' | 'blue' | 'zinc' | 'purple';
   description: string;
 } {
+  const normSourceType = (provenance.sourceType || '').toLowerCase();
+  const isSimulated = normSourceType === 'simulated' || provenance.trustLabel?.toLowerCase().includes('simulat');
+
+  // Simulated offers MUST NEVER be live verified or emerald-badged
+  if (isSimulated) {
+    return {
+      label: provenance.isStale ? 'Simulated Offer (Stale)' : 'Simulated Offer',
+      tone: 'amber',
+      description: provenance.trustDescription || 'Offline simulated offer for demonstration and testing. Not a verified retail price.',
+    };
+  }
+
   if (provenance.isLiveVerified) {
     return {
       label: 'Live Verified',
@@ -363,7 +377,7 @@ export function getProvenanceBadge(provenance: OfferProvenance): {
     };
   }
 
-  switch (provenance.sourceType) {
+  switch (normSourceType) {
     case 'cached':
       return {
         label: 'Cached',
@@ -379,11 +393,77 @@ export function getProvenanceBadge(provenance: OfferProvenance): {
     case 'demo':
     default:
       return {
-        label: 'Catalog Offer',
+        label: provenance.trustLabel || 'Catalog Offer',
         tone: 'zinc',
         description: provenance.trustDescription,
       };
   }
+}
+
+/**
+ * Safely maps a backend NormalizedOfferDTO into a frontend NormalizedOffer.
+ * Preserves canonical USD pricing, ensures truthful provenance, and avoids fabricating stock status or fees.
+ */
+export function mapDtoToNormalizedOffer(dto: NormalizedOfferDTO): NormalizedOffer {
+  const rawStatus = (dto.availability?.status || 'UNKNOWN').toLowerCase();
+  let status: OfferAvailabilityStatus = 'unknown';
+  if (rawStatus === 'in_stock') status = 'in_stock';
+  else if (rawStatus === 'out_of_stock') status = 'out_of_stock';
+  else if (rawStatus === 'preorder') status = 'preorder';
+  else if (rawStatus === 'backorder') status = 'backorder';
+
+  const isAvailable = dto.availability?.available ?? (status === 'in_stock' ? true : status === 'out_of_stock' ? false : undefined);
+
+  const rawSourceType = (dto.provenance?.sourceType || 'demo').toLowerCase();
+  const isSimulated = rawSourceType === 'simulated'
+    || dto.provenance?.trustLabel?.toLowerCase().includes('simulat')
+    || dto.source?.providerName === 'mock-marketplace'
+    || dto.source?.providerName === 'mock';
+
+  const sourceType: OfferProvenanceType = isSimulated ? 'simulated' : (rawSourceType as OfferProvenanceType);
+
+  return {
+    id: dto.id,
+    productId: dto.productId,
+    productTitle: dto.productTitle,
+    source: {
+      sellerId: dto.source?.sellerId || 'unknown-seller',
+      sellerName: dto.source?.sellerName?.trim() || 'Market Merchant',
+      websiteUrl: dto.source?.websiteUrl,
+      logoUrl: dto.source?.logoUrl,
+      offerUrl: dto.source?.offerUrl || '#',
+      providerName: dto.source?.providerName,
+    },
+    pricing: {
+      basePrice: Number(dto.pricing.basePrice),
+      originalPrice: dto.pricing.originalPrice != null ? Number(dto.pricing.originalPrice) : undefined,
+      discountPercentage: Number(dto.pricing.discountPercentage || 0),
+      currency: (dto.pricing.currency || 'USD') as CurrencyCode,
+      shippingPrice: dto.pricing.shippingPrice != null ? Number(dto.pricing.shippingPrice) : undefined,
+      taxesAndFees: dto.pricing.taxesAndFees != null ? Number(dto.pricing.taxesAndFees) : undefined,
+      totalPrice: dto.pricing.totalPrice != null ? Number(dto.pricing.totalPrice) : undefined,
+      isBasePriceOnly: dto.pricing.basePriceOnly ?? true,
+      pricingDisclaimer: dto.pricing.pricingDisclaimer || 'Listed base price. Additional shipping, taxes, and merchant fees may apply at checkout.',
+    },
+    provenance: {
+      sourceType,
+      verificationStatus: (dto.provenance?.verificationStatus || 'unverified').toLowerCase() as any,
+      isLiveVerified: isSimulated ? false : Boolean(dto.provenance?.liveVerified),
+      observedAt: dto.provenance?.observedAt,
+      rawLastUpdated: dto.provenance?.rawLastUpdated,
+      isStale: Boolean(dto.provenance?.stale),
+      trustLabel: isSimulated ? 'Simulated Offer' : (dto.provenance?.trustLabel || 'Catalog Offer'),
+      trustDescription: dto.provenance?.trustDescription || (isSimulated ? 'Simulated offline offer for demonstration and testing.' : 'Catalog demonstration data.'),
+    },
+    availability: {
+      status,
+      isAvailable,
+      stockQuantity: dto.availability?.stockQuantity != null ? Number(dto.availability.stockQuantity) : undefined,
+    },
+    isBestDeal: Boolean(dto.isBestDeal),
+    savings: dto.savings != null ? Number(dto.savings) : undefined,
+    priceDifferenceFromLowest: dto.priceDifferenceFromLowest != null ? Number(dto.priceDifferenceFromLowest) : undefined,
+  };
 }
 
 /**

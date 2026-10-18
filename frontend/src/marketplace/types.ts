@@ -11,6 +11,7 @@ export type OfferProvenanceType =
   | 'stale'           // Observation exceeds freshness TTL
   | 'demo'            // Synthetic seed or demonstration catalog data
   | 'user_submitted'  // Sourced from crowd or user submission
+  | 'simulated'       // Simulated offline marketplace test data
   | 'unknown';        // Unverified or missing provenance metadata
 
 /**
@@ -147,4 +148,51 @@ export interface NormalizerOptions {
   defaultSourceType?: OfferProvenanceType;
   defaultVerificationStatus?: OfferVerificationStatus;
   staleThresholdHours?: number;
+}
+
+/**
+ * Backend DTO contract for GET /api/v1/products/{id}/offers.
+ * Matches com.pricepilot.intelligence.marketplace.dto.NormalizedOfferDTO.
+ */
+export interface NormalizedOfferDTO {
+  id: string;
+  productId: string;
+  productTitle?: string;
+  source: {
+    sellerId?: string;
+    sellerName: string;
+    websiteUrl?: string;
+    logoUrl?: string;
+    offerUrl: string;
+    providerName?: string;
+  };
+  pricing: {
+    basePrice: number;
+    originalPrice?: number;
+    discountPercentage?: number;
+    currency: string;
+    shippingPrice?: number | null;
+    taxesAndFees?: number | null;
+    totalPrice?: number | null;
+    basePriceOnly?: boolean;
+    pricingDisclaimer?: string;
+  };
+  provenance: {
+    sourceType: string;
+    verificationStatus: string;
+    liveVerified: boolean;
+    observedAt?: string;
+    rawLastUpdated?: string;
+    stale: boolean;
+    trustLabel: string;
+    trustDescription: string;
+  };
+  availability?: {
+    status: string;
+    available?: boolean | null;
+    stockQuantity?: number | null;
+  };
+  isBestDeal?: boolean;
+  savings?: number;
+  priceDifferenceFromLowest?: number;
 }

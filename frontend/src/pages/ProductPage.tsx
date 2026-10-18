@@ -10,7 +10,13 @@ import { useAuth } from '../context/AuthContext';
 import { PriceHistorySection } from '../components/PriceHistorySection';
 import { AlternativeList } from '../components/alternative/AlternativeList';
 import { ProductImage } from '../components/common/ProductImage';
-import { normalizeProductOffers, formatOfferObservationTime, getProvenanceBadge } from '../marketplace';
+import {
+  normalizeProductOffers,
+  formatOfferObservationTime,
+  getProvenanceBadge,
+  mapDtoToNormalizedOffer,
+  type NormalizedOffer
+} from '../marketplace';
 
 export const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,15 +27,38 @@ export const ProductPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const [currency, setCurrency] = useState<CurrencyCode>(getSavedCurrency());
 
+  // Aggregated marketplace offers state
+  const [aggregatedOffers, setAggregatedOffers] = useState<NormalizedOffer[]>([]);
+  const [offersLoading, setOffersLoading] = useState<boolean>(true);
+  const [offersError, setOffersError] = useState<string | null>(null);
+  const [isOffersFallback, setIsOffersFallback] = useState<boolean>(false);
+
   useEffect(() => {
     saveCurrency(currency);
   }, [currency]);
 
-  // Normalized marketplace offers preserving canonical USD pricing and honest provenance
-  const normalizedOffers = useMemo(() => {
+  // Fallback marketplace offers derived locally from catalog database prices
+  const fallbackOffers = useMemo(() => {
     if (!product?.prices || product.prices.length === 0) return [];
     return normalizeProductOffers(product);
   }, [product]);
+
+  // Active offers: uses aggregated backend offers, or visibly falls back to catalog prices
+  const normalizedOffers = useMemo(() => {
+    if (isOffersFallback) {
+      return fallbackOffers;
+    }
+    return aggregatedOffers;
+  }, [isOffersFallback, fallbackOffers, aggregatedOffers]);
+
+  const hasSimulatedOffers = useMemo(() => {
+    return normalizedOffers.some(
+      (o) => o.provenance.sourceType?.toLowerCase() === 'simulated' ||
+             o.provenance.trustLabel?.toLowerCase().includes('simulat') ||
+             o.source.providerName === 'mock-marketplace' ||
+             o.source.providerName === 'mock'
+    );
+  }, [normalizedOffers]);
 
   const lowestPriceUsd = normalizedOffers[0]?.pricing.basePrice || 0;
   const highestPriceUsd = normalizedOffers[normalizedOffers.length - 1]?.pricing.basePrice || 0;
@@ -86,6 +115,38 @@ export const ProductPage: React.FC = () => {
           setAnalyticsLoading(false);
         });
     }
+  }, [id]);
+
+  // Fetch aggregated marketplace offers with cancellation guard and resilient fallback
+  useEffect(() => {
+    if (!id) return;
+    let isMounted = true;
+    setOffersLoading(true);
+    setOffersError(null);
+    setIsOffersFallback(false);
+
+    apiService.getProductOffers(id)
+      .then((dtos) => {
+        if (!isMounted) return;
+        const mapped = dtos.map(mapDtoToNormalizedOffer);
+        setAggregatedOffers(mapped);
+        setIsOffersFallback(false);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.warn('Marketplace offers endpoint unavailable, using catalog fallback:', err);
+        setIsOffersFallback(true);
+        setOffersError(err?.response?.data?.message || err?.message || 'Aggregator unavailable');
+      })
+      .finally(() => {
+        if (isMounted) {
+          setOffersLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   // Fetch product alternatives with active strategy and personalization preference
@@ -514,7 +575,7 @@ export const ProductPage: React.FC = () => {
               <div className="flex flex-col">
                 <span className="text-[10px] text-[var(--color-muted-foreground)] uppercase font-bold tracking-wider mb-0.5">Availability</span>
                 <span className="text-xs font-semibold text-[var(--color-foreground)] mt-1">
-                  {normalizedOffers.length} {normalizedOffers.length === 1 ? 'Offer' : 'Offers'} Available
+                  {normalizedOffers.length} {normalizedOffers.length === 1 ? 'Offer' : 'Offers'} Available{isOffersFallback ? ' (Catalog Fallback)' : ''}
                 </span>
               </div>
             </div>
@@ -682,7 +743,50 @@ export const ProductPage: React.FC = () => {
           </div>
         </div>
 
-        {normalizedOffers.length > 0 ? (
+        {/* Marketplace Data Source Banners */}
+        {isOffersFallback && (
+          <div
+            className="flex items-center gap-2.5 p-3.5 mb-6 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-800 dark:text-amber-200"
+            role="status"
+            aria-live="polite"
+          >
+            <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-1">
+              <span className="font-semibold">
+                Marketplace offer aggregator unavailable{offersError ? ` (${offersError})` : ''}. Displaying catalog prices as fallback.
+              </span>
+              <span className="text-[10px] opacity-80 uppercase tracking-wider font-bold">Catalog Fallback</span>
+            </div>
+          </div>
+        )}
+
+        {!isOffersFallback && hasSimulatedOffers && (
+          <div
+            className="flex items-center gap-2.5 p-3 mb-6 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-300"
+            role="status"
+          >
+            <Info className="h-4 w-4 shrink-0 text-blue-500" />
+            <span>Marketplace simulation active. Simulated offers are labeled for offline testing and are never live-verified.</span>
+          </div>
+        )}
+
+        {offersLoading && normalizedOffers.length === 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="h-64 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] p-5 flex flex-col justify-between">
+                <div className="flex justify-between items-start">
+                  <div className="h-9 w-20 bg-[var(--color-surface-accent)] rounded-xl" />
+                  <div className="h-5 w-24 bg-[var(--color-surface-accent)] rounded-full" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-8 w-28 bg-[var(--color-surface-accent)] rounded-lg" />
+                  <div className="h-4 w-40 bg-[var(--color-surface-accent)] rounded-md" />
+                </div>
+                <div className="h-10 w-full bg-[var(--color-surface-accent)] rounded-xl" />
+              </div>
+            ))}
+          </div>
+        ) : normalizedOffers.length > 0 ? (
           <>
             <AnimatePresence mode="wait">
             {viewMode === 'card' ? (
@@ -727,6 +831,10 @@ export const ProductPage: React.FC = () => {
                     <tbody className="divide-y divide-[var(--color-border)] text-sm">
                       {normalizedOffers.map((offer) => {
                         const isLowest = Boolean(offer.isBestDeal);
+                        const isSimulated = offer.provenance.sourceType?.toLowerCase() === 'simulated' ||
+                          offer.provenance.trustLabel?.toLowerCase().includes('simulat') ||
+                          offer.source.providerName === 'mock-marketplace' ||
+                          offer.source.providerName === 'mock';
                         const currentPriceLocal = getDisplayPrice(offer.pricing.basePrice, currency);
                         const originalPriceLocal = offer.pricing.originalPrice !== undefined
                           ? getDisplayPrice(offer.pricing.originalPrice, currency)
@@ -745,7 +853,7 @@ export const ProductPage: React.FC = () => {
                           <tr
                             key={offer.id}
                             className={`transition-colors duration-200 hover:bg-[var(--color-surface-accent)]/50 ${
-                              isLowest ? 'bg-emerald-500/[0.03]' : ''
+                              isLowest ? (isSimulated ? 'bg-amber-500/[0.03]' : 'bg-emerald-500/[0.03]') : ''
                             }`}
                           >
                             {/* Seller Logo & Name */}
@@ -765,12 +873,14 @@ export const ProductPage: React.FC = () => {
                                    <span
                                      title={provBadge.description}
                                      className={`inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[9px] font-semibold border ${
-                                       offer.provenance.isLiveVerified
+                                       offer.provenance.isLiveVerified && !isSimulated
                                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25'
+                                         : provBadge.tone === 'amber'
+                                         ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25'
                                          : 'bg-[var(--color-surface-accent)] text-[var(--color-muted-foreground)] border-[var(--color-border)]'
                                      }`}
                                    >
-                                     {offer.provenance.isLiveVerified ? (
+                                     {offer.provenance.isLiveVerified && !isSimulated ? (
                                        <ShieldCheck className="h-2 w-2 text-emerald-500" />
                                      ) : (
                                        <Database className="h-2 w-2 text-[var(--color-muted-foreground)]" />
@@ -779,8 +889,10 @@ export const ProductPage: React.FC = () => {
                                    </span>
                                  </div>
                                  {isLowest && (
-                                   <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-emerald-500 dark:text-emerald-400 mt-0.5 tracking-wide uppercase">
-                                     <Sparkles className="h-2.5 w-2.5" /> Best Deal
+                                   <span className={`inline-flex items-center gap-1 text-[9px] font-extrabold mt-0.5 tracking-wide uppercase ${
+                                     isSimulated ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-500 dark:text-emerald-400'
+                                   }`}>
+                                     <Sparkles className="h-2.5 w-2.5" /> {isSimulated ? 'Simulated Deal (Testing)' : 'Best Deal'}
                                    </span>
                                  )}
                                </div>

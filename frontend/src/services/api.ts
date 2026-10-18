@@ -27,6 +27,7 @@ import type {
   AlternativeParams,
   AlternativeQueryParams
 } from '../types';
+import type { NormalizedOfferDTO } from '../marketplace';
 import { convertToUsd, getDisplayPrice, getSavedCurrency, formatPrice } from '../currency';
 
 export const getApiBaseUrl = (customEnv?: { VITE_API_URL?: string; VITE_API_BASE_URL?: string }): string => {
@@ -211,6 +212,12 @@ export const apiService = {
   // Get single product details (Real API)
   async getProduct(id: string): Promise<ProductWithPrices | null> {
     const response = await apiClient.get(`/products/${id}`);
+    return response.data;
+  },
+
+  // Get aggregated marketplace offers for a product (Real API)
+  async getProductOffers(id: string): Promise<NormalizedOfferDTO[]> {
+    const response = await apiClient.get<NormalizedOfferDTO[]>(`/products/${id}/offers`);
     return response.data;
   },
 

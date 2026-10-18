@@ -47,6 +47,11 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
   );
   const provBadge = getProvenanceBadge(normalizedOffer.provenance);
 
+  const isSimulated = normalizedOffer.provenance.sourceType?.toLowerCase() === 'simulated' ||
+    normalizedOffer.provenance.trustLabel?.toLowerCase().includes('simulat') ||
+    normalizedOffer.source.providerName === 'mock-marketplace' ||
+    normalizedOffer.source.providerName === 'mock';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -56,13 +61,17 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       className={`relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 ${
         isBestDeal
-          ? 'bg-[var(--color-surface)] border-emerald-500/40 shadow-[0_8px_30px_rgba(16,185,129,0.08)]'
+          ? isSimulated
+            ? 'bg-[var(--color-surface)] border-amber-500/40 shadow-[0_8px_30px_rgba(245,158,11,0.08)]'
+            : 'bg-[var(--color-surface)] border-emerald-500/40 shadow-[0_8px_30px_rgba(16,185,129,0.08)]'
           : 'bg-[var(--color-surface)] border-[var(--color-border)] hover:border-[var(--color-ring)]/40 shadow-sm'
       }`}
     >
       {/* Glow Effect for Best Deal */}
       {isBestDeal && (
-        <div className="absolute top-0 right-0 h-[100px] w-[100px] bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none" />
+        <div className={`absolute top-0 right-0 h-[100px] w-[100px] blur-[50px] rounded-full pointer-events-none ${
+          isSimulated ? 'bg-amber-500/10' : 'bg-emerald-500/10'
+        }`} />
       )}
 
       {/* Top Section: Seller and Badges */}
@@ -90,9 +99,15 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
         {/* Highlights & Badges */}
         <div className="flex flex-col gap-1.5 items-end">
           {isBestDeal && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider shadow-sm">
-              <Sparkles className="h-3 w-3" /> Best Deal
-            </span>
+            isSimulated ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-[9px] font-extrabold text-amber-700 dark:text-amber-300 uppercase tracking-wider shadow-sm">
+                <Sparkles className="h-3 w-3" /> Simulated Deal (Testing)
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider shadow-sm">
+                <Sparkles className="h-3 w-3" /> Best Deal
+              </span>
+            )
           )}
           {normalizedOffer.pricing.discountPercentage > 0 && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-[9px] font-extrabold text-rose-700 dark:text-rose-300 uppercase tracking-wider">
@@ -103,12 +118,14 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
           <span
             title={provBadge.description}
             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold border ${
-              normalizedOffer.provenance.isLiveVerified
+              normalizedOffer.provenance.isLiveVerified && !isSimulated
                 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25'
+                : provBadge.tone === 'amber'
+                ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25'
                 : 'bg-[var(--color-surface-accent)] text-[var(--color-muted-foreground)] border-[var(--color-border)]'
             }`}
           >
-            {normalizedOffer.provenance.isLiveVerified ? (
+            {normalizedOffer.provenance.isLiveVerified && !isSimulated ? (
               <ShieldCheck className="h-2.5 w-2.5 text-emerald-500" />
             ) : (
               <Database className="h-2.5 w-2.5 text-[var(--color-muted-foreground)]" />
@@ -155,9 +172,9 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
           )}
 
           {isBestDeal && (
-            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+            <div className={`flex items-center gap-1.5 ${isSimulated ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Lowest listed base price</span>
+              <span>{isSimulated ? 'Lowest simulated base price (Testing)' : 'Lowest listed base price'}</span>
             </div>
           )}
 
