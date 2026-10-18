@@ -1,5 +1,7 @@
 package com.pricepilot.intelligence.marketplace.normalizer;
 
+import com.pricepilot.intelligence.marketplace.adapter.MarketplaceQueryContext;
+import com.pricepilot.intelligence.marketplace.adapter.RawMarketplaceOffer;
 import com.pricepilot.intelligence.marketplace.dto.*;
 import com.pricepilot.intelligence.marketplace.model.AvailabilityStatus;
 import com.pricepilot.intelligence.marketplace.model.ProvenanceType;
@@ -231,6 +233,160 @@ public class OfferNormalizer {
     }
 
     /**
+     * Normalizes a RawMarketplaceOffer from an external or mock provider into a NormalizedOfferDTO.
+     * Enforces provenance rules:
+     * - DEMO/MOCK providers are marked as DEMO, UNVERIFIED, liveVerified=false.
+     * - Missing fees are never inferred as zero.
+     * - Invalid or negative prices return null.
+     */
+    public NormalizedOfferDTO normalize(RawMarketplaceOffer raw, MarketplaceQueryContext context, ProvenanceType sourceType, String providerId) {
+        if (raw == null) {
+            return null;
+        }
+
+        // Price Safety Gate: Never convert an invalid, missing, or negative price into a valid zero-price offer.
+        if (raw.price() == null || raw.price().compareTo(BigDecimal.ZERO) < 0) {
+            return null;
+        }
+
+        // Currency Correctness: Base prices are strictly ranked as canonical USD.
+        // Missing, blank, non-USD, or unsupported currencies are rejected from canonical ranking
+        // to prevent fabricating an assumption that a missing or non-USD currency is USD.
+        if (raw.currency() == null || raw.currency().trim().isEmpty() || !"USD".equalsIgnoreCase(raw.currency().trim())) {
+            return null;
+        }
+        String currency = "USD";
+
+        UUID offerId = null;
+        try {
+            if (raw.rawOfferId() != null) {
+                offerId = UUID.fromString(raw.rawOfferId());
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Non-UUID rawOfferId will generate a deterministic or pseudo-random UUID below
+        }
+        if (offerId == null) {
+            offerId = UUID.randomUUID();
+        }
+
+        String sellerName = raw.sellerName() != null && !raw.sellerName().trim().isEmpty()
+                ? raw.sellerName().trim()
+                : "Marketplace Merchant";
+
+        OfferSourceDTO source = OfferSourceDTO.builder()
+                .sellerId(null)
+                .sellerName(sellerName)
+                .websiteUrl(raw.sellerUrl())
+                .logoUrl(null)
+                .offerUrl(raw.offerUrl() != null ? raw.offerUrl() : (raw.sellerUrl() != null ? raw.sellerUrl() : "#"))
+                .providerName(providerId != null ? providerId : "marketplace")
+                .build();
+
+        BigDecimal basePrice = raw.price();
+        BigDecimal originalPrice = raw.originalPrice() != null && raw.originalPrice().compareTo(BigDecimal.ZERO) > 0
+                ? raw.originalPrice()
+                : null;
+
+        BigDecimal discountPct = BigDecimal.ZERO;
+        if (originalPrice != null && originalPrice.compareTo(basePrice) > 0) {
+            discountPct = originalPrice.subtract(basePrice)
+                    .divide(originalPrice, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(2, RoundingMode.HALF_UP);
+        }
+
+        OfferPricingDTO pricing = OfferPricingDTO.builder()
+                .basePrice(basePrice)
+                .originalPrice(originalPrice)
+                .discountPercentage(discountPct)
+                .currency(currency)
+                .shippingPrice(null)
+                .taxesAndFees(null)
+                .totalPrice(null)
+                .basePriceOnly(true)
+                .pricingDisclaimer("Listed base price. Additional shipping, taxes, and merchant fees may apply at checkout.")
+                .build();
+
+        LocalDateTime observedAt = raw.observationTime();
+        boolean isStale = false;
+        if (observedAt != null) {
+            LocalDateTime now = LocalDateTime.now();
+            if (observedAt.isBefore(now)) {
+                long hours = ChronoUnit.HOURS.between(observedAt, now);
+                if (hours > DEFAULT_STALE_THRESHOLD_HOURS) {
+                    isStale = true;
+                }
+            }
+        }
+
+        ProvenanceType provType = sourceType != null ? sourceType : ProvenanceType.DEMO;
+        VerificationStatus verStatus;
+        boolean liveVerified;
+        String trustLabel;
+        String trustDesc;
+
+        if (provType == ProvenanceType.DEMO) {
+            verStatus = VerificationStatus.UNVERIFIED;
+            liveVerified = false;
+            if ("mock".equalsIgnoreCase(providerId)) {
+                trustLabel = isStale ? "Simulated Offer (Stale)" : "Simulated Offer";
+                trustDesc = "Simulated offline marketplace offer for testing. Not a live verified retailer feed.";
+            } else {
+                trustLabel = isStale ? "Catalog Offer (Stale)" : "Catalog Offer";
+                trustDesc = isStale
+                        ? "Catalog seed offer has exceeded the freshness window. Not a live verified retailer feed."
+                        : "Demonstration catalog seed offer. Not a live verified retailer feed.";
+            }
+        } else if (provType == ProvenanceType.LIVE) {
+            verStatus = isStale ? VerificationStatus.STALE : VerificationStatus.VERIFIED;
+            liveVerified = !isStale;
+            trustLabel = isStale ? "Live Verified (Stale)" : "Live Verified";
+            trustDesc = "Real-time verified offer from integrated merchant endpoint.";
+        } else {
+            verStatus = VerificationStatus.UNVERIFIED;
+            liveVerified = false;
+            trustLabel = isStale ? "Catalog Offer (Stale)" : "Catalog Offer";
+            trustDesc = "Demonstration catalog offer. Not a live verified retailer feed.";
+        }
+
+        OfferProvenanceDTO provenance = OfferProvenanceDTO.builder()
+                .sourceType(provType)
+                .verificationStatus(verStatus)
+                .liveVerified(liveVerified)
+                .observedAt(observedAt)
+                .rawLastUpdated(observedAt != null ? observedAt.toString() : null)
+                .stale(isStale)
+                .trustLabel(trustLabel)
+                .trustDescription(trustDesc)
+                .build();
+
+        AvailabilityStatus availStatus = AvailabilityStatus.UNKNOWN;
+        Boolean available = raw.inStock();
+        if (available != null) {
+            availStatus = available ? AvailabilityStatus.IN_STOCK : AvailabilityStatus.OUT_OF_STOCK;
+        }
+
+        OfferAvailabilityDTO availability = OfferAvailabilityDTO.builder()
+                .status(availStatus)
+                .available(available)
+                .stockQuantity(raw.stockQuantity())
+                .build();
+
+        UUID productId = context != null ? context.productId() : null;
+        String productTitle = context != null ? context.productName() : null;
+
+        return NormalizedOfferDTO.builder()
+                .id(offerId)
+                .productId(productId)
+                .productTitle(productTitle)
+                .source(source)
+                .pricing(pricing)
+                .provenance(provenance)
+                .availability(availability)
+                .build();
+    }
+
+    /**
      * Normalizes a collection of offer DTOs for a product, ordering them by lowest base price
      * and computing competitive ranking and savings.
      */
@@ -250,23 +406,48 @@ public class OfferNormalizer {
             }
         }
 
-        if (offers.isEmpty()) {
-            return offers;
+        return rankAndEvaluateOffers(offers);
+    }
+
+    /**
+     * Ranks pre-normalized offers by canonical USD base price, computes best deal, savings,
+     * and price differences from lowest. Rejects any invalid offers.
+     */
+    public List<NormalizedOfferDTO> rankAndEvaluateOffers(List<NormalizedOfferDTO> offers) {
+        if (offers == null || offers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<NormalizedOfferDTO> validOffers = new ArrayList<>();
+        for (NormalizedOfferDTO offer : offers) {
+            if (offer != null && offer.getPricing() != null
+                    && offer.getPricing().getBasePrice() != null
+                    && offer.getPricing().getBasePrice().compareTo(BigDecimal.ZERO) >= 0) {
+                validOffers.add(offer);
+            }
+        }
+
+        if (validOffers.isEmpty()) {
+            return Collections.emptyList();
         }
 
         // Sort by base price ascending, tie-breaking by higher discount then seller name
-        offers.sort((a, b) -> {
+        validOffers.sort((a, b) -> {
             int cmp = a.getPricing().getBasePrice().compareTo(b.getPricing().getBasePrice());
             if (cmp != 0) return cmp;
-            int discCmp = b.getPricing().getDiscountPercentage().compareTo(a.getPricing().getDiscountPercentage());
+            BigDecimal discA = a.getPricing().getDiscountPercentage() != null ? a.getPricing().getDiscountPercentage() : BigDecimal.ZERO;
+            BigDecimal discB = b.getPricing().getDiscountPercentage() != null ? b.getPricing().getDiscountPercentage() : BigDecimal.ZERO;
+            int discCmp = discB.compareTo(discA);
             if (discCmp != 0) return discCmp;
-            return a.getSource().getSellerName().compareTo(b.getSource().getSellerName());
+            String nameA = (a.getSource() != null && a.getSource().getSellerName() != null) ? a.getSource().getSellerName() : "";
+            String nameB = (b.getSource() != null && b.getSource().getSellerName() != null) ? b.getSource().getSellerName() : "";
+            return nameA.compareTo(nameB);
         });
 
-        BigDecimal lowestBasePrice = offers.get(0).getPricing().getBasePrice();
+        BigDecimal lowestBasePrice = validOffers.get(0).getPricing().getBasePrice();
 
-        for (int i = 0; i < offers.size(); i++) {
-            NormalizedOfferDTO offer = offers.get(i);
+        for (int i = 0; i < validOffers.size(); i++) {
+            NormalizedOfferDTO offer = validOffers.get(i);
             offer.setIsBestDeal(i == 0);
             BigDecimal orig = offer.getPricing().getOriginalPrice();
             BigDecimal base = offer.getPricing().getBasePrice();
@@ -278,6 +459,6 @@ public class OfferNormalizer {
             offer.setPriceDifferenceFromLowest(base.subtract(lowestBasePrice));
         }
 
-        return offers;
+        return validOffers;
     }
 }
