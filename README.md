@@ -1,6 +1,9 @@
 <div align="center">
 
-<img src="docs/assets/banner.svg" alt="PricePilot v1.3 — Intelligent Shopping & Multi-Merchant Offer Normalization" width="100%" />
+<picture>
+  <source srcset="docs/assets/banner.gif" type="image/gif">
+  <img src="docs/assets/banner.gif" alt="PricePilot — Autonomous Commerce Intelligence: Discovery, Offer Comparison, Evidence-Based Decisions" width="100%" />
+</picture>
 
 <p align="center">
   <strong>Intelligent Shopping, Grounded Evidence, Multi-Merchant Price Normalization.</strong><br/>
@@ -301,6 +304,7 @@ v2.0  ──  Autonomous Live Retailer Partner Network            [FUTURE]
 | **[System Architecture](docs/ARCHITECTURE.md)** | End-to-end monolith design and state management principles. |
 | **[Semantic Intelligence Spec](docs/SEMANTIC_INTELLIGENCE_ARCHITECTURE.md)** | Local deterministic 64-dimensional vector embedding architecture. |
 | **[Marketplace Scope & Acceptance](docs/v1.3-scope-and-acceptance.md)** | Formal v1.3 delivery criteria and data integrity constraints. |
+| **[Static Vector Banner](docs/assets/banner.svg)** | Scalable static SVG fallback banner asset for offline/vector rendering. |
 
 ---
 
