@@ -122,6 +122,7 @@ export const AlternativeCard: React.FC<AlternativeCardProps> = ({
           <ProductImage
             src={alternative.imageUrl}
             alt={alternative.name}
+            category={alternative.category}
             className="h-full w-full object-contain"
             showFallbackText
             fallbackText={alternative.brand}

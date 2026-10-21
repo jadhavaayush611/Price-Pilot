@@ -326,6 +326,7 @@ export const AnalyticsPage: React.FC = () => {
                         <ProductImage
                           src={prod.imageUrl}
                           alt={prod.name}
+                          category={prod.category}
                           className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
                           showFallbackText
                           fallbackText={prod.brand}
@@ -416,6 +417,7 @@ export const AnalyticsPage: React.FC = () => {
               <ProductImage
                 src={product.imageUrl}
                 alt={product.name}
+                category={product.category}
                 className="h-full w-full object-contain"
                 showFallbackText
                 fallbackText={product.brand}

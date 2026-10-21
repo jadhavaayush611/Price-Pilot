@@ -40,61 +40,60 @@ class ProductCatalogImageVerificationTest {
         assertNotNull(is, "DatabaseSeeder class must be available");
 
         Map<String, String> seededImages = extractSeedImagesFromSource();
-        assertFalse(seededImages.isEmpty(), "Expected to extract seeded product definitions");
+        assertEquals(252, seededImages.size(), "Expected exactly 252 seeded products in catalog");
+
+        Set<String> distinctImageUrls = new HashSet<>();
 
         for (Map.Entry<String, String> entry : seededImages.entrySet()) {
             String product = entry.getKey();
             String imageUrl = entry.getValue();
 
-            if (imageUrl != null) {
-                // Must use HTTPS
-                assertTrue(imageUrl.startsWith("https://"),
-                        "Image URL for product '" + product + "' must start with https://: " + imageUrl);
+            assertNotNull(imageUrl, "Product '" + product + "' must have a dedicated image assignment");
+            assertFalse(imageUrl.trim().isEmpty(), "Product '" + product + "' image URL must not be blank");
 
-                // Must not be base64 or placeholder domain
-                assertFalse(imageUrl.contains("via.placeholder.com"),
-                        "Image URL for product '" + product + "' must not use placeholder domain");
-                assertFalse(imageUrl.startsWith("data:"),
-                        "Image URL for product '" + product + "' must not be data URL");
+            // Must use HTTPS or a local public asset path (/products/*.svg)
+            assertTrue(imageUrl.startsWith("https://") || imageUrl.startsWith("/products/"),
+                    "Image URL for product '" + product + "' must start with https:// or /products/: " + imageUrl);
 
-                // Must end with valid image extension
-                String cleanUrl = imageUrl.split("\\?")[0].toLowerCase();
-                assertTrue(cleanUrl.endsWith(".jpg") || cleanUrl.endsWith(".jpeg") || cleanUrl.endsWith(".png") || cleanUrl.endsWith(".webp"),
-                        "Image URL for product '" + product + "' must have standard image extension: " + imageUrl);
+            // Must not be base64 or placeholder domain
+            assertFalse(imageUrl.contains("via.placeholder.com"),
+                    "Image URL for product '" + product + "' must not use placeholder domain");
+            assertFalse(imageUrl.startsWith("data:"),
+                    "Image URL for product '" + product + "' must not be data URL");
 
-                // Regression check against known false-positive tokens
-                for (String disqualified : DISQUALIFIED_URL_PATTERNS) {
-                    assertFalse(imageUrl.toLowerCase().contains(disqualified.toLowerCase()),
-                            "Image URL for product '" + product + "' contains disqualified substring '" + disqualified + "': " + imageUrl);
-                }
+            // Must end with valid image extension (jpg, jpeg, png, webp, svg)
+            String cleanUrl = imageUrl.split("\\?")[0].toLowerCase();
+            assertTrue(cleanUrl.endsWith(".jpg") || cleanUrl.endsWith(".jpeg") || cleanUrl.endsWith(".png") || cleanUrl.endsWith(".webp") || cleanUrl.endsWith(".svg"),
+                    "Image URL for product '" + product + "' must have standard image extension: " + imageUrl);
+
+            // Regression check against known false-positive tokens
+            for (String disqualified : DISQUALIFIED_URL_PATTERNS) {
+                assertFalse(imageUrl.toLowerCase().contains(disqualified.toLowerCase()),
+                        "Image URL for product '" + product + "' contains disqualified substring '" + disqualified + "': " + imageUrl);
             }
+
+            // Ensure no duplicate assignments (every product has a distinct asset)
+            assertTrue(distinctImageUrls.add(imageUrl),
+                    "Duplicate image asset detected: '" + imageUrl + "' assigned to multiple products (product: '" + product + "')");
         }
     }
 
     @Test
-    @DisplayName("Regression: Known false-positive products must have null imageUrl")
-    void verifyKnownFalsePositivesAreRejected() throws Exception {
+    @DisplayName("All 252 catalog products have 100% complete dedicated visual asset coverage")
+    void verifyCompleteCatalogCoverage() throws Exception {
         Map<String, String> seededImages = extractSeedImagesFromSource();
+        assertEquals(252, seededImages.size(), "Catalog must have exactly 252 products");
 
-        // Google Pixel 8a was previously matched to a temple photo
-        assertNull(seededImages.get("Google Pixel 8a"),
-                "Google Pixel 8a must be null until an unquestionably verified product photo is available");
+        long photoCount = seededImages.values().stream()
+                .filter(url -> url != null && url.startsWith("https://"))
+                .count();
+        long illustrationCount = seededImages.values().stream()
+                .filter(url -> url != null && url.startsWith("/products/"))
+                .count();
 
-        // Pixel Watch 2 was previously matched to Shibuya Stream building
-        assertNull(seededImages.get("Pixel Watch 2"),
-                "Pixel Watch 2 must be null until an unquestionably verified product photo is available");
-
-        // Google Pixel Tablet was previously matched to Shibuya Stream building
-        assertNull(seededImages.get("Google Pixel Tablet"),
-                "Google Pixel Tablet must be null until an unquestionably verified product photo is available");
-
-        // DJI Osmo Pocket 3 was previously matched to a drama actress filming
-        assertNull(seededImages.get("DJI Osmo Pocket 3"),
-                "DJI Osmo Pocket 3 must be null until an unquestionably verified product photo is available");
-
-        // Samsung Galaxy Z Flip 5 was previously matched to a Game Boy comparison photo
-        assertNull(seededImages.get("Samsung Galaxy Z Flip 5"),
-                "Samsung Galaxy Z Flip 5 must be null until an unquestionably verified product photo is available");
+        assertEquals(42, photoCount, "Expected exactly 42 verified open-access photographs");
+        assertEquals(210, illustrationCount, "Expected exactly 210 dedicated vector illustrations");
+        assertEquals(252, photoCount + illustrationCount, "All 252 products must map to dedicated visual assets");
     }
 
     @Test
@@ -105,13 +104,13 @@ class ProductCatalogImageVerificationTest {
                 .brand("Apple")
                 .category("Smartphone")
                 .description("Flagship Apple smartphone")
-                .imageUrl("https://upload.wikimedia.org/wikipedia/commons/c/c3/Apple_iPhone_15_Pro.jpg")
+                .imageUrl("https://upload.wikimedia.org/wikipedia/commons/1/19/Apple_iPhone_15_Pro.jpg")
                 .archived(false)
                 .build();
         entity.setId(UUID.randomUUID());
 
         ProductResponseDTO dto = ProductResponseDTO.fromEntity(entity);
-        assertEquals("https://upload.wikimedia.org/wikipedia/commons/c/c3/Apple_iPhone_15_Pro.jpg", dto.getImageUrl());
+        assertEquals("https://upload.wikimedia.org/wikipedia/commons/1/19/Apple_iPhone_15_Pro.jpg", dto.getImageUrl());
         assertEquals("iPhone 15 Pro", dto.getName());
     }
 

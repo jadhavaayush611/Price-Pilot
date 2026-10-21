@@ -136,6 +136,7 @@ export const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({
                     <ProductImage
                       src={p.imageUrl}
                       alt={p.name}
+                      category={p.category}
                       className="h-full w-full object-contain"
                     />
                   </div>

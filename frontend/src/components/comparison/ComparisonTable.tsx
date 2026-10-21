@@ -82,6 +82,7 @@ export const ComparisonTable: React.FC<ComparisonTableProps> = ({ comparison, on
                           <ProductImage
                             src={p.imageUrl}
                             alt={p.name}
+                            category={p.category}
                             className="h-full object-contain transition-transform group-hover:scale-105"
                             showFallbackText
                             fallbackText={p.brand}

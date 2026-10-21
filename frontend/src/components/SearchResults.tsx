@@ -205,6 +205,7 @@ export const SearchResults: React.FC<SearchResultsProps> = React.memo(({
                   <ProductImage
                     src={product.imageUrl}
                     alt={product.name}
+                    category={product.category}
                     className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
                     showFallbackText
                     fallbackText={product.brand}

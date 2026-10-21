@@ -510,6 +510,7 @@ export const ProductPage: React.FC = () => {
           <ProductImage
             src={product.imageUrl}
             alt={product.name}
+            category={product.category}
             className="w-full h-full object-contain p-4 group-hover:scale-102 transition-transform duration-700"
             containerClassName="w-full h-full"
             showFallbackText
@@ -667,6 +668,7 @@ export const ProductPage: React.FC = () => {
 
       {/* Comparison Section */}
       <motion.div 
+        id="marketplace-offers"
         variants={childVariants}
         className="flex flex-col gap-6"
       >
@@ -773,11 +775,12 @@ export const ProductPage: React.FC = () => {
         {offersLoading && normalizedOffers.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="h-64 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] p-5 flex flex-col justify-between">
+              <div key={n} className="rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] p-5 flex flex-col gap-4">
                 <div className="flex justify-between items-start">
                   <div className="h-9 w-20 bg-[var(--color-surface-accent)] rounded-xl" />
                   <div className="h-5 w-24 bg-[var(--color-surface-accent)] rounded-full" />
                 </div>
+                <div className="h-36 w-full bg-[var(--color-surface-accent)] rounded-xl" />
                 <div className="space-y-2">
                   <div className="h-8 w-28 bg-[var(--color-surface-accent)] rounded-lg" />
                   <div className="h-4 w-40 bg-[var(--color-surface-accent)] rounded-md" />
@@ -805,6 +808,10 @@ export const ProductPage: React.FC = () => {
                     isBestDeal={Boolean(offer.isBestDeal)}
                     lowestPrice={lowestPriceUsd}
                     currency={currency}
+                    product={product}
+                    productImageUrl={product?.imageUrl}
+                    productCategory={product?.category}
+                    productName={product?.name}
                   />
                 ))}
               </motion.div>
