@@ -250,6 +250,7 @@ export const FeaturedPricePreview: React.FC<FeaturedPricePreviewProps> = ({ init
             <ProductImage
               src={product.imageUrl}
               alt={product.name}
+              category={product.category}
               className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
               showFallbackText
               fallbackText={product.brand}

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#94a3b822" />
+      <stop offset="60%" stop-color="#0c0e17" />
+      <stop offset="100%" stop-color="#07080d" />
+    </radialGradient>
+    <linearGradient id="cardBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#cbd5e1" stop-opacity="0.4" />
+      <stop offset="50%" stop-color="#2a2e45" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#64748b" stop-opacity="0.3" />
+    </linearGradient>
+    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f2337" />
+      <stop offset="50%" stop-color="#161826" />
+      <stop offset="100%" stop-color="#0e101a" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#cbd5e1" />
+      <stop offset="100%" stop-color="#94a3b8" />
+    </linearGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect width="600" height="600" rx="32" fill="url(#bgGlow)" />
+  <rect x="1.5" y="1.5" width="597" height="597" rx="30.5" fill="none" stroke="url(#cardBorder)" stroke-width="2" />
+
+  <g opacity="0.12" stroke="#cbd5e1" stroke-width="0.8" stroke-dasharray="4 8">
+    <line x1="80" y1="120" x2="520" y2="120" />
+    <line x1="80" y1="460" x2="520" y2="460" />
+    <line x1="120" y1="80" x2="120" y2="520" />
+    <line x1="480" y1="80" x2="480" y2="520" />
+    <circle cx="300" cy="270" r="180" fill="none" />
+  </g>
+
+  <g transform="translate(300, 260)">
+    
+            <!-- Rugged Action Camera Silhouette -->
+            <rect x="-90" y="-65" width="180" height="130" rx="18" fill="url(#bodyGrad)" stroke="#cbd5e1" stroke-width="2.5" />
+            <circle cx="-35" cy="0" r="42" fill="#0c0e18" stroke="#cbd5e1" stroke-width="3" />
+            <circle cx="-35" cy="0" r="26" fill="#141826" stroke="#94a3b8" stroke-width="1.5" />
+            <!-- Front Status / Selfie Display -->
+            <rect x="20" y="-40" width="55" height="50" rx="6" fill="#080912" stroke="#64748b" stroke-width="1.5" />
+            <text x="47" y="-12" fill="#cbd5e1" font-family="ui-monospace, monospace" font-size="10" font-weight="700" text-anchor="middle">4K120</text>
+            <rect x="-70" y="-75" width="28" height="10" rx="3" fill="#2d334e" stroke="#cbd5e1" stroke-width="1" />
+            
+  </g>
+
+  <g transform="translate(48, 56)">
+    <rect x="0" y="0" width="84" height="22" rx="6" fill="#181b2a" stroke="#cbd5e1" stroke-opacity="0.3" stroke-width="1" />
+    <text x="42" y="15" fill="#cbd5e1" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" letter-spacing="1" text-anchor="middle">DJI</text>
+    <text x="96" y="15" fill="#64748b" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="600" letter-spacing="0.8">CAMERA</text>
+  </g>
+
+  <g transform="translate(48, 510)">
+    <text x="0" y="0" fill="#f8fafc" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" letter-spacing="-0.3">DJI Action 4</text>
+    <text x="0" y="24" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="400" width="400">Rugged action camera with 1/1.3-inch sensor.</text>
+  </g>
+
+  <g transform="translate(552, 510)">
+    <text x="0" y="0" fill="#cbd5e1" font-family="ui-monospace, SFMono-Regular, monospace" font-size="20" font-weight="700" text-anchor="end">$299.00</text>
+    <text x="0" y="22" fill="#64748b" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="600" letter-spacing="0.5" text-anchor="end">PRICEPILOT VERIFIED MODEL</text>
+  </g>
+</svg>

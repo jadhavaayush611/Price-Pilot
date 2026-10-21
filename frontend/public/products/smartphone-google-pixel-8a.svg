@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="100%" height="100%" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#38bdf822" />
+      <stop offset="60%" stop-color="#0c0e17" />
+      <stop offset="100%" stop-color="#07080d" />
+    </radialGradient>
+    <linearGradient id="cardBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.4" />
+      <stop offset="50%" stop-color="#2a2e45" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0.3" />
+    </linearGradient>
+    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f2337" />
+      <stop offset="50%" stop-color="#161826" />
+      <stop offset="100%" stop-color="#0e101a" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect width="600" height="600" rx="32" fill="url(#bgGlow)" />
+  <rect x="1.5" y="1.5" width="597" height="597" rx="30.5" fill="none" stroke="url(#cardBorder)" stroke-width="2" />
+
+  <g opacity="0.12" stroke="#38bdf8" stroke-width="0.8" stroke-dasharray="4 8">
+    <line x1="80" y1="120" x2="520" y2="120" />
+    <line x1="80" y1="460" x2="520" y2="460" />
+    <line x1="120" y1="80" x2="120" y2="520" />
+    <line x1="480" y1="80" x2="480" y2="520" />
+    <circle cx="300" cy="270" r="180" fill="none" />
+  </g>
+
+  <g transform="translate(300, 260)">
+    
+            <rect x="-80" y="-160" width="160" height="300" rx="28" fill="url(#bodyGrad)" stroke="#38bdf8" stroke-width="2.5" />
+            <rect x="-70" y="-150" width="140" height="280" rx="20" fill="#07080f" stroke="#1f2336" stroke-width="1.5" />
+            <rect x="-62" y="-142" width="48" height="78" rx="14" fill="#151726" stroke="#0284c7" stroke-width="1.5" />
+            <circle cx="-38" cy="-122" r="12" fill="#0c0d17" stroke="#38bdf8" stroke-width="2" />
+            <circle cx="-38" cy="-86" r="12" fill="#0c0d17" stroke="#38bdf8" stroke-width="2" />
+            <circle cx="-20" cy="-104" r="6" fill="#1a1c2d" stroke="#818cf8" stroke-width="1" />
+            
+  </g>
+
+  <g transform="translate(48, 56)">
+    <rect x="0" y="0" width="84" height="22" rx="6" fill="#181b2a" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1" />
+    <text x="42" y="15" fill="#38bdf8" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" letter-spacing="1" text-anchor="middle">GOOGLE</text>
+    <text x="96" y="15" fill="#64748b" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="600" letter-spacing="0.8">SMARTPHONE</text>
+  </g>
+
+  <g transform="translate(48, 510)">
+    <text x="0" y="0" fill="#f8fafc" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" letter-spacing="-0.3">Google Pixel 8a</text>
+    <text x="0" y="24" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="400" width="400">Affordable Pixel phone with flagship camera features.</text>
+  </g>
+
+  <g transform="translate(552, 510)">
+    <text x="0" y="0" fill="#38bdf8" font-family="ui-monospace, SFMono-Regular, monospace" font-size="20" font-weight="700" text-anchor="end">$499.00</text>
+    <text x="0" y="22" fill="#64748b" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="600" letter-spacing="0.5" text-anchor="end">PRICEPILOT VERIFIED MODEL</text>
+  </g>
+</svg>

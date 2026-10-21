@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { ProductPrice, NormalizedOffer } from '../types';
+import type { ProductPrice, NormalizedOffer, Product, ProductWithPrices } from '../types';
 import { normalizeOffer, formatOfferObservationTime, getProvenanceBadge } from '../marketplace';
 import { ExternalLink, Sparkles, Tag, Clock, TrendingUp, CheckCircle2, AlertCircle, ShieldCheck, Database } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -7,12 +7,16 @@ import { formatPrice, getDisplayPrice, type CurrencyCode } from '../currency';
 import { apiService } from '../services/api';
 import { ProductImage } from './common/ProductImage';
 
-interface SellerCardProps {
+export interface SellerCardProps {
   price?: ProductPrice;
   offer?: NormalizedOffer;
   isBestDeal: boolean;
   lowestPrice: number;
   currency?: CurrencyCode;
+  product?: Product | ProductWithPrices | null;
+  productImageUrl?: string | null;
+  productCategory?: string | null;
+  productName?: string | null;
 }
 
 export const SellerCard: React.FC<SellerCardProps> = React.memo(({
@@ -21,6 +25,10 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
   isBestDeal,
   lowestPrice,
   currency = 'INR',
+  product,
+  productImageUrl,
+  productCategory,
+  productName,
 }) => {
   const normalizedOffer = useMemo(() => {
     if (offer) return offer;
@@ -54,8 +62,33 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
 
   const isStaleOffer = Boolean(normalizedOffer.provenance.isStale);
 
+  const resolvedProductImageUrl =
+    (productImageUrl && productImageUrl.trim()) ||
+    (product?.imageUrl && product.imageUrl.trim()) ||
+    (price?.product?.imageUrl && price.product.imageUrl.trim()) ||
+    (offer?.rawPrice?.product?.imageUrl && offer.rawPrice.product.imageUrl.trim()) ||
+    null;
+
+  const resolvedProductCategory =
+    (productCategory && productCategory.trim()) ||
+    (product?.category && product.category.trim()) ||
+    (price?.product?.category && price.product.category.trim()) ||
+    (offer?.rawPrice?.product?.category && offer.rawPrice.product.category.trim()) ||
+    null;
+
+  const resolvedProductName =
+    (productName && productName.trim()) ||
+    (product?.name && product.name.trim()) ||
+    (price?.product?.name && price.product.name.trim()) ||
+    (offer?.rawPrice?.product?.name && offer.rawPrice.product.name.trim()) ||
+    (offer?.productTitle && offer.productTitle.trim()) ||
+    'Product';
+
+  const hasProductContext = Boolean(resolvedProductImageUrl || resolvedProductCategory);
+
   return (
     <motion.div
+      data-testid="seller-card"
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
@@ -142,6 +175,20 @@ export const SellerCard: React.FC<SellerCardProps> = React.memo(({
           </span>
         </div>
       </div>
+
+      {/* Product Image Preview (when product context is available) */}
+      {hasProductContext && (
+        <div className="relative h-36 w-full bg-[var(--color-surface-accent)]/50 rounded-xl p-3 mb-3 flex items-center justify-center overflow-hidden border border-[var(--color-border)] group">
+          <ProductImage
+            src={resolvedProductImageUrl}
+            alt={resolvedProductName}
+            category={resolvedProductCategory}
+            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+            showFallbackText
+            fallbackText={resolvedProductName.substring(0, 3)}
+          />
+        </div>
+      )}
 
       {/* Middle Section: Prices & Calculations */}
       <div className="flex flex-col gap-2 py-3.5 border-t border-b border-[var(--color-border)] my-2">

@@ -1,10 +1,26 @@
 import { describe, it, expect } from 'vitest';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
-import { ProductImage } from './ProductImage';
+import { ProductImage, getCategoryIcon } from './ProductImage';
+import {
+  Smartphone,
+  Laptop,
+  Tablet,
+  Headphones,
+  AudioLines,
+  Watch,
+  Gamepad2,
+  Monitor,
+  Keyboard,
+  Mouse,
+  HardDrive,
+  Router,
+  Camera,
+  Package,
+} from 'lucide-react';
 
 describe('ProductImage Pipeline & Fallback Rendering', () => {
-  it('renders fallback container with package icon when src is undefined or null', () => {
+  it('renders fallback container with package icon when src is undefined or null and category is omitted', () => {
     const htmlNull = renderToString(React.createElement(ProductImage, { src: null, alt: 'Test Product' }));
     expect(htmlNull).toContain('aria-label="Test Product"');
     expect(htmlNull).toContain('lucide-package');
@@ -62,5 +78,95 @@ describe('ProductImage Pipeline & Fallback Rendering', () => {
       fallbackText: 'Sony',
     }));
     expect(html).toContain('Sony');
+  });
+
+  describe('Category-specific fallback icons for all 14 catalog categories', () => {
+    it('maps all catalog categories to corresponding domain icons', () => {
+      expect(getCategoryIcon('Smartphone')).toBe(Smartphone);
+      expect(getCategoryIcon('Laptop')).toBe(Laptop);
+      expect(getCategoryIcon('Tablet')).toBe(Tablet);
+      expect(getCategoryIcon('Headphones')).toBe(Headphones);
+      expect(getCategoryIcon('Earbuds')).toBe(AudioLines);
+      expect(getCategoryIcon('Smartwatch')).toBe(Watch);
+      expect(getCategoryIcon('Gaming Console')).toBe(Gamepad2);
+      expect(getCategoryIcon('Monitor')).toBe(Monitor);
+      expect(getCategoryIcon('Keyboard')).toBe(Keyboard);
+      expect(getCategoryIcon('Mouse')).toBe(Mouse);
+      expect(getCategoryIcon('Storage')).toBe(HardDrive);
+      expect(getCategoryIcon('Networking')).toBe(Router);
+      expect(getCategoryIcon('Camera')).toBe(Camera);
+      expect(getCategoryIcon('Accessory')).toBe(Package);
+    });
+
+    it('renders category-specific icon in DOM when image is missing', () => {
+      const htmlPhone = renderToString(React.createElement(ProductImage, {
+        src: null,
+        alt: 'OnePlus 12',
+        category: 'Smartphone',
+      }));
+      expect(htmlPhone).toContain('lucide-smartphone');
+
+      const htmlLaptop = renderToString(React.createElement(ProductImage, {
+        src: null,
+        alt: 'MacBook Pro 16 M3',
+        category: 'Laptop',
+      }));
+      expect(htmlLaptop).toContain('lucide-laptop');
+
+      const htmlMonitor = renderToString(React.createElement(ProductImage, {
+        src: null,
+        alt: 'LG UltraFine',
+        category: 'Monitor',
+      }));
+      expect(htmlMonitor).toContain('lucide-monitor');
+
+      const htmlStorage = renderToString(React.createElement(ProductImage, {
+        src: null,
+        alt: 'Samsung 990 Pro',
+        category: 'Storage',
+      }));
+      expect(htmlStorage).toContain('lucide-hard-drive');
+
+      const htmlNetworking = renderToString(React.createElement(ProductImage, {
+        src: null,
+        alt: 'Netgear Nighthawk',
+        category: 'Networking',
+      }));
+      expect(htmlNetworking).toContain('lucide-router');
+    });
+
+    it('handles case-insensitivity and whitespace in category name gracefully', () => {
+      expect(getCategoryIcon('  smartphone  ')).toBe(Smartphone);
+      expect(getCategoryIcon('gaming console')).toBe(Gamepad2);
+      expect(getCategoryIcon('MONITOR')).toBe(Monitor);
+      expect(getCategoryIcon('unknown category')).toBe(Package);
+      expect(getCategoryIcon(null)).toBe(Package);
+      expect(getCategoryIcon(undefined)).toBe(Package);
+    });
+  });
+
+  describe('Dedicated Product Asset Coverage (Option A)', () => {
+    it('renders dedicated product illustration asset path without error', () => {
+      const html = renderToString(React.createElement(ProductImage, {
+        src: '/products/laptop-macbook-pro-16-m3.svg',
+        alt: 'MacBook Pro 16 M3',
+        category: 'Laptop',
+      }));
+      expect(html).toContain('src="/products/laptop-macbook-pro-16-m3.svg"');
+      expect(html).toContain('alt="MacBook Pro 16 M3"');
+      // Should render image element, not the missing icon placeholder
+      expect(html).toContain('<img');
+    });
+
+    it('renders genuine external photograph URL cleanly without error', () => {
+      const html = renderToString(React.createElement(ProductImage, {
+        src: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Apple_iPhone_15_Pro.jpg',
+        alt: 'iPhone 15 Pro',
+        category: 'Smartphone',
+      }));
+      expect(html).toContain('src="https://upload.wikimedia.org/wikipedia/commons/1/19/Apple_iPhone_15_Pro.jpg"');
+      expect(html).toContain('alt="iPhone 15 Pro"');
+      expect(html).toContain('<img');
+    });
   });
 });

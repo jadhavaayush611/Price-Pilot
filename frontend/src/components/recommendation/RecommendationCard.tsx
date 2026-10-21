@@ -115,6 +115,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
           <ProductImage
             src={product.imageUrl}
             alt={product.name}
+            category={product.category}
             className="h-full w-full object-contain"
             showFallbackText
             fallbackText={product.brand}

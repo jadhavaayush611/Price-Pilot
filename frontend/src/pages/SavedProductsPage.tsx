@@ -166,6 +166,7 @@ export const SavedProductsPage: React.FC = () => {
                     <ProductImage
                       src={product.imageUrl}
                       alt={product.name}
+                      category={product.category}
                       className="w-full h-full object-contain group-hover:scale-102 transition-transform duration-500"
                       showFallbackText
                       fallbackText={product.brand}
