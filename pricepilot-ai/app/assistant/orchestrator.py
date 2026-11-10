@@ -2,8 +2,9 @@ import os
 import uuid
 import time
 import logging
-import requests
 from typing import Dict, Any, List, Optional
+
+from app.config.settings import settings
 from app.assistant.memory import memory_manager
 from app.assistant.rag import rag_pipeline
 from app.assistant.response_formatter import response_formatter
@@ -14,20 +15,37 @@ from app.assistant.prompts import (
     COMPARISON_PROMPT,
     SHOPPING_ADVICE_PROMPT
 )
+from app.assistant.providers import (
+    LlmProvider,
+    ProviderFactory,
+    LlmRole,
+    LlmMessage,
+    LlmGenerationConfig,
+    LlmCompletionRequest,
+    ProviderError
+)
 
 logger = logging.getLogger("pricepilot.assistant.orchestrator")
 
 class AssistantOrchestrator:
     """Orchestrates RAG, memory, prompt assembly, LLM call, and response formatting."""
 
-    def __init__(self) -> None:
-        self.api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+    def __init__(self, provider: Optional[LlmProvider] = None) -> None:
+        self._provider = provider
+
+    @property
+    def provider(self) -> LlmProvider:
+        if self._provider is None:
+            self._provider = ProviderFactory.get_provider()
+        return self._provider
+
+    def set_provider(self, provider: LlmProvider) -> None:
+        self._provider = provider
 
     def chat(self, message: str, conversation_id: Optional[str] = None, token: Optional[str] = None) -> Dict[str, Any]:
         start_time = time.time()
         
-        # 1. Manage Conversation ID & memory
+        # 1. Manage Conversation ID & memory (temporary compatibility shim for AI-02)
         if not conversation_id:
             conversation_id = str(uuid.uuid4())
             
@@ -47,9 +65,8 @@ class AssistantOrchestrator:
 
         context_str = rag_pipeline.format_context_as_text(context)
 
-        # 3. Construct Prompts
+        # 3. Construct Prompts & Messages
         history = memory_manager.get_messages(conversation_id)
-        history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history[:-1]])
 
         # Select prompt modifiers based on query intent
         intent_prompt = ""
@@ -67,71 +84,69 @@ class AssistantOrchestrator:
         if not SYSTEM_PROMPT:
             raise ValueError("System prompt is empty or not configured")
 
-        # Construct structured prompt with XML-like boundary tags to isolate instructions from untrusted inputs
-        full_prompt = (
-            f"<system_instructions>\n"
-            f"{SYSTEM_PROMPT.strip()}\n"
-            f"{intent_prompt.strip()}\n"
-            f"</system_instructions>\n\n"
-            f"<conversation_history>\n"
-            f"{history_str}\n"
-            f"</conversation_history>\n\n"
+        system_instruction = f"{SYSTEM_PROMPT.strip()}\n\n{intent_prompt.strip()}"
+
+        # Build stateless conversation messages
+        # Prior history
+        llm_messages: List[LlmMessage] = []
+        for msg in history[:-1]:
+            role = LlmRole.USER if msg.get("role") == "user" else LlmRole.ASSISTANT
+            llm_messages.append(LlmMessage(role=role, content=msg.get("content", "")))
+
+        # Current user turn containing grounding context and query
+        user_turn_content = (
             f"<retrieved_context>\n"
             f"{context_str}\n"
             f"</retrieved_context>\n\n"
             f"<user_query>\n"
             f"{message}\n"
-            f"</user_query>\n\n"
-            f"Assistant:"
+            f"</user_query>"
+        )
+        llm_messages.append(LlmMessage(role=LlmRole.USER, content=user_turn_content))
+
+        # 4. Invoke LLM Provider with configured budget and 0 retries
+        llm_start = time.time()
+        completion_request = LlmCompletionRequest(
+            system_instruction=system_instruction,
+            messages=llm_messages,
+            generation_config=LlmGenerationConfig(
+                temperature=settings.llm_temperature,
+                top_p=settings.llm_top_p,
+                max_output_tokens=settings.llm_max_tokens
+            ),
+            metadata={"conversation_id": conversation_id}
         )
 
-        # 4. Invoke LLM or Fallback reasoning engine
-        llm_start = time.time()
-        raw_response = None
-        latencies = {"retrieval": retrieval_latency}
+        logger.info(
+            "Invoking LLM provider '%s' (model=%s, timeout=%.2fs)",
+            self.provider.provider_name,
+            self.provider.model_name,
+            settings.llm_timeout_seconds
+        )
+        llm_response = self.provider.generate_text(completion_request)
+        raw_response = llm_response.content
+        llm_latency = llm_response.latency_seconds
 
-        if self.api_key:
-            try:
-                # Call Gemini Developer API via direct request
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent?key={self.api_key}"
-                payload = {
-                    "contents": [{"parts": [{"text": full_prompt}]}],
-                    "generationConfig": {
-                        "temperature": 0.2,
-                        "topP": 0.8,
-                        "maxOutputTokens": 2048
-                    }
-                }
-                logger.info(f"Orchestrator: Sending request to Gemini API ({self.model_name})")
-                response = requests.post(url, json=payload, timeout=10)
-                if response.status_code == 200:
-                    res_json = response.json()
-                    raw_response = res_json["candidates"][0]["content"]["parts"][0]["text"]
-                else:
-                    logger.error(f"Gemini API returned status {response.status_code}: {response.text}")
-            except Exception as e:
-                logger.exception("Failed calling Gemini API, using local reasoning fallback")
+        latencies = {
+            "retrieval": retrieval_latency,
+            "llm": llm_latency,
+            "total": time.time() - start_time
+        }
 
-        if not raw_response:
-            # Local reasoning engine fallback
-            raw_response = self._run_local_reasoning(message, context, active_product_id)
-
-        llm_latency = time.time() - llm_start
-        latencies["llm"] = llm_latency
-        latencies["total"] = time.time() - start_time
-
-        # Save to memory
+        # Save to memory (temporary compatibility shim)
         memory_manager.add_message(conversation_id, "assistant", raw_response)
 
         # 5. Format Structured Response
         structured_res = response_formatter.format_response(raw_response, context, message)
         structured_res["conversationId"] = conversation_id
         structured_res["latency"] = latencies
+        structured_res["model"] = llm_response.model_name
+        structured_res["provider"] = llm_response.provider_name
 
         return structured_res
 
     def _run_local_reasoning(self, query: str, context: Dict[str, Any], active_product_id: Optional[str]) -> str:
-        """Fallback reasoning engine that operates directly on the retrieved context to answer user requests."""
+        """Local reasoning engine helper used for standalone comparison and fallback scenarios."""
         query_lower = query.lower()
         products = context.get("products", [])
 
@@ -222,7 +237,6 @@ class AssistantOrchestrator:
             else:
                 summary += f"**{p2.get('name')}** is more budget-friendly by ₹{p1_price - p2_price:,.2f}."
 
-            # Construct comparison card block
             card_json = {
                 "products": [
                     {
@@ -259,7 +273,6 @@ class AssistantOrchestrator:
             
             lines = ["Here are my explainable recommendations for you:\n"]
             for r in recs[:3]:
-                # Extract product info
                 p = r.get("product") or r
                 name = p.get("name")
                 price = p.get("currentMinPrice") or p.get("price") or 0.0

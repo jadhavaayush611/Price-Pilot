@@ -34,4 +34,14 @@ class Settings:
         self.recommendation_limit = int(os.getenv("PRICEPILOT_AI_RECOMMENDATION_LIMIT", "60"))
         self.rate_limit_enabled = os.getenv("PRICEPILOT_AI_RATE_LIMIT_ENABLED", "true").lower() == "true"
 
+        # LLM Provider Configuration
+        self.ai_provider = os.getenv("AI_PROVIDER", "gemini").lower()
+        self.gemini_api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        self.gemini_primary_model = os.getenv("GEMINI_PRIMARY_MODEL") or os.getenv("GEMINI_MODEL") or "gemini-3.8-flash"
+        self.gemini_fallback_model = os.getenv("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash")
+        self.llm_timeout_seconds = float(os.getenv("LLM_TIMEOUT_SECONDS", "3.5"))
+        self.llm_temperature = float(os.getenv("LLM_TEMPERATURE", "0.2"))
+        self.llm_top_p = float(os.getenv("LLM_TOP_P", "0.8"))
+        self.llm_max_tokens = int(os.getenv("LLM_MAX_TOKENS", "2048"))
+
 settings = Settings()

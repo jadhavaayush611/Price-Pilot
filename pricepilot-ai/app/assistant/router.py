@@ -6,6 +6,7 @@ from app.assistant.orchestrator import orchestrator
 from app.assistant.memory import memory_manager
 from app.assistant.tools import get_product_details
 from app.assistant.response_formatter import response_formatter
+from app.assistant.providers import ProviderError
 
 router = APIRouter(prefix="/assistant", tags=["Assistant"])
 
@@ -61,6 +62,12 @@ def assistant_chat(
         if "conversationId" in response:
             response["conversationId"] = strip_email_prefix(response["conversationId"], request.email)
         return response
+    except ProviderError as e:
+        status_code = getattr(e, "status_code", status.HTTP_500_INTERNAL_SERVER_ERROR)
+        raise HTTPException(
+            status_code=status_code,
+            detail=f"AI Provider error: {str(e)}"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
