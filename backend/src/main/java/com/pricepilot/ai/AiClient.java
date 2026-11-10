@@ -23,6 +23,10 @@ public interface AiClient {
      */
     java.util.Map<String, Object> chat(java.util.Map<String, Object> request, String authorizationHeader);
 
+    default java.util.Map<String, Object> chat(java.util.Map<String, Object> request) {
+        return chat(request, null);
+    }
+
     /**
      * Forwards product comparison requests to the FastAPI assistant compare endpoint.
      */

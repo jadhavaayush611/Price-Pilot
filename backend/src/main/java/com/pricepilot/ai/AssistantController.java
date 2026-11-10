@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -233,51 +234,41 @@ public class AssistantController {
 
     private UUID resolveAuthenticatedUserId(UserPrincipal principal) {
         if (principal != null && principal.getId() != null) {
+            if (!userRepository.existsById(principal.getId())) {
+                throw new AccessDeniedException("Authenticated user not found in repository");
+            }
             return principal.getId();
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AccessDeniedException("Authentication required to access shopping assistant");
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new InsufficientAuthenticationException("Authentication required to access shopping assistant");
         }
 
         Object p = authentication.getPrincipal();
         if (p instanceof UserPrincipal up) {
-            return up.getId();
+            if (up.getId() != null && userRepository.existsById(up.getId())) {
+                return up.getId();
+            }
+            throw new AccessDeniedException("Authenticated user not found in repository");
         } else if (p instanceof UserEntity ue) {
-            return ue.getId();
+            if (ue.getId() != null && userRepository.existsById(ue.getId())) {
+                return ue.getId();
+            }
+            throw new AccessDeniedException("Authenticated user not found in repository");
         } else if (p instanceof UserDetails ud) {
             return userRepository.findByEmail(ud.getUsername())
                     .map(UserEntity::getId)
-                    .orElseGet(() -> {
-                        UserEntity created = userRepository.save(UserEntity.builder()
-                                .email(ud.getUsername())
-                                .firstName("Test")
-                                .lastName("User")
-                                .password("Password123!")
-                                .role(com.pricepilot.user.Role.USER)
-                                .enabled(true)
-                                .locked(false)
-                                .build());
-                        return created.getId();
-                    });
-        } else if (p instanceof String s && !"anonymousUser".equals(s)) {
+                    .orElseThrow(() -> new AccessDeniedException("Authenticated user not found in repository"));
+        } else if (p instanceof String s) {
+            if ("anonymousUser".equals(s)) {
+                throw new InsufficientAuthenticationException("Authentication required to access shopping assistant");
+            }
             return userRepository.findByEmail(s)
                     .map(UserEntity::getId)
-                    .orElseGet(() -> {
-                        UserEntity created = userRepository.save(UserEntity.builder()
-                                .email(s)
-                                .firstName("Test")
-                                .lastName("User")
-                                .password("Password123!")
-                                .role(com.pricepilot.user.Role.USER)
-                                .enabled(true)
-                                .locked(false)
-                                .build());
-                        return created.getId();
-                    });
+                    .orElseThrow(() -> new AccessDeniedException("Authenticated user not found in repository"));
         }
 
-        throw new AccessDeniedException("Authentication required to access shopping assistant");
+        throw new AccessDeniedException("Authenticated user could not be resolved");
     }
 }

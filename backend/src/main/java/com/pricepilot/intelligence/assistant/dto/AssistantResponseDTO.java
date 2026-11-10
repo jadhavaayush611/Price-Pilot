@@ -21,6 +21,9 @@ public class AssistantResponseDTO {
     // Primary text response
     private String response;
 
+    // Fallback indicator
+    private Boolean fallbackMode;
+
     // Identifiers
     private UUID conversationId;
     private UUID messageId;

@@ -11,11 +11,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.Map;
 
 @Component
@@ -29,6 +31,9 @@ public class AiClientImpl implements AiClient {
     @Value("${pricepilot.ai.timeout:5000}")
     private int timeout;
 
+    @Value("${pricepilot.ai.connect-timeout:1000}")
+    private int connectTimeout = 1000;
+
     @Value("${pricepilot.ai.retry-count:3}")
     private int retryCount;
 
@@ -39,9 +44,11 @@ public class AiClientImpl implements AiClient {
 
     @PostConstruct
     public void init() {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(timeout);
-        requestFactory.setReadTimeout(timeout);
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofMillis(connectTimeout))
+                .build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(Duration.ofMillis(timeout));
 
         this.restTemplate = new RestTemplate(requestFactory);
 

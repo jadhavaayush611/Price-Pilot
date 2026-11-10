@@ -240,7 +240,10 @@ public class ShoppingAssistantServiceImpl implements ShoppingAssistantService {
                 intent, sanitizedContent, request.getActiveProductId(), conversation.getId(), user, preferences, displayCurrency);
 
         // 5. Generate assistant response (AI service with deterministic fallback)
-        String responseText = generateAssistantText(sanitizedContent, conversation.getId(), intent, bundle, preferences);
+        GenerationResult generationResult = generateAssistantText(
+                sanitizedContent, conversation.getId(), user, intent, bundle, preferences);
+        String responseText = generationResult.text();
+        boolean fallbackMode = generationResult.fallbackMode();
 
         // 6. Save assistant message
         String serializedBundle = serializeBundle(bundle);
@@ -263,11 +266,11 @@ public class ShoppingAssistantServiceImpl implements ShoppingAssistantService {
         conversationRepository.save(conversation);
 
         long durationMs = System.currentTimeMillis() - startTime;
-        log.info("Assistant message processed | conv_id={} | intent={} | grounded_items={} | duration_ms={}",
-                conversationId, intent, bundle.getGroundedProducts().size(), durationMs);
+        log.info("Assistant message processed | conv_id={} | intent={} | fallback={} | grounded_items={} | duration_ms={}",
+                conversationId, intent, fallbackMode, bundle.getGroundedProducts().size(), durationMs);
 
         // 7. Format backward-compatible response DTO
-        return buildResponseDTO(conversation.getId(), assistantMessage.getId(), intent, responseText, bundle, displayCurrency);
+        return buildResponseDTO(conversation.getId(), assistantMessage.getId(), intent, responseText, bundle, displayCurrency, fallbackMode);
     }
 
     @Override
@@ -1173,15 +1176,46 @@ public class ShoppingAssistantServiceImpl implements ShoppingAssistantService {
                 .build());
     }
 
-    private String generateAssistantText(
+    private record GenerationResult(String text, boolean fallbackMode) {}
+
+    private GenerationResult generateAssistantText(
             String userQuery,
             UUID conversationId,
+            UserEntity user,
             AssistantIntent intent,
             AssistantEvidenceBundle bundle,
             UserShoppingPreferenceDTO preferences) {
 
-        // Pure deterministic grounded generation strictly from authoritative PricePilot evidence bundle
-        return fallbackGenerator.generateFallbackResponse(intent, bundle, preferences);
+        if (aiClient != null) {
+            try {
+                Map<String, Object> aiReq = new HashMap<>();
+                aiReq.put("message", userQuery);
+                if (conversationId != null) {
+                    aiReq.put("conversationId", conversationId.toString());
+                }
+                if (user != null) {
+                    aiReq.put("userId", user.getId().toString());
+                    aiReq.put("email", user.getEmail());
+                }
+
+                Map<String, Object> aiRes = aiClient.chat(aiReq);
+                if (aiRes != null && aiRes.containsKey("response")) {
+                    Object respObj = aiRes.get("response");
+                    if (respObj instanceof String text && !text.trim().isEmpty()) {
+                        log.debug("AI service returned response for conversation {}", conversationId);
+                        return new GenerationResult(text.trim(), false);
+                    }
+                }
+                log.warn("AI service returned empty or invalid response for conversation {}, falling back", conversationId);
+            } catch (Exception e) {
+                log.warn("AI chat service failed or timed out for conversation {}: {}, falling back to deterministic response",
+                        conversationId, e.getMessage());
+            }
+        } else {
+            log.debug("No AiClient configured, using deterministic shopping assistant");
+        }
+
+        return new GenerationResult(fallbackGenerator.generateFallbackResponse(intent, bundle, preferences), true);
     }
 
     private AssistantResponseDTO buildResponseDTO(
@@ -1190,7 +1224,8 @@ public class ShoppingAssistantServiceImpl implements ShoppingAssistantService {
             AssistantIntent intent,
             String responseText,
             AssistantEvidenceBundle bundle,
-            CurrencyCode displayCurrency) {
+            CurrencyCode displayCurrency,
+            boolean fallbackMode) {
 
         List<String> suggestedPrompts = new ArrayList<>();
         String examplePrice = switch (displayCurrency != null ? displayCurrency : CurrencyCode.INR) {
@@ -1214,6 +1249,7 @@ public class ShoppingAssistantServiceImpl implements ShoppingAssistantService {
 
         return AssistantResponseDTO.builder()
                 .response(responseText)
+                .fallbackMode(fallbackMode)
                 .conversationId(conversationId)
                 .messageId(messageId)
                 .intent(intent)

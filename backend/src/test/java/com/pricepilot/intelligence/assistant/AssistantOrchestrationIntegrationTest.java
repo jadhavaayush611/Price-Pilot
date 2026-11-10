@@ -780,9 +780,9 @@ public class AssistantOrchestrationIntegrationTest {
     }
 
     @Test
-    @DisplayName("Unauthenticated request to assistant throws AccessDeniedException")
+    @DisplayName("Unauthenticated request to assistant throws AuthenticationException")
     void testUnauthenticatedAccess() {
-        assertThrows(AccessDeniedException.class, () -> {
+        assertThrows(org.springframework.security.core.AuthenticationException.class, () -> {
             assistantController.listConversations(null);
         });
     }
