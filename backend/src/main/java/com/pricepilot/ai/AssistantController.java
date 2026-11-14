@@ -1,5 +1,6 @@
 package com.pricepilot.ai;
 
+import com.pricepilot.ai.stream.AssistantStreamOrchestrator;
 import com.pricepilot.intelligence.assistant.dto.*;
 import com.pricepilot.intelligence.assistant.service.ShoppingAssistantService;
 import com.pricepilot.security.UserPrincipal;
@@ -9,6 +10,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
@@ -17,6 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.*;
 
@@ -30,14 +33,25 @@ public class AssistantController {
     private final ShoppingAssistantService assistantService;
     private final UserRepository userRepository;
     private final AiClient aiClient;
+    private final AssistantStreamOrchestrator streamOrchestrator;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AssistantController(
+            ShoppingAssistantService assistantService,
+            UserRepository userRepository,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) AiClient aiClient,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) AssistantStreamOrchestrator streamOrchestrator) {
+        this.assistantService = assistantService;
+        this.userRepository = userRepository;
+        this.aiClient = aiClient;
+        this.streamOrchestrator = streamOrchestrator;
+    }
 
     public AssistantController(
             ShoppingAssistantService assistantService,
             UserRepository userRepository,
-            @org.springframework.beans.factory.annotation.Autowired(required = false) AiClient aiClient) {
-        this.assistantService = assistantService;
-        this.userRepository = userRepository;
-        this.aiClient = aiClient;
+            AiClient aiClient) {
+        this(assistantService, userRepository, aiClient, null);
     }
 
     // =========================================================================
@@ -92,6 +106,19 @@ public class AssistantController {
         UUID userId = resolveAuthenticatedUserId(principal);
         AssistantResponseDTO response = assistantService.sendMessage(id, userId, request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping(value = "/conversations/{id}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamMessage(
+            @PathVariable("id") UUID id,
+            @AuthenticationPrincipal UserPrincipal principal,
+            @Valid @RequestBody SendMessageRequest request) {
+
+        UUID userId = resolveAuthenticatedUserId(principal);
+        if (streamOrchestrator == null) {
+            throw new IllegalStateException("Assistant stream orchestrator is not available");
+        }
+        return streamOrchestrator.streamMessage(id, userId, request);
     }
 
     // =========================================================================

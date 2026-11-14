@@ -24,4 +24,8 @@ public interface ShoppingAssistantService {
     AssistantResponseDTO processDirectAsk(UUID userId, String question, String conversationId);
 
     void clearConversationMemory(UUID userId, String conversationId);
+
+    AssistantEvidenceBundle createEvidenceBundle(UUID conversationId, UUID userId, String query, UUID activeProductId, AssistantIntent intent);
+
+    void validateConversationOwnership(UUID conversationId, UUID userId);
 }

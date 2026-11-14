@@ -102,9 +102,10 @@ public class GlobalExceptionHandler {
             IllegalArgumentException.class,
             ProductArchivedException.class,
             InvalidPriceException.class,
-            InvalidCursorException.class
+            InvalidCursorException.class,
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class
     })
-    public ResponseEntity<ErrorResponse> handleBadRequestExceptions(RuntimeException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleBadRequestExceptions(Exception ex, HttpServletRequest request) {
         logExceptionDetails(request, HttpStatus.BAD_REQUEST, ex);
 
         ErrorResponse errorResponse = ErrorResponse.builder()
@@ -116,6 +117,27 @@ public class GlobalExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler({
+            com.pricepilot.ai.stream.StreamCapacityExceededException.class,
+            java.util.concurrent.RejectedExecutionException.class
+    })
+    public ResponseEntity<ErrorResponse> handleStreamCapacityExceeded(Exception ex, HttpServletRequest request) {
+        logExceptionDetails(request, HttpStatus.SERVICE_UNAVAILABLE, ex);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+                .error(HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase())
+                .code("STREAM_CAPACITY_EXCEEDED")
+                .message("Assistant stream capacity reached. Please retry in a few seconds.")
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .header("Retry-After", "5")
+                .body(errorResponse);
     }
 
     @ExceptionHandler(InvalidWatchlistPriceException.class)

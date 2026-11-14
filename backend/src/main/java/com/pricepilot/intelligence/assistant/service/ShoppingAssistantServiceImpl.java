@@ -310,6 +310,40 @@ public class ShoppingAssistantServiceImpl implements ShoppingAssistantService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public AssistantEvidenceBundle createEvidenceBundle(
+            UUID conversationId,
+            UUID userId,
+            String query,
+            UUID activeProductId,
+            AssistantIntent intent) {
+        UserEntity user = getUserOrThrow(userId);
+        UserShoppingPreferenceDTO preferences = null;
+        try {
+            preferences = preferenceService.getPreferences(userId);
+        } catch (Exception e) {
+            log.warn("Unable to fetch preferences for user {}: {}", userId, e.getMessage());
+        }
+
+        CurrencyCode displayCurrency = (preferences != null && preferences.getCurrency() != null)
+                ? preferences.getCurrency()
+                : currencyConversionService.getDefaultDisplayCurrency();
+
+        return buildEvidenceBundle(intent, query, activeProductId, conversationId, user, preferences, displayCurrency);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validateConversationOwnership(UUID conversationId, UUID userId) {
+        getUserOrThrow(userId);
+        AssistantConversationEntity conv = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found with id: " + conversationId));
+        if (!conv.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("User does not have access to conversation: " + conversationId);
+        }
+    }
+
     // --- Private Orchestration Helpers ---
 
     private UUID resolveOrCreateConversation(UUID userId, String conversationIdStr, String title) {
